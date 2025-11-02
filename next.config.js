@@ -13,15 +13,19 @@ const nextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
-    // Exclure le module 'canvas' du bundling client
-    // Konva utilise 'canvas' uniquement côté serveur (via index-node.js)
-    // Côté client, Konva utilise directement le Canvas HTML5 du navigateur
+    // Configuration spécifique pour Konva/React-Konva
     if (!isServer) {
+      // Exclure canvas du bundling côté client
       config.resolve.fallback = {
         ...config.resolve.fallback,
         canvas: false,
+        fs: false,
       }
+    } else {
+      // Côté serveur, exclure Konva complètement
+      config.externals = [...(config.externals || []), 'canvas', 'konva']
     }
+
     return config
   },
 }

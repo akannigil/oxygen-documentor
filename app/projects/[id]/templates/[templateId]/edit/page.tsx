@@ -1,18 +1,27 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { TemplateEditor } from '@/components/template-editor/TemplateEditor'
+import { TemplateEditor } from '@/components/template-editor'
 import type { TemplateField } from '@/shared/types'
 
+interface Template {
+  id: string
+  name: string
+  fileUrl?: string
+  filePath: string
+  width?: number
+  height?: number
+  fields: TemplateField[]
+}
+
 export default function EditTemplatePage() {
-  const router = useRouter()
   const params = useParams()
   const projectId = params['id'] as string
   const templateId = params['templateId'] as string
 
-  const [template, setTemplate] = useState<any>(null)
+  const [template, setTemplate] = useState<Template | null>(null)
   const [fields, setFields] = useState<TemplateField[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -90,7 +99,7 @@ export default function EditTemplatePage() {
   }
 
   // Construire l'URL du fichier
-  const fileUrl = template.fileUrl || `/uploads/${template.filePath}`
+  const fileUrl = template.fileUrl || `/api/uploads/${template.filePath}`
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -145,8 +154,8 @@ export default function EditTemplatePage() {
         {/* Éditeur */}
         <TemplateEditor
           templateUrl={fileUrl}
-          templateWidth={template.width || undefined}
-          templateHeight={template.height || undefined}
+          {...(template.width != null && { templateWidth: template.width })}
+          {...(template.height != null && { templateHeight: template.height })}
           fields={fields}
           onFieldsChange={handleFieldsChange}
         />

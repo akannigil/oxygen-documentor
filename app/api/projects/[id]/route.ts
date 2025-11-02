@@ -84,9 +84,18 @@ export async function PUT(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
     }
 
+    // Construire l'objet data en excluant les valeurs undefined
+    const updateData: { name?: string; description?: string } = {}
+    if (validatedData.name !== undefined) {
+      updateData.name = validatedData.name
+    }
+    if (validatedData.description !== undefined) {
+      updateData.description = validatedData.description
+    }
+
     const project = await prisma.project.update({
       where: { id },
-      data: validatedData,
+      data: updateData,
     })
 
     return NextResponse.json(project)

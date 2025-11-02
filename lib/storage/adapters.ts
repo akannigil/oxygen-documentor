@@ -25,12 +25,12 @@ export class S3StorageAdapter implements StorageAdapter {
 
     this.client = new S3Client({
       region: this.region,
-      credentials: accessKeyId && secretAccessKey
-        ? {
-            accessKeyId,
-            secretAccessKey,
-          }
-        : undefined,
+      ...(accessKeyId && secretAccessKey && {
+        credentials: {
+          accessKeyId,
+          secretAccessKey,
+        },
+      }),
     })
   }
 
@@ -80,7 +80,7 @@ export class LocalStorageAdapter implements StorageAdapter {
     this.baseDir = path.resolve(baseDir)
   }
 
-  async upload(buffer: Buffer, key: string, contentType: string): Promise<string> {
+  async upload(buffer: Buffer, key: string, _contentType: string): Promise<string> {
     const fullPath = path.join(this.baseDir, key)
     const dir = path.dirname(fullPath)
 
@@ -94,11 +94,11 @@ export class LocalStorageAdapter implements StorageAdapter {
   }
 
   async getUrl(key: string): Promise<string> {
-    // Pour le dev local, retourner une URL relative
-    return `/uploads/${key}`
+    // Pour le dev local, retourner une URL relative pointant vers la route API
+    return `/api/uploads/${key}`
   }
 
-  async getSignedUrl(key: string, expiresIn?: number): Promise<string> {
+  async getSignedUrl(key: string, _expiresIn?: number): Promise<string> {
     // Pas besoin de signed URL en local
     return this.getUrl(key)
   }
@@ -147,7 +147,7 @@ export class FTPStorageAdapter implements StorageAdapter {
     return client
   }
 
-  async upload(buffer: Buffer, key: string, contentType: string): Promise<string> {
+  async upload(buffer: Buffer, key: string, _contentType: string): Promise<string> {
     const client = await this.getClient()
 
     try {
@@ -161,8 +161,10 @@ export class FTPStorageAdapter implements StorageAdapter {
         await client.ensureDir(dir)
       }
 
-      // Upload le fichier
-      await client.uploadFrom(buffer, fullPath)
+      // Upload le fichier depuis un stream
+      const { Readable } = await import('stream')
+      const stream = Readable.from(buffer)
+      await client.uploadFrom(stream, fullPath)
 
       return key
     } finally {
@@ -180,7 +182,7 @@ export class FTPStorageAdapter implements StorageAdapter {
     return `${protocol}://${host}${port}/${basePath}${key}`
   }
 
-  async getSignedUrl(key: string, expiresIn?: number): Promise<string> {
+  async getSignedUrl(key: string, _expiresIn?: number): Promise<string> {
     // FTP ne supporte pas les signed URLs, retourner l'URL normale
     return this.getUrl(key)
   }
@@ -204,36 +206,36 @@ export class FTPStorageAdapter implements StorageAdapter {
  * Factory pour créer l'adaptateur de stockage approprié selon l'environnement
  */
 export function createStorageAdapter(): StorageAdapter {
-  const storageType = process.env.STORAGE_TYPE || 'local'
+  const storageType = process.env['STORAGE_TYPE'] || 'local'
 
   switch (storageType) {
     case 's3':
-      if (!process.env.AWS_REGION || !process.env.S3_BUCKET_NAME) {
+      if (!process.env['AWS_REGION'] || !process.env['S3_BUCKET_NAME']) {
         throw new Error('AWS_REGION and S3_BUCKET_NAME are required for S3 storage')
       }
       return new S3StorageAdapter(
-        process.env.S3_BUCKET_NAME,
-        process.env.AWS_REGION,
-        process.env.AWS_ACCESS_KEY_ID,
-        process.env.AWS_SECRET_ACCESS_KEY
+        process.env['S3_BUCKET_NAME'],
+        process.env['AWS_REGION'],
+        process.env['AWS_ACCESS_KEY_ID'],
+        process.env['AWS_SECRET_ACCESS_KEY']
       )
 
     case 'ftp':
-      if (!process.env.FTP_HOST || !process.env.FTP_USER || !process.env.FTP_PASSWORD) {
+      if (!process.env['FTP_HOST'] || !process.env['FTP_USER'] || !process.env['FTP_PASSWORD']) {
         throw new Error('FTP_HOST, FTP_USER, and FTP_PASSWORD are required for FTP storage')
       }
       return new FTPStorageAdapter({
-        host: process.env.FTP_HOST,
-        user: process.env.FTP_USER,
-        password: process.env.FTP_PASSWORD,
-        secure: process.env.FTP_SECURE === 'true',
-        port: process.env.FTP_PORT ? parseInt(process.env.FTP_PORT, 10) : undefined,
-        basePath: process.env.FTP_BASE_PATH,
+        host: process.env['FTP_HOST'],
+        user: process.env['FTP_USER'],
+        password: process.env['FTP_PASSWORD'],
+        secure: process.env['FTP_SECURE'] === 'true',
+        ...(process.env['FTP_PORT'] && { port: parseInt(process.env['FTP_PORT'], 10) }),
+        ...(process.env['FTP_BASE_PATH'] && { basePath: process.env['FTP_BASE_PATH'] }),
       })
 
     case 'local':
     default:
-      return new LocalStorageAdapter(process.env.LOCAL_STORAGE_DIR || './uploads')
+      return new LocalStorageAdapter(process.env['LOCAL_STORAGE_DIR'] || './uploads')
   }
 }
 

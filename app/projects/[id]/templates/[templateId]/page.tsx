@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import type { TemplateField } from '@/shared/types'
 
 interface PageProps {
   params: Promise<{ id: string; templateId: string }>
@@ -51,7 +52,7 @@ export default async function TemplatePage({ params }: PageProps) {
     redirect('/dashboard')
   }
 
-  const fields = Array.isArray(template.fields) ? template.fields : []
+  const fields = Array.isArray(template.fields) ? (template.fields as unknown as TemplateField[]) : []
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -133,11 +134,11 @@ export default async function TemplatePage({ params }: PageProps) {
           <div className="mt-6 rounded-lg bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">Champs définis</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {fields.map((field: any, index: number) => (
-                <div key={index} className="rounded-lg border border-gray-200 p-4">
+              {fields.map((field, index) => (
+                <div key={`${field.key}-${index}`} className="rounded-lg border border-gray-200 p-4">
                   <div className="font-medium text-gray-900">{field.key}</div>
                   <div className="mt-1 text-xs text-gray-500">
-                    Type: {field.type} | Position: ({field.x}, {field.y})
+                    Type: {field.type} | Position: ({Math.round(field.x)}, {Math.round(field.y)})
                   </div>
                 </div>
               ))}

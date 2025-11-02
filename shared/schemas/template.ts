@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import type { TemplateField } from '../types'
 
 export const templateFieldSchema = z.object({
   key: z.string().min(1),
@@ -11,7 +10,7 @@ export const templateFieldSchema = z.object({
   align: z.enum(['left', 'center', 'right']).optional(),
   type: z.enum(['text', 'qrcode', 'date', 'number']),
   format: z.string().optional(),
-}) satisfies z.ZodType<TemplateField>
+}) // satisfies désactivé car incompatible avec exactOptionalPropertyTypes
 
 export const updateTemplateFieldsSchema = z.object({
   fields: z.array(templateFieldSchema),

@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     const project = await prisma.project.create({
       data: {
         name: validatedData.name,
-        description: validatedData.description,
+        ...(validatedData.description !== undefined && { description: validatedData.description }),
         ownerId: session.user.id,
       },
       include: {

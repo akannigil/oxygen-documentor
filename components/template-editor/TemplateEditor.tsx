@@ -7,12 +7,33 @@ import type { TemplateField } from '@/shared/types'
 import type Konva from 'konva'
 import useImage from 'use-image'
 
-interface TemplateEditorProps {
+export interface TemplateEditorProps {
   templateUrl: string
   templateWidth?: number
   templateHeight?: number
   fields: TemplateField[]
   onFieldsChange: (fields: TemplateField[]) => void
+}
+
+// Constantes pour l'éditeur
+const STAGE_WIDTH = 800
+const STAGE_HEIGHT = 600
+const MIN_SCALE = 0.5
+const MAX_SCALE = 3
+const SCALE_BY = 0.1
+const MIN_FIELD_SIZE = 10
+const DEFAULT_FONT_SIZE = 12
+const ZOOM_SPEED = 0.95
+const ZOOM_SPEED_IN = 1.05
+
+interface Position {
+  x: number
+  y: number
+}
+
+interface RectSize extends Position {
+  w: number
+  h: number
 }
 
 export function TemplateEditor({
@@ -26,15 +47,15 @@ export function TemplateEditor({
   const [fields, setFields] = useState<TemplateField[]>(initialFields)
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null)
   const [isDrawing, setIsDrawing] = useState(false)
-  const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(null)
-  const [currentRect, setCurrentRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
+  const [drawStart, setDrawStart] = useState<Position | null>(null)
+  const [currentRect, setCurrentRect] = useState<RectSize | null>(null)
   const [scale, setScale] = useState(1)
-  const [stagePos, setStagePos] = useState({ x: 0, y: 0 })
+  const [stagePos, setStagePos] = useState<Position>({ x: 0, y: 0 })
   const transformerRef = useRef<Konva.Transformer>(null)
   const stageRef = useRef<Konva.Stage>(null)
 
-  const imgWidth = templateWidth || image?.width || 800
-  const imgHeight = templateHeight || image?.height || 600
+  const imgWidth = templateWidth || image?.width || STAGE_WIDTH
+  const imgHeight = templateHeight || image?.height || STAGE_HEIGHT
 
   useEffect(() => {
     setFields(initialFields)
@@ -55,12 +76,16 @@ export function TemplateEditor({
   }, [selectedFieldId])
 
   const handleStageMouseDown = (e: KonvaEventObject<MouseEvent>) => {
-    // Si on clique sur un élément existant, ne pas créer de nouvelle zone
-    const clickedOnEmpty = e.target === e.target.getStage()
-    if (clickedOnEmpty) {
+    // Si on clique sur un élément existant (zone de champ), ne pas créer de nouvelle zone
+    const targetType = e.target.getType()
+    const clickedOnField = targetType === 'Rect' && e.target.name()?.startsWith('field-')
+    
+    // Permettre le dessin si on clique sur le Stage ou sur l'Image, mais pas sur une zone existante
+    if (!clickedOnField) {
       setSelectedFieldId(null)
       setIsDrawing(true)
-      const pos = e.target.getStage()?.getPointerPosition()
+      const stage = e.target.getStage()
+      const pos = stage?.getPointerPosition()
       if (pos) {
         setDrawStart({ x: pos.x, y: pos.y })
       }
@@ -89,7 +114,7 @@ export function TemplateEditor({
     }
 
     // Créer une nouvelle zone seulement si elle a une taille minimale
-    if (currentRect.w > 10 && currentRect.h > 10) {
+    if (currentRect.w > MIN_FIELD_SIZE && currentRect.h > MIN_FIELD_SIZE) {
       const newField: TemplateField = {
         key: `field_${Date.now()}`,
         x: currentRect.x / scale,
@@ -97,7 +122,7 @@ export function TemplateEditor({
         w: currentRect.w / scale,
         h: currentRect.h / scale,
         type: 'text',
-        fontSize: 12,
+        fontSize: DEFAULT_FONT_SIZE,
         align: 'left',
       }
 
@@ -170,13 +195,13 @@ export function TemplateEditor({
     const pointer = stage.getPointerPosition()
     if (!pointer) return
 
-    const mousePointTo = {
+    const mousePointTo: Position = {
       x: (pointer.x - stagePos.x) / oldScale,
       y: (pointer.y - stagePos.y) / oldScale,
     }
 
-    const newScale = e.evt.deltaY > 0 ? oldScale * 0.95 : oldScale * 1.05
-    const clampedScale = Math.max(0.5, Math.min(3, newScale))
+    const newScale = e.evt.deltaY > 0 ? oldScale * ZOOM_SPEED : oldScale * ZOOM_SPEED_IN
+    const clampedScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale))
 
     setScale(clampedScale)
     setStagePos({
@@ -207,15 +232,17 @@ export function TemplateEditor({
       <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setScale(Math.max(0.5, scale - 0.1))}
+            onClick={() => setScale(Math.max(MIN_SCALE, scale - SCALE_BY))}
             className="rounded px-3 py-1 text-sm text-gray-700 hover:bg-gray-100"
+            aria-label="Zoom arrière"
           >
             -
           </button>
           <span className="text-sm text-gray-600">{Math.round(scale * 100)}%</span>
           <button
-            onClick={() => setScale(Math.min(3, scale + 0.1))}
+            onClick={() => setScale(Math.min(MAX_SCALE, scale + SCALE_BY))}
             className="rounded px-3 py-1 text-sm text-gray-700 hover:bg-gray-100"
+            aria-label="Zoom avant"
           >
             +
           </button>
@@ -238,8 +265,8 @@ export function TemplateEditor({
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <Stage
           ref={stageRef}
-          width={800}
-          height={600}
+          width={STAGE_WIDTH}
+          height={STAGE_HEIGHT}
           onMouseDown={handleStageMouseDown}
           onMouseMove={handleStageMouseMove}
           onMouseUp={handleStageMouseUp}

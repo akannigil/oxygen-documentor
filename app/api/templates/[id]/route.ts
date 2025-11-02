@@ -40,7 +40,14 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     // Obtenir l'URL du fichier (signed URL pour S3, URL publique pour local)
-    const fileUrl = await storage.getSignedUrl(template.filePath, 3600)
+    let fileUrl: string
+    try {
+      fileUrl = await storage.getSignedUrl(template.filePath, 3600)
+    } catch (storageError) {
+      console.error('Error getting signed URL:', storageError)
+      // En cas d'erreur, essayer getUrl comme fallback
+      fileUrl = await storage.getUrl(template.filePath)
+    }
 
     return NextResponse.json({
       ...template,
@@ -48,8 +55,27 @@ export async function GET(request: Request, { params }: RouteParams) {
     })
   } catch (error) {
     console.error('Error fetching template:', error)
+    
+    // Messages d'erreur plus spécifiques
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue'
+    
+    // Déterminer le code de statut approprié
+    if (errorMessage.includes('non trouvé') || errorMessage.includes('not found')) {
+      return NextResponse.json(
+        { error: 'Template non trouvé' },
+        { status: 404 }
+      )
+    }
+    
+    if (errorMessage.includes('Non autorisé') || errorMessage.includes('Unauthorized')) {
+      return NextResponse.json(
+        { error: 'Non autorisé' },
+        { status: 403 }
+      )
+    }
+
     return NextResponse.json(
-      { error: 'Une erreur est survenue' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

@@ -41,7 +41,7 @@ export async function generatePDF(
       const fontSize = field.fontSize ?? 12
       const currentFont = field.type === 'number' ? boldFont : font
 
-      let textY = field.y
+      const textY = field.y
 
       // Gérer l'alignement
       let textX = field.x
