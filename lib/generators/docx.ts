@@ -6,6 +6,7 @@ import {
   type CertificateAuthConfig,
   type CertificateData,
 } from '@/lib/qrcode/certificate-auth'
+import type { DOCXQRCodeConfig } from '@/shared/types'
 
 /**
  * Formate une valeur selon son type pour DOCX
@@ -80,6 +81,12 @@ export interface GenerateDOCXOptions {
     margin?: number
     errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H'
   }
+  
+  /**
+   * Configurations des QR Codes DOCX avec patterns dynamiques (nouvelle méthode)
+   * Remplace progressivement qrcodes et permet des QR Codes avec variables
+   */
+  qrcodeConfigs?: DOCXQRCodeConfig[]
   
   /**
    * Configuration pour authentification de certificat (optionnel)
@@ -202,10 +209,37 @@ export async function generateDOCX(
         width?: number
         margin?: number
         errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H'
+        color?: {
+          dark?: string
+          light?: string
+        }
       }
     }> = []
 
-    // Traiter les QR codes manuels si spécifiés
+    // Traiter les QR codes depuis qrcodeConfigs (nouvelle méthode)
+    if (options.qrcodeConfigs && options.qrcodeConfigs.length > 0) {
+      options.qrcodeConfigs.forEach((config) => {
+        // Remplacer les variables dans le pattern de contenu
+        let content = config.contentPattern
+        Object.entries(options.variables).forEach(([key, value]) => {
+          const variablePattern = new RegExp(`\\{\\{${key}\\}\\}`, 'g')
+          content = content.replace(variablePattern, String(value))
+        })
+
+        qrCodeInsertions.push({
+          placeholder: config.placeholder,
+          data: content,
+          options: {
+            width: config.options?.width ?? 200,
+            margin: config.options?.margin ?? 1,
+            errorCorrectionLevel: config.options?.errorCorrectionLevel ?? 'M',
+            ...(config.options?.color && { color: config.options.color }),
+          },
+        })
+      })
+    }
+
+    // Traiter les QR codes manuels si spécifiés (ancienne méthode, pour rétrocompatibilité)
     if (options.qrcodes && Object.keys(options.qrcodes).length > 0) {
       Object.entries(options.qrcodes).forEach(([placeholder, data]) => {
         qrCodeInsertions.push({

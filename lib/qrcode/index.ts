@@ -34,3 +34,9 @@ export {
   type AuthenticatedCertificate,
 } from './certificate-auth'
 
+export {
+  generateQRCodeContent,
+  generateQRCodeWithOptions,
+  type QRCodeWorkflowOptions,
+} from './workflow-integration'
+

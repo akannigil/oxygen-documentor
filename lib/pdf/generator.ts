@@ -1,6 +1,7 @@
 import { PDFDocument, rgb, StandardFonts, PDFPage, PDFFont } from 'pdf-lib'
 import QRCode from 'qrcode'
 import type { TemplateField } from '@/shared/types'
+import { generateQRCodeContent, generateQRCodeWithOptions, type QRCodeWorkflowOptions } from '@/lib/qrcode/workflow-integration'
 
 /**
  * Génère un PDF à partir d'un template et de données
@@ -8,7 +9,8 @@ import type { TemplateField } from '@/shared/types'
 export async function generatePDF(
   templateBuffer: Buffer,
   fields: TemplateField[],
-  data: Record<string, string | number | Date>
+  data: Record<string, string | number | Date>,
+  qrcodeOptions?: Omit<QRCodeWorkflowOptions, 'field' | 'data'>
 ): Promise<Buffer> {
   const pdfDoc = await PDFDocument.load(templateBuffer)
   const pages = pdfDoc.getPages()
@@ -21,14 +23,18 @@ export async function generatePDF(
     const value = formatFieldValue(data[field.key], field.type, field.format)
 
     if (field.type === 'qrcode') {
-      // Générer QR code
-      const qrDataUrl = await QRCode.toDataURL(String(value), {
-        width: field.w,
-        margin: 1,
+      // Générer le contenu du QR code avec options avancées
+      const qrContent = await generateQRCodeContent({
+        field,
+        data,
+        ...qrcodeOptions,
       })
-
-      // Convertir DataURL en image PNG
-      const pngImage = await pdfDoc.embedPng(qrDataUrl)
+      
+      // Générer le QR code avec les options de personnalisation
+      const qrBuffer = await generateQRCodeWithOptions(qrContent, field, field.w)
+      
+      // Convertir le buffer en image pour PDF
+      const pngImage = await pdfDoc.embedPng(qrBuffer)
 
       page.drawImage(pngImage, {
         x: field.x,
@@ -76,10 +82,11 @@ export async function generateDocumentFromTemplate(
   templateBuffer: Buffer,
   templateMimeType: string,
   fields: TemplateField[],
-  data: Record<string, string | number | Date>
+  data: Record<string, string | number | Date>,
+  qrcodeOptions?: Omit<QRCodeWorkflowOptions, 'field' | 'data'>
 ): Promise<Buffer> {
   if (templateMimeType.startsWith('application/pdf')) {
-    return generatePDFWithCoordinateConversion(templateBuffer, fields, data)
+    return generatePDFWithCoordinateConversion(templateBuffer, fields, data, qrcodeOptions)
   }
 
   // Image (PNG/JPEG) en fond
@@ -103,11 +110,19 @@ export async function generateDocumentFromTemplate(
     const value = formatFieldValue(data[field.key], field.type, field.format)
 
     if (field.type === 'qrcode') {
-      const qrDataUrl = await QRCode.toDataURL(String(value), {
-        width: field.w,
-        margin: 1,
+      // Générer le contenu du QR code avec options avancées
+      const qrContent = await generateQRCodeContent({
+        field,
+        data,
+        ...qrcodeOptions,
       })
-      const pngImage = await pdfDoc.embedPng(qrDataUrl)
+      
+      // Générer le QR code avec les options de personnalisation
+      const qrBuffer = await generateQRCodeWithOptions(qrContent, field, field.w)
+      
+      // Convertir le buffer en image pour PDF
+      const pngImage = await pdfDoc.embedPng(qrBuffer)
+      
       // Convertir les coordonnées Y (origine en haut dans l'éditeur, en bas dans PDF)
       const pdfY = img.height - field.y - field.h
       page.drawImage(pngImage, {
@@ -189,7 +204,8 @@ export async function generateDocumentFromTemplate(
 async function generatePDFWithCoordinateConversion(
   templateBuffer: Buffer,
   fields: TemplateField[],
-  data: Record<string, string | number | Date>
+  data: Record<string, string | number | Date>,
+  qrcodeOptions?: Omit<QRCodeWorkflowOptions, 'field' | 'data'>
 ): Promise<Buffer> {
   const pdfDoc = await PDFDocument.load(templateBuffer)
   const pages = pdfDoc.getPages()
@@ -203,11 +219,19 @@ async function generatePDFWithCoordinateConversion(
     const value = formatFieldValue(data[field.key], field.type, field.format)
 
     if (field.type === 'qrcode') {
-      const qrDataUrl = await QRCode.toDataURL(String(value), {
-        width: field.w,
-        margin: 1,
+      // Générer le contenu du QR code avec options avancées
+      const qrContent = await generateQRCodeContent({
+        field,
+        data,
+        ...qrcodeOptions,
       })
-      const pngImage = await pdfDoc.embedPng(qrDataUrl)
+      
+      // Générer le QR code avec les options de personnalisation
+      const qrBuffer = await generateQRCodeWithOptions(qrContent, field, field.w)
+      
+      // Convertir le buffer en image pour PDF
+      const pngImage = await pdfDoc.embedPng(qrBuffer)
+      
       // Convertir les coordonnées Y (origine en haut dans l'éditeur, en bas dans PDF)
       const pdfY = pageHeight - field.y - field.h
       page.drawImage(pngImage, {

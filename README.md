@@ -122,13 +122,28 @@ oxygen-document/
 
 L'authentification utilise NextAuth.js (email/password ou OAuth).
 
-## 📦 Génération PDF
+## 📦 Génération de Documents
 
-- Upload de templates (PDF ou images)
-- Éditeur visuel pour définir les zones de texte
+### Formats supportés
+- **PDF/Images** : Templates visuels avec éditeur graphique
+- **DOCX** : Templates Word avec placeholders `{{variable}}`
+
+### Fonctionnalités
+- Upload de templates (PDF, PNG, JPG, DOCX)
+- Éditeur visuel pour définir les zones (PDF/Images)
 - Génération PDF avec pdf-lib
-- QR codes intégrés
+- **QR codes intégrés** avec authentification avancée
+- Variables dynamiques et formatage
 - Stockage sur S3, FTP ou local (selon configuration)
+
+### 📚 Documentation QR Codes
+
+Pour intégrer des QR Codes dans vos documents :
+
+- **🚀 [Référence Rapide QR Code](./docs/QRCODE_QUICK_REFERENCE.md)** - Guide visuel en 2 minutes
+- **📖 [Guide Complet par Type de Template](./docs/GUIDE_INTEGRATION_QRCODE_PAR_TYPE.md)** - Tutoriel détaillé
+- **🔒 [Authentification des Certificats](./docs/GUIDE_AUTHENTIFICATION_CERTIFICATS.md)** - QR Codes sécurisés
+- **⚙️ [Guide Complet QR Codes](./docs/GUIDE_QR_CODES.md)** - Documentation technique complète
 
 ## 📧 Emails
 

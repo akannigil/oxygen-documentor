@@ -6,6 +6,7 @@ import { generateDocumentFromTemplate } from '@/lib/pdf/generator'
 import { generateDOCX } from '@/lib/generators/docx'
 import { convertDOCXToPDFWithStyles } from '@/lib/converters/docx-to-pdf'
 import type { TemplateType } from '@/shared/types'
+import type { CertificateAuthConfig } from '@/lib/qrcode/certificate-auth'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -57,60 +58,104 @@ export async function POST(request: Request, { params }: RouteParams) {
     // Charger le fichier template depuis l'adaptateur de stockage
     const templateBuffer = await storage.getBuffer(template.filePath)
 
+    // Préparer la configuration d'authentification si nécessaire
+    const authConfig: CertificateAuthConfig | undefined = process.env['CERTIFICATE_SECRET_KEY'] && process.env['CERTIFICATE_VERIFICATION_BASE_URL']
+      ? {
+          secretKey: process.env['CERTIFICATE_SECRET_KEY'],
+          verificationBaseUrl: process.env['CERTIFICATE_VERIFICATION_BASE_URL'],
+          algorithm: (process.env['CERTIFICATE_ALGORITHM'] as 'sha256' | 'sha512') ?? 'sha256',
+        }
+      : undefined
+
+    // Helper pour obtenir l'URL de stockage
+    const getStorageUrl = async (filePath: string, signed = false, expiresIn = 3600): Promise<string> => {
+      if (signed) {
+        return await storage.getSignedUrl(filePath, expiresIn)
+      }
+      return await storage.getUrl(filePath)
+    }
+
     let successCount = 0
     for (const data of rows) {
       try {
-        let documentBuffer: Buffer
-        let outputMimeType: string
-        let fileExtension: string
-
-        if (templateType === 'docx') {
-          // Génération DOCX avec docxtemplater
-          const docxBuffer = await generateDOCX(templateBuffer, {
-            variables: data,
-          })
-          
-          // Si format de sortie demandé est PDF, convertir DOCX → PDF
-          if (outputFormat === 'pdf') {
-            documentBuffer = await convertDOCXToPDFWithStyles(docxBuffer, pdfOptions)
-            outputMimeType = 'application/pdf'
-            fileExtension = 'pdf'
-          } else {
-            // Garder le format DOCX
-            documentBuffer = docxBuffer
-            outputMimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            fileExtension = 'docx'
-          }
-        } else {
-          // Génération PDF/image (existant)
-          documentBuffer = await generateDocumentFromTemplate(
-            templateBuffer,
-            template.mimeType,
-            Array.isArray(template.fields) ? (template.fields as any) : [],
-            data
-          )
-          outputMimeType = 'application/pdf'
-          fileExtension = 'pdf'
-        }
-
-        // Créer record document
+        // Créer le record document d'abord pour avoir l'ID
         const doc = await prisma.document.create({
           data: {
             projectId,
             templateId,
             data: data as any,
             filePath: '',
-            mimeType: outputMimeType,
+            mimeType: '',
             status: 'generated',
             recipient: typeof data['recipient_name'] === 'string' ? (data['recipient_name'] as string) : null,
             recipientEmail: typeof data['recipient_email'] === 'string' ? (data['recipient_email'] as string) : null,
           },
         })
 
-        const key = `projects/${projectId}/documents/${doc.id}.${fileExtension}`
-        await storage.upload(documentBuffer, key, outputMimeType)
+        let documentBuffer: Buffer
+        let outputMimeType: string
+        let fileExtension: string
 
-        await prisma.document.update({ where: { id: doc.id }, data: { filePath: key } })
+        // Déterminer le chemin du fichier pour les QR codes
+        if (templateType === 'docx') {
+          outputMimeType = outputFormat === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          fileExtension = outputFormat === 'pdf' ? 'pdf' : 'docx'
+        } else {
+          outputMimeType = 'application/pdf'
+          fileExtension = 'pdf'
+        }
+
+        const documentKey = `projects/${projectId}/documents/${doc.id}.${fileExtension}`
+
+        // Options pour les QR codes (si nécessaire)
+        const fields = Array.isArray(template.fields) ? (template.fields as any) : []
+        const hasQRCodeWithOptions = fields.some((f: any) => 
+          f.type === 'qrcode' && (f.qrcodeAuth?.enabled || f.qrcodeStorageUrl?.enabled)
+        )
+
+        if (templateType === 'docx') {
+          // Génération DOCX avec docxtemplater
+          // Récupérer les configurations QR Code du template
+          const qrcodeConfigs = template.qrcodeConfigs ? (template.qrcodeConfigs as any[]) : []
+
+          const docxBuffer = await generateDOCX(templateBuffer, {
+            variables: data,
+            qrcodeConfigs: qrcodeConfigs,
+          })
+          
+          // Si format de sortie demandé est PDF, convertir DOCX → PDF
+          if (outputFormat === 'pdf') {
+            documentBuffer = await convertDOCXToPDFWithStyles(docxBuffer, pdfOptions)
+          } else {
+            documentBuffer = docxBuffer
+          }
+        } else {
+          // Génération PDF/image avec options QR code si nécessaire
+          documentBuffer = await generateDocumentFromTemplate(
+            templateBuffer,
+            template.mimeType,
+            fields,
+            data,
+            hasQRCodeWithOptions ? {
+              documentFilePath: documentKey,
+              ...(authConfig && { authConfig }),
+              getStorageUrl,
+            } : undefined
+          )
+        }
+
+        // Upload du document
+        await storage.upload(documentBuffer, documentKey, outputMimeType)
+
+        // Mettre à jour le document avec le filePath
+        await prisma.document.update({ 
+          where: { id: doc.id }, 
+          data: { 
+            filePath: documentKey,
+            mimeType: outputMimeType,
+          } 
+        })
+        
         successCount++
       } catch (e) {
         console.error('Doc generation failed:', e)

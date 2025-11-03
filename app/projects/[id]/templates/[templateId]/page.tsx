@@ -60,6 +60,8 @@ export default async function TemplatePage({ params }: PageProps) {
     ? (template.variables as Array<{ name: string; occurrences: number; context?: string }>)
     : []
 
+  const qrcodeConfigs = (template.qrcodeConfigs as Array<unknown>) || []
+
   // Définir les étapes du workflow (différent pour DOCX)
   const workflowSteps = templateType === 'docx' 
     ? [
@@ -71,11 +73,18 @@ export default async function TemplatePage({ params }: PageProps) {
           status: 'complete' as const,
         },
         {
+          id: 'configure-qrcodes',
+          name: 'Configurer les QR Codes',
+          description: 'Définir les QR Codes dynamiques (optionnel)',
+          href: `/projects/${projectId}/templates/${templateId}/configure-qrcodes`,
+          status: variables.length > 0 ? ('current' as const) : ('upcoming' as const),
+        },
+        {
           id: 'generate',
           name: 'Générer des documents',
           description: 'Importer des données et créer les documents Word',
           href: `/projects/${projectId}/generate?templateId=${templateId}`,
-          status: variables.length > 0 ? ('current' as const) : ('upcoming' as const),
+          status: variables.length > 0 ? ('upcoming' as const) : ('upcoming' as const),
         },
       ]
     : [
@@ -237,8 +246,52 @@ export default async function TemplatePage({ params }: PageProps) {
               ) : (
                 <div className="rounded-lg border-2 border-dashed border-yellow-300 bg-yellow-50 p-12 text-center">
                   <p className="text-sm text-yellow-800">
-                    Aucune variable détectée. Ajoutez des variables <code className="bg-yellow-100 px-1 rounded">{'{{nom}}'}</code> dans votre document Word.
+                    Aucune variable détectées. Ajoutez des variables <code className="bg-yellow-100 px-1 rounded">{'{{nom}}'}</code> dans votre document Word.
                   </p>
+                </div>
+              )}
+
+              {/* QR Codes DOCX */}
+              {qrcodeConfigs.length > 0 && (
+                <div className="mt-6 rounded-lg bg-white p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      QR Codes configurés ({qrcodeConfigs.length})
+                    </h2>
+                    <Link
+                      href={`/projects/${projectId}/templates/${templateId}/configure-qrcodes`}
+                      className="text-sm text-blue-600 hover:text-blue-500"
+                    >
+                      Modifier →
+                    </Link>
+                  </div>
+                  <div className="space-y-3">
+                    {qrcodeConfigs.map((config: any, index: number) => (
+                      <div key={index} className="flex items-start gap-3 rounded-md border border-gray-200 bg-gray-50 p-3">
+                        <svg
+                          className="h-5 w-5 flex-shrink-0 text-blue-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                          />
+                        </svg>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-mono font-semibold text-gray-900">
+                            {config.placeholder}
+                          </p>
+                          <p className="mt-1 text-xs text-gray-500 truncate">
+                            {config.contentPattern}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

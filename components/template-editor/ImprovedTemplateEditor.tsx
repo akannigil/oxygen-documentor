@@ -6,6 +6,7 @@ import type { KonvaEventObject } from 'konva/lib/Node'
 import type { TemplateField } from '@/shared/types'
 import type Konva from 'konva'
 import useImage from 'use-image'
+import { QRCodeConfiguration } from './QRCodeConfiguration'
 
 export interface ImprovedTemplateEditorProps {
   templateUrl: string
@@ -502,6 +503,10 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
             </div>
           </div>
         </>
+      )}
+
+      {field.type === 'qrcode' && (
+        <QRCodeConfiguration field={field} index={index} onUpdate={onUpdate} />
       )}
 
       <div className="pt-3 border-t border-gray-200">
