@@ -28,9 +28,15 @@ export default function NewTemplatePage() {
     }
 
     // Vérifier le type
-    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg']
+    const allowedTypes = [
+      'application/pdf',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+    ]
     if (!allowedTypes.includes(selectedFile.type)) {
-      setError('Type de fichier non supporté. Utilisez PDF, PNG ou JPG.')
+      setError('Type de fichier non supporté. Utilisez PDF, PNG, JPG ou DOCX.')
       return
     }
 
@@ -183,14 +189,14 @@ export default function NewTemplatePage() {
                       ou glissez-déposez
                     </p>
                     <p className="mt-1 text-xs text-gray-500">
-                      PDF, PNG ou JPG (max. 10MB)
+                      PDF, PNG, JPG ou DOCX (max. 10MB)
                     </p>
                   </div>
                 )}
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.png,.jpg,.jpeg"
+                  accept=".pdf,.png,.jpg,.jpeg,.docx"
                   onChange={handleFileChange}
                   className="hidden"
                 />

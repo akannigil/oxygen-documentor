@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { DeleteProjectButton } from '@/components/projects/DeleteProjectButton'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -96,6 +97,29 @@ export default async function ProjectPage({ params }: PageProps) {
                 <div className="text-right">
                   <div className="text-xs text-gray-500 uppercase tracking-wide">Documents</div>
                   <div className="text-2xl font-bold text-blue-600">{project._count.documents}</div>
+                </div>
+                <div className="flex gap-2">
+                  <Link
+                    href={`/projects/${project.id}/templates/new`}
+                    className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500"
+                  >
+                    <svg className="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Nouveau template
+                  </Link>
+                  {project.templates.length > 0 && (
+                    <Link
+                      href={`/projects/${project.id}/documents`}
+                      className="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                    >
+                      <svg className="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Voir documents
+                    </Link>
+                  )}
+                  <DeleteProjectButton projectId={project.id} />
                 </div>
               </div>
             </div>

@@ -405,7 +405,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
             <option value="number">Nombre</option>
           </select>
         </div>
-        {localField.type === 'text' && (
+        {(localField.type === 'text' || localField.type === 'number' || localField.type === 'date') && (
           <>
             <div>
               <label className="block text-xs font-medium text-gray-700">Taille de police</label>
@@ -419,6 +419,21 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
               />
             </div>
             <div>
+              <label className="block text-xs font-medium text-gray-700">Police</label>
+              <select
+                value={localField.fontFamily || 'Helvetica'}
+                onChange={(e) => handleChange('fontFamily', e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+              >
+                <option value="Helvetica">Helvetica</option>
+                <option value="Helvetica-Bold">Helvetica Bold</option>
+                <option value="Times-Roman">Times Roman</option>
+                <option value="Times-Bold">Times Bold</option>
+                <option value="Courier">Courier</option>
+                <option value="Courier-Bold">Courier Bold</option>
+              </select>
+            </div>
+            <div>
               <label className="block text-xs font-medium text-gray-700">Alignement</label>
               <select
                 value={localField.align || 'left'}
@@ -430,7 +445,116 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
                 <option value="right">Droite</option>
               </select>
             </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700">Couleur du texte</label>
+              <div className="mt-1 flex gap-2">
+                <input
+                  type="color"
+                  value={localField.textColor || '#000000'}
+                  onChange={(e) => handleChange('textColor', e.target.value)}
+                  className="h-8 w-16 rounded border border-gray-300"
+                />
+                <input
+                  type="text"
+                  value={localField.textColor || '#000000'}
+                  onChange={(e) => handleChange('textColor', e.target.value)}
+                  className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm"
+                  placeholder="#000000"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700">Couleur de fond</label>
+              <div className="mt-1 flex gap-2">
+                <input
+                  type="color"
+                  value={localField.backgroundColor || '#ffffff'}
+                  onChange={(e) => handleChange('backgroundColor', e.target.value)}
+                  className="h-8 w-16 rounded border border-gray-300"
+                />
+                <input
+                  type="text"
+                  value={localField.backgroundColor || ''}
+                  onChange={(e) => handleChange('backgroundColor', e.target.value)}
+                  className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm"
+                  placeholder="Transparent"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700">Bordure</label>
+              <div className="mt-1 space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={localField.borderColor || '#000000'}
+                    onChange={(e) => handleChange('borderColor', e.target.value)}
+                    className="h-8 w-16 rounded border border-gray-300"
+                  />
+                  <input
+                    type="text"
+                    value={localField.borderColor || ''}
+                    onChange={(e) => handleChange('borderColor', e.target.value)}
+                    className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm"
+                    placeholder="Couleur bordure"
+                  />
+                </div>
+                <input
+                  type="number"
+                  value={localField.borderWidth || 0}
+                  onChange={(e) => handleChange('borderWidth', Number.parseInt(e.target.value))}
+                  className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                  placeholder="Épaisseur (px)"
+                  min={0}
+                  max={10}
+                />
+              </div>
+            </div>
           </>
+        )}
+        {localField.type === 'text' && (
+          <div>
+            <label className="block text-xs font-medium text-gray-700">Format du texte</label>
+            <select
+              value={localField.format || ''}
+              onChange={(e) => handleChange('format', e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+            >
+              <option value="">Aucun</option>
+              <option value="uppercase">MAJUSCULES</option>
+              <option value="lowercase">minuscules</option>
+              <option value="capitalize">Première Majuscule</option>
+            </select>
+          </div>
+        )}
+        {localField.type === 'date' && (
+          <div>
+            <label className="block text-xs font-medium text-gray-700">Format de date</label>
+            <select
+              value={localField.format || ''}
+              onChange={(e) => handleChange('format', e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+            >
+              <option value="">DD/MM/YYYY (défaut)</option>
+              <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+              <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+            </select>
+          </div>
+        )}
+        {localField.type === 'number' && (
+          <div>
+            <label className="block text-xs font-medium text-gray-700">Format de nombre</label>
+            <select
+              value={localField.format || ''}
+              onChange={(e) => handleChange('format', e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+            >
+              <option value="">Entier</option>
+              <option value="0.0">1 décimale</option>
+              <option value="0.00">2 décimales</option>
+              <option value="0.000">3 décimales</option>
+            </select>
+          </div>
         )}
         <button
           onClick={() => onDelete(index)}

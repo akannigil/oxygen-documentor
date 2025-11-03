@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { storage } from '@/lib/storage'
 import { updateProjectSchema } from '@/shared/schemas/project'
 import { z } from 'zod'
 
@@ -138,6 +139,48 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
     }
 
+    // Récupérer les templates et documents associés pour supprimer leurs fichiers
+    const projectWithRelations = await prisma.project.findUnique({
+      where: { id },
+      include: {
+        templates: {
+          select: { id: true, filePath: true },
+        },
+        documents: {
+          select: { id: true, filePath: true },
+        },
+      },
+    })
+
+    if (!projectWithRelations) {
+      return NextResponse.json({ error: 'Projet non trouvé' }, { status: 404 })
+    }
+
+    // Supprimer les fichiers des templates
+    for (const template of projectWithRelations.templates) {
+      if (template.filePath) {
+        try {
+          await storage.delete(template.filePath)
+        } catch (error) {
+          console.error(`Error deleting template file ${template.id}:`, error)
+          // Continuer même si la suppression échoue
+        }
+      }
+    }
+
+    // Supprimer les fichiers des documents
+    for (const document of projectWithRelations.documents) {
+      if (document.filePath) {
+        try {
+          await storage.delete(document.filePath)
+        } catch (error) {
+          console.error(`Error deleting document file ${document.id}:`, error)
+          // Continuer même si la suppression échoue
+        }
+      }
+    }
+
+    // Supprimer le projet (les templates et documents seront supprimés en cascade)
     await prisma.project.delete({
       where: { id },
     })

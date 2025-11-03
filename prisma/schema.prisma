@@ -42,10 +42,12 @@ model Template {
   name        String
   description String?
   filePath    String    // Storage path (S3 key, FTP path, or local path)
-  mimeType    String    // application/pdf, image/png, image/jpeg
+  mimeType    String    // application/pdf, image/png, image/jpeg, application/vnd.openxmlformats-officedocument.wordprocessingml.document
+  templateType String   @default("pdf") // "pdf" | "image" | "docx" | "pptx"
   width       Int?      // Width in pixels or points
   height      Int?      // Height in pixels or points
-  fields      Json      @default("[]") // Array of zone definitions: {key, x, y, w, h, fontSize, align, type, format}
+  fields      Json      @default("[]") // Array of zone definitions: {key, x, y, w, h, fontSize, align, type, format} (for PDF/image)
+  variables   Json?     // Array of detected variables: [{name: "nom", occurrences: 5}] (for DOCX/PPTX)
   documents   Document[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

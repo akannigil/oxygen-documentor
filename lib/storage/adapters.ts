@@ -8,7 +8,18 @@ export interface StorageAdapter {
   upload(buffer: Buffer, key: string, contentType: string): Promise<string>
   getUrl(key: string): Promise<string>
   getSignedUrl(key: string, expiresIn?: number): Promise<string>
+  getBuffer(key: string): Promise<Buffer>
   delete(key: string): Promise<void>
+}
+
+async function streamToBuffer(stream: any): Promise<Buffer> {
+  if (!stream) return Buffer.alloc(0)
+  return await new Promise<Buffer>((resolve, reject) => {
+    const chunks: Buffer[] = []
+    stream.on('data', (chunk: Buffer) => chunks.push(chunk))
+    stream.on('end', () => resolve(Buffer.concat(chunks)))
+    stream.on('error', (err: Error) => reject(err))
+  })
 }
 
 /**
@@ -60,6 +71,19 @@ export class S3StorageAdapter implements StorageAdapter {
     return await getSignedUrl(this.client, command, { expiresIn })
   }
 
+  async getBuffer(key: string): Promise<Buffer> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+    })
+    const res: any = await this.client.send(command)
+    if (res.Body?.transformToByteArray) {
+      const arr = await res.Body.transformToByteArray()
+      return Buffer.from(arr)
+    }
+    return await streamToBuffer(res.Body)
+  }
+
   async delete(key: string): Promise<void> {
     const command = new DeleteObjectCommand({
       Bucket: this.bucket,
@@ -101,6 +125,11 @@ export class LocalStorageAdapter implements StorageAdapter {
   async getSignedUrl(key: string, _expiresIn?: number): Promise<string> {
     // Pas besoin de signed URL en local
     return this.getUrl(key)
+  }
+
+  async getBuffer(key: string): Promise<Buffer> {
+    const fullPath = path.join(this.baseDir, key)
+    return await fs.readFile(fullPath)
   }
 
   async delete(key: string): Promise<void> {
@@ -185,6 +214,22 @@ export class FTPStorageAdapter implements StorageAdapter {
   async getSignedUrl(key: string, _expiresIn?: number): Promise<string> {
     // FTP ne supporte pas les signed URLs, retourner l'URL normale
     return this.getUrl(key)
+  }
+
+  async getBuffer(key: string): Promise<Buffer> {
+    const client = await this.getClient()
+    try {
+      const tempDir = path.join(process.cwd(), '.tmp_ftp')
+      await fs.mkdir(tempDir, { recursive: true })
+      const tmpPath = path.join(tempDir, `${Date.now()}-${Math.random().toString(36).slice(2)}.bin`)
+      const fullPath = this.config.basePath ? `${this.config.basePath}/${key}` : key
+      await client.downloadTo(tmpPath, fullPath)
+      const buf = await fs.readFile(tmpPath)
+      await fs.unlink(tmpPath).catch(() => {})
+      return buf
+    } finally {
+      client.close()
+    }
   }
 
   async delete(key: string): Promise<void> {

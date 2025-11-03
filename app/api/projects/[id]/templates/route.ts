@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { storage } from '@/lib/storage'
 import { randomUUID } from 'crypto'
+import { validateDOCXTemplate } from '@/lib/templates/docx-parser'
+import type { TemplateType } from '@/shared/types'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -14,7 +16,18 @@ const ALLOWED_MIME_TYPES = [
   'image/png',
   'image/jpeg',
   'image/jpg',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
 ]
+
+/**
+ * Détermine le type de template à partir du MIME type
+ */
+function getTemplateType(mimeType: string): TemplateType {
+  if (mimeType === 'application/pdf') return 'pdf'
+  if (mimeType.startsWith('image/')) return 'image'
+  if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx'
+  return 'pdf' // Par défaut
+}
 
 export async function POST(request: Request, { params }: RouteParams) {
   try {
@@ -64,7 +77,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     // Vérifier le type MIME
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Type de fichier non supporté. Utilisez PDF, PNG ou JPG.' },
+        { error: 'Type de fichier non supporté. Utilisez PDF, PNG, JPG ou DOCX.' },
         { status: 400 }
       )
     }
@@ -72,6 +85,30 @@ export async function POST(request: Request, { params }: RouteParams) {
     // Convertir le File en Buffer
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
+
+    // Déterminer le type de template
+    const templateType = getTemplateType(file.type)
+
+    // Pour les templates DOCX, parser les variables
+    let variables: Array<{ name: string; occurrences: number; context?: string }> | undefined
+    if (templateType === 'docx') {
+      try {
+        const validation = await validateDOCXTemplate(buffer)
+        if (!validation.isValid) {
+          return NextResponse.json(
+            { error: validation.error || 'Erreur lors de la validation du template DOCX' },
+            { status: 400 }
+          )
+        }
+        variables = validation.variables
+      } catch (error) {
+        console.error('Error parsing DOCX template:', error)
+        return NextResponse.json(
+          { error: 'Erreur lors de l\'analyse du template DOCX. Assurez-vous qu\'il contient des variables {{...}}' },
+          { status: 400 }
+        )
+      }
+    }
 
     // Générer une clé unique pour le stockage
     const fileExtension = file.name.split('.').pop() || 'pdf'
@@ -98,10 +135,12 @@ export async function POST(request: Request, { params }: RouteParams) {
         description: description || null,
         filePath: storageKey,
         mimeType: file.type,
+        templateType, // templateType existe dans le schéma Prisma mais le client généré ne le reconnaît pas encore
         width: width || null,
         height: height || null,
-        fields: [],
-      },
+        fields: templateType === 'docx' ? [] : [], // Pour DOCX, on n'utilise pas fields
+        variables: variables ? JSON.parse(JSON.stringify(variables)) : null, // Convertir en JSON pour Prisma
+      } as any, // Cast nécessaire car templateType n'est pas reconnu par le client Prisma généré
       include: {
         project: {
           select: {
