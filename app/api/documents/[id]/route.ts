@@ -54,6 +54,10 @@ export async function DELETE(request: Request, { params }: RouteParams) {
 
     const { id } = await params
 
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json({ error: 'ID de document invalide' }, { status: 400 })
+    }
+
     const doc = await prisma.document.findUnique({
       where: { id },
       include: {
@@ -61,23 +65,47 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       },
     })
 
-    if (!doc) return NextResponse.json({ error: 'Document non trouvé' }, { status: 404 })
-    if (doc.project.ownerId !== session.user.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
+    if (!doc) {
+      console.error(`Document not found: ${id}`)
+      return NextResponse.json({ error: 'Document non trouvé' }, { status: 404 })
+    }
 
-    // Supprimer le fichier du storage
+    if (!doc.project) {
+      console.error(`Document ${id} has no associated project`)
+      return NextResponse.json({ error: 'Projet associé introuvable' }, { status: 404 })
+    }
+
+    if (doc.project.ownerId !== session.user.id) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
+    }
+
+    // Supprimer le fichier du storage (si présent)
+    // On continue même si le fichier n'existe pas ou si la suppression échoue
     if (doc.filePath) {
       try {
         await storage.delete(doc.filePath)
+        console.log(`File deleted from storage: ${doc.filePath}`)
       } catch (error) {
-        console.error('Error deleting file from storage:', error)
-        // Continuer même si la suppression du fichier échoue
+        console.warn(`File not found or error deleting from storage (${doc.filePath}):`, error)
+        // Continuer même si le fichier n'existe pas ou si la suppression échoue
       }
     }
 
-    // Supprimer le document de la DB
-    await prisma.document.delete({
-      where: { id },
-    })
+    // Toujours supprimer le document de la DB, même si le fichier n'existe pas
+    try {
+      await prisma.document.delete({
+        where: { id },
+      })
+      console.log(`Document deleted from DB: ${id}`)
+    } catch (dbError) {
+      console.error('Error deleting document from DB:', dbError)
+      // Si le document n'existe plus en DB, on considère que c'est déjà fait
+      if (dbError instanceof Error && dbError.message.includes('Record to delete does not exist')) {
+        console.log(`Document ${id} already deleted from DB`)
+        return NextResponse.json({ message: 'Document supprimé' }, { status: 200 })
+      }
+      throw dbError
+    }
 
     return NextResponse.json({ message: 'Document supprimé' }, { status: 200 })
   } catch (error) {

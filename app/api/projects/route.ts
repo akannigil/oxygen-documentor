@@ -47,6 +47,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
 
+    if (!session.user.id) {
+      console.error('Session user ID is missing:', session.user)
+      return NextResponse.json(
+        { error: 'ID utilisateur manquant dans la session' },
+        { status: 500 }
+      )
+    }
+
+    // Vérifier que l'utilisateur existe dans la base de données
+    const userExists = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true },
+    })
+
+    if (!userExists) {
+      console.error('User does not exist in database:', session.user.id)
+      return NextResponse.json(
+        { error: 'Utilisateur non trouvé. Veuillez vous reconnecter.' },
+        { status: 404 }
+      )
+    }
+
     const body = await request.json()
     const validatedData = createProjectSchema.parse(body)
 

@@ -99,15 +99,14 @@ export function DOCXQRCodeConfiguration({
     switch (contentType) {
       case 'url':
         return [
-          'https://example.com/{{id}}',
+          '{{storage_url}}',
+          'https://app.example.com/redirect?file={{storage_url}}',
           'https://verify.example.com/certificate/{{certificateId}}',
+          'https://example.com/{{id}}',
           'https://example.com/user/{{userId}}/profile',
         ]
       case 'email':
-        return [
-          'mailto:{{email}}',
-          'mailto:{{email}}?subject={{subject}}',
-        ]
+        return ['mailto:{{email}}', 'mailto:{{email}}?subject={{subject}}']
       case 'phone':
         return ['tel:{{phone}}']
       case 'vcard':
@@ -136,6 +135,39 @@ export function DOCXQRCodeConfiguration({
         </button>
       </div>
 
+      {/* Panneau d'aide / Patterns */}
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <div className="text-sm text-blue-900">
+          <div className="mb-1 font-semibold">Aide - Patterns courants</div>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>
+              <span className="font-medium">Variables</span> : utilisez{' '}
+              <code className="rounded bg-blue-100 px-1">{'{{variable}}'}</code> (ex:{' '}
+              <code className="rounded bg-blue-100 px-1">{'{{id}}'}</code>)
+            </li>
+            <li>
+              <span className="font-medium">URL de stockage du document</span> :{' '}
+              <code className="rounded bg-blue-100 px-1">{'{{storage_url}}'}</code>
+              <span className="ml-1">(générée au moment de la création du fichier)</span>
+            </li>
+            <li>
+              <span className="font-medium">Exemples</span> :
+              <span className="ml-2">
+                <code className="rounded bg-blue-100 px-1">{'{{storage_url}}'}</code>
+              </span>
+              ,
+              <span className="ml-2">
+                <code className="rounded bg-blue-100 px-1">{`https://verify.example.com/cert/{{certificateId}}`}</code>
+              </span>
+              ,
+              <span className="ml-2">
+                <code className="rounded bg-blue-100 px-1">{`https://app.example.com/redirect?file={{storage_url}}`}</code>
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
       {/* Variables disponibles */}
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <h4 className="mb-2 text-sm font-medium text-gray-700">Variables disponibles :</h4>
@@ -143,7 +175,7 @@ export function DOCXQRCodeConfiguration({
           {variables.map((variable) => (
             <span
               key={variable.name}
-              className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-mono text-gray-700 shadow-sm"
+              className="inline-flex items-center rounded-full bg-white px-3 py-1 font-mono text-xs text-gray-700 shadow-sm"
             >
               {`{{${variable.name}}}`}
               <span className="ml-1 text-gray-400">({variable.occurrences}×)</span>
@@ -161,12 +193,7 @@ export function DOCXQRCodeConfiguration({
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           <p className="mt-2 text-sm text-gray-500">
             Aucun QR Code configuré. Cliquez sur &quot;Ajouter un QR Code&quot; pour commencer.
@@ -192,7 +219,7 @@ export function DOCXQRCodeConfiguration({
                     <h4 className="font-mono text-sm font-semibold text-gray-900">
                       {config.placeholder}
                     </h4>
-                    <p className="mt-1 text-xs text-gray-500 line-clamp-1">
+                    <p className="mt-1 line-clamp-1 text-xs text-gray-500">
                       {config.contentPattern || 'Pattern non défini'}
                     </p>
                   </button>
@@ -202,12 +229,7 @@ export function DOCXQRCodeConfiguration({
                   className="ml-4 text-red-600 hover:text-red-500"
                   title="Supprimer"
                 >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -230,7 +252,7 @@ export function DOCXQRCodeConfiguration({
                       value={config.placeholder}
                       onChange={(e) => handleUpdateConfig(index, { placeholder: e.target.value })}
                       placeholder="{{qrcode_verification}}"
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono"
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm"
                     />
                     <p className="mt-1 text-xs text-gray-500">
                       Ce texte sera remplacé par le QR Code dans le document Word
@@ -245,7 +267,13 @@ export function DOCXQRCodeConfiguration({
                     <select
                       value={config.contentType || 'custom'}
                       onChange={(e) => {
-                        const value = e.target.value as 'url' | 'text' | 'vcard' | 'email' | 'phone' | 'custom'
+                        const value = e.target.value as
+                          | 'url'
+                          | 'text'
+                          | 'vcard'
+                          | 'email'
+                          | 'phone'
+                          | 'custom'
                         handleUpdateConfig(index, { contentType: value })
                       }}
                       className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
@@ -271,7 +299,7 @@ export function DOCXQRCodeConfiguration({
                       }
                       placeholder="https://verify.example.com/{{id}}/{{code}}"
                       rows={3}
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono"
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm"
                     />
                     <p className="mt-1 text-xs text-gray-500">
                       Utilisez {`{{variable}}`} pour insérer des données dynamiques
@@ -285,8 +313,10 @@ export function DOCXQRCodeConfiguration({
                           {getPatternSuggestions(config.contentType).map((suggestion, i) => (
                             <button
                               key={i}
-                              onClick={() => handleUpdateConfig(index, { contentPattern: suggestion })}
-                              className="block w-full rounded bg-gray-100 px-2 py-1 text-left text-xs font-mono text-gray-600 hover:bg-gray-200"
+                              onClick={() =>
+                                handleUpdateConfig(index, { contentPattern: suggestion })
+                              }
+                              className="block w-full rounded bg-gray-100 px-2 py-1 text-left font-mono text-xs text-gray-600 hover:bg-gray-200"
                             >
                               {suggestion}
                             </button>
@@ -373,7 +403,7 @@ export function DOCXQRCodeConfiguration({
                               type="text"
                               value={config.options?.color?.dark || '#000000'}
                               onChange={(e) => handleUpdateColor(index, 'dark', e.target.value)}
-                              className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-mono"
+                              className="flex-1 rounded-md border border-gray-300 px-2 py-1 font-mono text-xs"
                             />
                           </div>
                         </div>
@@ -393,7 +423,7 @@ export function DOCXQRCodeConfiguration({
                               type="text"
                               value={config.options?.color?.light || '#FFFFFF'}
                               onChange={(e) => handleUpdateColor(index, 'light', e.target.value)}
-                              className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-mono"
+                              className="flex-1 rounded-md border border-gray-300 px-2 py-1 font-mono text-xs"
                             />
                           </div>
                         </div>

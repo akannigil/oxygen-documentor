@@ -480,6 +480,14 @@ NODE_ENV="development"
    - Tests d'intégration pour API routes
    - Documentation API (Swagger/OpenAPI)
 
+5. **Améliorer le positionnement des QR codes DOCX** (à planifier)
+   - Exposer options d'ancrage: alignement horizontal (left/center/right), offsets X/Y
+   - Gérer le wrapping: `wrapNone` (par défaut), `wrapSquare`, `wrapTopAndBottom`
+   - Z-order configurable: `behindDoc` (par défaut avant-plan = 0)
+   - Fallback: insertion inline si versions Word anciennes posent problème
+   - Tests: templates avec image de fond, zones de texte, tableaux, proximité bord de page
+   - Docs: mettre à jour `GUIDE_QRCODE_DOCX_WORKFLOW.md` (section positionnement/overlays)
+
 ---
 
 ## Notes de Développement

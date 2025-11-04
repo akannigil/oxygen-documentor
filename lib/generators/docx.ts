@@ -89,6 +89,17 @@ export interface GenerateDOCXOptions {
   qrcodeConfigs?: DOCXQRCodeConfig[]
   
   /**
+   * (Avancé) Chemin du fichier final pour ce document, utilisé pour générer une URL de stockage
+   * Ex: "projects/{projectId}/documents/{documentId}.docx"
+   */
+  documentFilePath?: string
+
+  /**
+   * (Avancé) Callback pour obtenir l'URL de stockage (signée ou publique)
+   */
+  getStorageUrl?: (filePath: string, signed?: boolean, expiresIn?: number) => Promise<string>
+
+  /**
    * Configuration pour authentification de certificat (optionnel)
    * Si fournie, génère automatiquement un QR code authentifié
    */
@@ -172,7 +183,7 @@ export async function generateDOCX(
 ): Promise<Buffer> {
   try {
     const zip = new PizZip(templateBuffer)
-    
+
     const doc = new Docxtemplater(zip, {
       paragraphLoop: true,
       linebreaks: true,
@@ -184,10 +195,45 @@ export async function generateDOCX(
 
     // Formater les données selon les formats spécifiés
     const formattedData: Record<string, string> = {}
-    
+
     for (const [key, value] of Object.entries(options.variables)) {
       const format = options.formats?.[key]
       formattedData[key] = formatValueForDOCX(value, format)
+    }
+
+    // Préserver les placeholders QR code pour qu'ils ne soient pas supprimés par docxtemplater
+    // On les ajoute à formattedData avec leur valeur placeholder pour qu'ils restent dans le document
+    if (options.qrcodeConfigs && options.qrcodeConfigs.length > 0) {
+      for (const config of options.qrcodeConfigs) {
+        // Extraire le nom de la variable du placeholder (ex: "{{qrcode_verification}}" -> "qrcode_verification")
+        const placeholderMatch = config.placeholder.match(/^\{\{([^}]+)\}\}$/)
+        if (placeholderMatch && placeholderMatch[1]) {
+          const placeholderKey = placeholderMatch[1]
+          // Ajouter le placeholder avec sa valeur complète pour qu'il ne soit pas supprimé
+          formattedData[placeholderKey] = config.placeholder
+        }
+      }
+    }
+
+    // Préserver aussi les placeholders QR code de l'ancienne méthode
+    if (options.qrcodes && Object.keys(options.qrcodes).length > 0) {
+      for (const placeholder of Object.keys(options.qrcodes)) {
+        const placeholderMatch = placeholder.match(/^\{\{([^}]+)\}\}$/)
+        if (placeholderMatch && placeholderMatch[1]) {
+          const placeholderKey = placeholderMatch[1]
+          formattedData[placeholderKey] = placeholder
+        }
+      }
+    }
+
+    // Préserver le placeholder de certificat si activé
+    if (options.certificate?.enabled) {
+      const placeholder = options.certificate.qrcodePlaceholder ?? '{{qrcode_verification}}'
+      const placeholderMatch = placeholder.match(/^\{\{([^}]+)\}\}$/)
+      if (placeholderMatch && placeholderMatch[1]) {
+        const placeholderKey = placeholderMatch[1]
+        formattedData[placeholderKey] = placeholder
+      }
     }
 
     // Rendre le template avec les données
@@ -198,7 +244,7 @@ export async function generateDOCX(
       type: 'nodebuffer',
       compression: 'DEFLATE',
     })
-    
+
     const finalBuffer = Buffer.from(buffer)
 
     // Préparer les QR codes à insérer
@@ -218,25 +264,161 @@ export async function generateDOCX(
 
     // Traiter les QR codes depuis qrcodeConfigs (nouvelle méthode)
     if (options.qrcodeConfigs && options.qrcodeConfigs.length > 0) {
-      options.qrcodeConfigs.forEach((config) => {
-        // Remplacer les variables dans le pattern de contenu
-        let content = config.contentPattern
-        Object.entries(options.variables).forEach(([key, value]) => {
-          const variablePattern = new RegExp(`\\{\\{${key}\\}\\}`, 'g')
-          content = content.replace(variablePattern, String(value))
-        })
+      for (const config of options.qrcodeConfigs) {
+        let qrContent: string
+        let qrOptions: {
+          width: number
+          margin: number
+          errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H'
+          color?: { dark?: string; light?: string }
+        } = {
+          width: config.options?.width ?? 200,
+          margin: config.options?.margin ?? 1,
+          errorCorrectionLevel: (config.options?.errorCorrectionLevel ?? 'M') as
+            | 'L'
+            | 'M'
+            | 'Q'
+            | 'H',
+          ...(config.options?.color && { color: config.options.color }),
+        }
+
+        // Si l'authentification est activée
+        if (config.auth?.enabled) {
+          // Configuration d'authentification par défaut
+          const defaultAuthConfig: CertificateAuthConfig = {
+            secretKey: process.env['CERTIFICATE_SECRET_KEY'] ?? '',
+            verificationBaseUrl:
+              process.env['CERTIFICATE_VERIFICATION_BASE_URL'] ??
+              process.env['VERIFICATION_BASE_URL'] ??
+              'https://certificates.example.com/verify',
+            algorithm: 'sha256' as const,
+            expiresIn: config.auth.expiresIn ?? 10 * 365 * 24 * 60 * 60, // 10 ans par défaut
+          }
+
+          const authConfig: CertificateAuthConfig = {
+            secretKey: process.env['CERTIFICATE_SECRET_KEY'] ?? '',
+            verificationBaseUrl:
+              config.auth.verificationBaseUrl ?? defaultAuthConfig.verificationBaseUrl,
+            ...(defaultAuthConfig.algorithm && { algorithm: defaultAuthConfig.algorithm }),
+            ...(config.auth.expiresIn !== undefined && { expiresIn: config.auth.expiresIn }),
+            ...(config.auth.expiresIn === undefined &&
+              defaultAuthConfig.expiresIn !== undefined && {
+                expiresIn: defaultAuthConfig.expiresIn,
+              }),
+          }
+
+          if (!authConfig.secretKey) {
+            throw new Error(
+              'CERTIFICATE_SECRET_KEY non configurée - voir docs/CONFIGURATION_CERTIFICATS.md'
+            )
+          }
+
+          // Construire les données du certificat depuis les variables
+          const certificateFields = config.auth.certificateFields
+          const getFieldValue = (key?: string): string | undefined => {
+            if (!key) return undefined
+            const value = options.variables[key]
+            if (value === undefined || value === null) return undefined
+            if (value instanceof Date) return value.toISOString()
+            return String(value)
+          }
+
+          // Détecter les données si certificateFields n'est pas fourni
+          if (!certificateFields) {
+            const detectedData = detectCertificateData(options.variables)
+            const certificateData: CertificateData = {
+              certificateId: detectedData.certificateId ?? 'UNKNOWN',
+              holderName: detectedData.holderName ?? 'Unknown',
+              title: detectedData.title ?? 'Certificate',
+              issueDate: detectedData.issueDate ?? new Date().toISOString(),
+              issuer: detectedData.issuer ?? 'Unknown Issuer',
+              ...(detectedData.grade && { grade: detectedData.grade }),
+              ...(detectedData.expiryDate && { expiryDate: detectedData.expiryDate }),
+            }
+
+            // Générer le certificat authentifié
+            let documentHashBuffer: Buffer | undefined
+            if (config.auth.includeDocumentHash) {
+              documentHashBuffer = finalBuffer
+            }
+
+            const authenticated = generateAuthenticatedCertificate(
+              certificateData,
+              authConfig,
+              documentHashBuffer
+            )
+
+            qrContent = authenticated.qrCodeData
+            // Utiliser un niveau de correction plus élevé pour les certificats authentifiés
+            qrOptions.errorCorrectionLevel = 'Q'
+          } else {
+            // Utiliser les champs configurés
+            const certificateData: CertificateData = {
+              certificateId: getFieldValue(certificateFields.certificateId) || 'UNKNOWN',
+              holderName: getFieldValue(certificateFields.holderName) || 'Unknown',
+              title: getFieldValue(certificateFields.title) || 'Certificate',
+              issueDate: getFieldValue(certificateFields.issueDate) || new Date().toISOString(),
+              issuer: getFieldValue(certificateFields.issuer) || 'Unknown Issuer',
+              ...(certificateFields.grade && getFieldValue(certificateFields.grade)
+                ? { grade: getFieldValue(certificateFields.grade)! }
+                : {}),
+              ...(certificateFields.expiryDate && getFieldValue(certificateFields.expiryDate)
+                ? { expiryDate: getFieldValue(certificateFields.expiryDate)! }
+                : {}),
+            }
+
+            // Générer le certificat authentifié
+            let documentHashBuffer: Buffer | undefined
+            if (config.auth.includeDocumentHash) {
+              documentHashBuffer = finalBuffer
+            }
+
+            const authenticated = generateAuthenticatedCertificate(
+              certificateData,
+              authConfig,
+              documentHashBuffer
+            )
+
+            qrContent = authenticated.qrCodeData
+            // Utiliser un niveau de correction plus élevé pour les certificats authentifiés
+            qrOptions = { ...qrOptions, errorCorrectionLevel: 'Q' as const }
+          }
+        } else {
+          // Remplacer les variables dans le pattern de contenu
+          qrContent = config.contentPattern
+          Object.entries(options.variables).forEach(([key, value]) => {
+            const variablePattern = new RegExp(`\\{\\{${key}\\}\\}`, 'g')
+            qrContent = qrContent.replace(variablePattern, String(value))
+          })
+
+          // Intégration URL de stockage si demandée ou si le pattern le requiert
+          const wantsStorageUrl = Boolean(config.storageUrl?.enabled) || qrContent.includes('{{storage_url}}')
+          if (wantsStorageUrl) {
+            if (!options.documentFilePath || !options.getStorageUrl) {
+              throw new Error(
+                'Intégration URL de stockage demandée pour un QR Code mais documentFilePath/getStorageUrl non fournis à generateDOCX()'
+              )
+            }
+
+            const useSigned = (config.storageUrl?.urlType ?? 'signed') === 'signed'
+            const expiresIn = config.storageUrl?.expiresIn ?? 3600
+            const storageUrl = await options.getStorageUrl(options.documentFilePath, useSigned, expiresIn)
+
+            if (qrContent.trim().length === 0 || qrContent.trim() === '{{storage_url}}') {
+              qrContent = storageUrl
+            } else {
+              // Remplacer toutes les occurrences explicites
+              qrContent = qrContent.replace(/\{\{storage_url\}\}/g, storageUrl)
+            }
+          }
+        }
 
         qrCodeInsertions.push({
           placeholder: config.placeholder,
-          data: content,
-          options: {
-            width: config.options?.width ?? 200,
-            margin: config.options?.margin ?? 1,
-            errorCorrectionLevel: config.options?.errorCorrectionLevel ?? 'M',
-            ...(config.options?.color && { color: config.options.color }),
-          },
+          data: qrContent,
+          options: qrOptions,
         })
-      })
+      }
     }
 
     // Traiter les QR codes manuels si spécifiés (ancienne méthode, pour rétrocompatibilité)
@@ -259,55 +441,60 @@ export async function generateDOCX(
       // Configuration par défaut
       const defaultAuthConfig: CertificateAuthConfig = {
         secretKey: process.env['CERTIFICATE_SECRET_KEY'] ?? '',
-        verificationBaseUrl: process.env['VERIFICATION_BASE_URL'] ?? 'https://certificates.example.com/verify',
+        verificationBaseUrl:
+          process.env['VERIFICATION_BASE_URL'] ?? 'https://certificates.example.com/verify',
         algorithm: 'sha256',
         expiresIn: 10 * 365 * 24 * 60 * 60, // 10 ans
       }
-      
+
       const authConfig = options.certificate.authConfig ?? defaultAuthConfig
-      
+
       if (!authConfig.secretKey) {
-        throw new Error('CERTIFICATE_SECRET_KEY non configurée - voir docs/CONFIGURATION_CERTIFICATS.md')
+        throw new Error(
+          'CERTIFICATE_SECRET_KEY non configurée - voir docs/CONFIGURATION_CERTIFICATS.md'
+        )
       }
-      
+
       // Détecter ou utiliser les données de certificat fournies
       const detectedData = detectCertificateData(options.variables)
       const certificateData: CertificateData = {
-        certificateId: options.certificate.data?.certificateId ?? detectedData.certificateId ?? 'UNKNOWN',
+        certificateId:
+          options.certificate.data?.certificateId ?? detectedData.certificateId ?? 'UNKNOWN',
         holderName: options.certificate.data?.holderName ?? detectedData.holderName ?? 'Unknown',
         title: options.certificate.data?.title ?? detectedData.title ?? 'Certificate',
-        issueDate: options.certificate.data?.issueDate ?? detectedData.issueDate ?? new Date().toISOString(),
+        issueDate:
+          options.certificate.data?.issueDate ?? detectedData.issueDate ?? new Date().toISOString(),
         issuer: options.certificate.data?.issuer ?? detectedData.issuer ?? 'Unknown Issuer',
       }
-      
+
       // Ajouter les propriétés optionnelles seulement si définies
       const grade = options.certificate.data?.grade ?? detectedData.grade
       if (grade) {
         certificateData.grade = grade
       }
-      
+
       if (options.certificate.data?.expiryDate) {
         certificateData.expiryDate = options.certificate.data.expiryDate
       }
-      
+
       if (options.certificate.data?.metadata) {
         certificateData.metadata = options.certificate.data.metadata
       }
-      
+
       // Générer le certificat authentifié
       let documentHashBuffer: Buffer | undefined
-      
+
       if (options.certificate.includeDocumentHash) {
         // Utiliser le buffer actuel pour calculer le hash
         documentHashBuffer = finalBuffer
       }
-      
+
       const authenticated = generateAuthenticatedCertificate(
         certificateData,
         authConfig,
         documentHashBuffer
       )
-      
+
       // Ajouter le QR code authentifié
       const placeholder = options.certificate.qrcodePlaceholder ?? '{{qrcode_verification}}'
       qrCodeInsertions.push({

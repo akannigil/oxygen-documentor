@@ -15,7 +15,31 @@ interface RouteParams {
 export async function POST(request: Request, { params }: RouteParams) {
   try {
     const session = await auth()
-    if (!session?.user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    }
+
+    if (!session.user.id) {
+      console.error('Session user ID is missing:', session.user)
+      return NextResponse.json(
+        { error: 'ID utilisateur manquant dans la session' },
+        { status: 500 }
+      )
+    }
+
+    // Vérifier que l'utilisateur existe dans la base de données
+    const userExists = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true },
+    })
+
+    if (!userExists) {
+      console.error('User does not exist in database:', session.user.id)
+      return NextResponse.json(
+        { error: 'Utilisateur non trouvé. Veuillez vous reconnecter.' },
+        { status: 404 }
+      )
+    }
 
     const { id: projectId } = await params
     const body = await request.json()
@@ -77,9 +101,10 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     let successCount = 0
     for (const data of rows) {
+      let doc: { id: string } | null = null
       try {
         // Créer le record document d'abord pour avoir l'ID
-        const doc = await prisma.document.create({
+        doc = await prisma.document.create({
           data: {
             projectId,
             templateId,
@@ -87,8 +112,14 @@ export async function POST(request: Request, { params }: RouteParams) {
             filePath: '',
             mimeType: '',
             status: 'generated',
-            recipient: typeof data['recipient_name'] === 'string' ? (data['recipient_name'] as string) : null,
-            recipientEmail: typeof data['recipient_email'] === 'string' ? (data['recipient_email'] as string) : null,
+            recipient:
+              typeof data['recipient_name'] === 'string'
+                ? (data['recipient_name'] as string)
+                : null,
+            recipientEmail:
+              typeof data['recipient_email'] === 'string'
+                ? (data['recipient_email'] as string)
+                : null,
           },
         })
 
@@ -98,7 +129,10 @@ export async function POST(request: Request, { params }: RouteParams) {
 
         // Déterminer le chemin du fichier pour les QR codes
         if (templateType === 'docx') {
-          outputMimeType = outputFormat === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          outputMimeType =
+            outputFormat === 'pdf'
+              ? 'application/pdf'
+              : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
           fileExtension = outputFormat === 'pdf' ? 'pdf' : 'docx'
         } else {
           outputMimeType = 'application/pdf'
@@ -109,8 +143,8 @@ export async function POST(request: Request, { params }: RouteParams) {
 
         // Options pour les QR codes (si nécessaire)
         const fields = Array.isArray(template.fields) ? (template.fields as any) : []
-        const hasQRCodeWithOptions = fields.some((f: any) => 
-          f.type === 'qrcode' && (f.qrcodeAuth?.enabled || f.qrcodeStorageUrl?.enabled)
+        const hasQRCodeWithOptions = fields.some(
+          (f: any) => f.type === 'qrcode' && (f.qrcodeAuth?.enabled || f.qrcodeStorageUrl?.enabled)
         )
 
         if (templateType === 'docx') {
@@ -121,8 +155,10 @@ export async function POST(request: Request, { params }: RouteParams) {
           const docxBuffer = await generateDOCX(templateBuffer, {
             variables: data,
             qrcodeConfigs: qrcodeConfigs,
+            documentFilePath: documentKey,
+            getStorageUrl,
           })
-          
+
           // Si format de sortie demandé est PDF, convertir DOCX → PDF
           if (outputFormat === 'pdf') {
             documentBuffer = await convertDOCXToPDFWithStyles(docxBuffer, pdfOptions)
@@ -136,11 +172,13 @@ export async function POST(request: Request, { params }: RouteParams) {
             template.mimeType,
             fields,
             data,
-            hasQRCodeWithOptions ? {
-              documentFilePath: documentKey,
-              ...(authConfig && { authConfig }),
-              getStorageUrl,
-            } : undefined
+            hasQRCodeWithOptions
+              ? {
+                  documentFilePath: documentKey,
+                  ...(authConfig && { authConfig }),
+                  getStorageUrl,
+                }
+              : undefined
           )
         }
 
@@ -148,24 +186,55 @@ export async function POST(request: Request, { params }: RouteParams) {
         await storage.upload(documentBuffer, documentKey, outputMimeType)
 
         // Mettre à jour le document avec le filePath
-        await prisma.document.update({ 
-          where: { id: doc.id }, 
-          data: { 
+        await prisma.document.update({
+          where: { id: doc.id },
+          data: {
             filePath: documentKey,
             mimeType: outputMimeType,
-          } 
+          },
         })
-        
+
         successCount++
       } catch (e) {
         console.error('Doc generation failed:', e)
-        // Optionnel : marquer le document comme failed si on le crée avant
+        // Marquer le document comme failed si on l'a créé
+        if (doc?.id) {
+          try {
+            await prisma.document.update({
+              where: { id: doc.id },
+              data: {
+                status: 'failed',
+                errorMessage:
+                  e instanceof Error ? e.message : 'Erreur inconnue lors de la génération',
+              },
+            })
+          } catch (updateError) {
+            console.error('Failed to update document status:', updateError)
+          }
+        }
       }
+    }
+
+    if (successCount === 0 && rows.length > 0) {
+      return NextResponse.json(
+        { error: "Aucun document n'a pu être généré. Vérifiez les logs pour plus de détails." },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({ count: successCount })
   } catch (error) {
     console.error('Generate error:', error)
-    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
+    
+    // Retourner plus de détails en développement
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue'
+    const errorDetails = process.env.NODE_ENV === 'development' && error instanceof Error
+      ? { message: errorMessage, stack: error.stack }
+      : { message: errorMessage }
+    
+    return NextResponse.json(
+      { error: 'Une erreur est survenue', details: errorDetails },
+      { status: 500 }
+    )
   }
 }

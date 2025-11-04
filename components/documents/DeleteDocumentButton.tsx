@@ -17,6 +17,11 @@ export function DeleteDocumentButton({ documentId, onDeleted }: DeleteDocumentBu
       return
     }
 
+    if (!documentId) {
+      alert('ID de document invalide')
+      return
+    }
+
     setLoading(true)
     try {
       const res = await fetch(`/api/documents/${documentId}`, {
@@ -24,7 +29,7 @@ export function DeleteDocumentButton({ documentId, onDeleted }: DeleteDocumentBu
       })
 
       if (!res.ok) {
-        const error = await res.json()
+        const error = await res.json().catch(() => ({ error: 'Erreur lors de la suppression' }))
         throw new Error(error.error || 'Erreur lors de la suppression')
       }
 
@@ -33,7 +38,9 @@ export function DeleteDocumentButton({ documentId, onDeleted }: DeleteDocumentBu
       }
     } catch (error) {
       console.error('Error deleting document:', error)
-      alert(error instanceof Error ? error.message : 'Une erreur est survenue lors de la suppression')
+      alert(
+        error instanceof Error ? error.message : 'Une erreur est survenue lors de la suppression'
+      )
     } finally {
       setLoading(false)
       setShowConfirm(false)
