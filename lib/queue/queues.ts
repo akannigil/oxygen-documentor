@@ -51,8 +51,8 @@ export function createRedisConnection(): Redis | null {
       if (!connectionFailed) {
         connectionFailed = true
         console.error('❌ Redis connection error:', error.message || error)
-        if (error.code === 'ECONNREFUSED') {
-          console.error('💡 Redis n\'est pas accessible. Pour démarrer Redis:')
+        if ('code' in error && error.code === 'ECONNREFUSED') {
+          console.error("💡 Redis n'est pas accessible. Pour démarrer Redis:")
           console.error('   docker-compose up -d redis')
           console.error('💡 Ou désactivez Redis en définissant REDIS_DISABLED=true')
         }
@@ -64,9 +64,44 @@ export function createRedisConnection(): Redis | null {
       console.log('✅ Redis connecté')
     })
 
-    redis.on('ready', () => {
+    redis.on('ready', async () => {
       connectionFailed = false
       console.log('✅ Redis prêt')
+
+      // Vérifier la version de Redis
+      try {
+        const info = await redis.info('server')
+        const versionMatch = info.match(/redis_version:([\d.]+)/)
+        if (versionMatch && versionMatch[1]) {
+          const version = versionMatch[1]
+          const versionParts = version.split('.').map(Number)
+          const major = versionParts[0]
+          const minor = versionParts[1]
+
+          // BullMQ recommande Redis 6.2.0+
+          if (
+            major !== undefined &&
+            minor !== undefined &&
+            (major < 6 || (major === 6 && minor < 2))
+          ) {
+            console.warn('⚠️  ATTENTION: Version Redis détectée:', version)
+            console.warn('⚠️  BullMQ recommande Redis 6.2.0 ou supérieur')
+            console.warn('⚠️  Version actuelle:', version)
+            console.warn('⚠️  Certaines fonctionnalités peuvent ne pas fonctionner correctement')
+            console.warn('💡 Pour mettre à jour Redis:')
+            console.warn('   - Docker: docker pull redis:7-alpine')
+            console.warn('   - Ou utilisez une version Redis >= 6.2.0')
+          } else {
+            console.log(`✅ Version Redis: ${version} (compatible)`)
+          }
+        }
+      } catch (err) {
+        // Ignorer les erreurs de vérification de version
+        console.warn(
+          '⚠️  Impossible de vérifier la version Redis:',
+          err instanceof Error ? err.message : err
+        )
+      }
     })
 
     redis.on('close', () => {

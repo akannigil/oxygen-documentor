@@ -237,24 +237,41 @@ export function createEmailSendingWorker(): Worker<EmailSendingJobData, { succes
   return worker
 }
 
+// Références globales aux workers pour éviter les créations multiples
+let globalDocumentWorker: ReturnType<typeof createDocumentGenerationWorker> | null = null
+let globalEmailWorker: ReturnType<typeof createEmailSendingWorker> | null = null
+
 /**
  * Initialise tous les workers
+ * Les workers sont créés une seule fois et réutilisés
  */
 export function initializeWorkers() {
-  const documentWorker = createDocumentGenerationWorker()
-  const emailWorker = createEmailSendingWorker()
-
-  if (documentWorker) {
-    console.log('Worker de génération de documents initialisé')
+  // Si les workers existent déjà, les retourner
+  if (globalDocumentWorker && globalEmailWorker) {
+    return {
+      documentWorker: globalDocumentWorker,
+      emailWorker: globalEmailWorker,
+    }
   }
 
-  if (emailWorker) {
-    console.log('Worker d\'envoi d\'emails initialisé')
+  // Créer les workers seulement s'ils n'existent pas
+  if (!globalDocumentWorker) {
+    globalDocumentWorker = createDocumentGenerationWorker()
+    if (globalDocumentWorker) {
+      console.log('✅ Worker de génération de documents initialisé')
+    }
+  }
+
+  if (!globalEmailWorker) {
+    globalEmailWorker = createEmailSendingWorker()
+    if (globalEmailWorker) {
+      console.log('✅ Worker d\'envoi d\'emails initialisé')
+    }
   }
 
   return {
-    documentWorker,
-    emailWorker,
+    documentWorker: globalDocumentWorker,
+    emailWorker: globalEmailWorker,
   }
 }
 
