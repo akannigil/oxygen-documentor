@@ -5,10 +5,10 @@ import { DOCXQRCodeConfigurationClient } from './DOCXQRCodeConfigurationClient'
 import type { TemplateVariable, DOCXQRCodeConfig } from '@/shared/types'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string
     templateId: string
-  }
+  }>
 }
 
 export default async function ConfigureQRCodesPage({ params }: PageProps) {
@@ -17,7 +17,7 @@ export default async function ConfigureQRCodesPage({ params }: PageProps) {
     redirect('/auth/signin')
   }
 
-  const { id: projectId, templateId } = params
+  const { id: projectId, templateId } = await params
 
   // Récupérer le projet et le template
   const project = await prisma.project.findUnique({

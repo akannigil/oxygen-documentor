@@ -16,7 +16,7 @@ Application web Next.js pour la gestion et génération en masse d'attestations 
 - **Canvas**: react-konva
 - **CSV/Excel**: papaparse, xlsx
 - **Jobs**: BullMQ + Redis
-- **Email**: nodemailer
+- **Email**: nodemailer + Resend
 
 ## 📋 Prérequis
 
@@ -60,6 +60,23 @@ AWS_REGION="us-east-1"
 AWS_ACCESS_KEY_ID=""
 AWS_SECRET_ACCESS_KEY=""
 S3_BUCKET_NAME=""
+
+# Email (optionnel)
+EMAIL_PROVIDER="smtp"  # Options: 'smtp', 'resend'
+# Pour SMTP
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_SECURE="false"
+SMTP_USER=""
+SMTP_PASSWORD=""
+EMAIL_FROM=""
+# Pour Resend
+RESEND_API_KEY=""
+RESEND_FROM_EMAIL=""
+# Informations optionnelles
+EMAIL_ORGANIZATION_NAME="Votre Organisation"
+EMAIL_APP_NAME="Oxygen Document"
+EMAIL_CONTACT="contact@example.com"
 ```
 
 4. **Configurer la base de données**
@@ -147,9 +164,11 @@ Pour intégrer des QR Codes dans vos documents :
 
 ## 📧 Emails
 
-- Envoi via SMTP (nodemailer)
-- Support pour SendGrid/AWS SES (optionnel)
-- Jobs BullMQ pour envois en masse
+- Envoi via SMTP (nodemailer) ou Resend
+- Système de publipostage avec variables personnalisées
+- Templates HTML personnalisables
+- Support des pièces jointes et liens de téléchargement
+- Documentation complète : [Guide Email](./docs/GUIDE_EMAIL.md)
 
 ## 🧪 Développement
 

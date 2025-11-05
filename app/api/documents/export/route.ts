@@ -3,14 +3,12 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
-const documentsQuerySchema = z.object({
+const exportQuerySchema = z.object({
   projectId: z.string(),
   status: z.enum(['generated', 'sent', 'failed']).optional(),
   search: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-  page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
-  limit: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 20)),
 })
 
 export async function GET(request: Request) {
@@ -20,18 +18,15 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     
-    // Valider les paramètres de requête
     const queryParams = {
       projectId: searchParams.get('projectId') ?? undefined,
       status: searchParams.get('status') ?? undefined,
       search: searchParams.get('search') ?? undefined,
       startDate: searchParams.get('startDate') ?? undefined,
       endDate: searchParams.get('endDate') ?? undefined,
-      page: searchParams.get('page') ?? undefined,
-      limit: searchParams.get('limit') ?? undefined,
     }
 
-    const validated = documentsQuerySchema.parse(queryParams)
+    const validated = exportQuerySchema.parse(queryParams)
 
     if (!validated.projectId) {
       return NextResponse.json({ error: 'projectId requis' }, { status: 400 })
@@ -41,7 +36,7 @@ export async function GET(request: Request) {
     if (!project) return NextResponse.json({ error: 'Projet non trouvé' }, { status: 404 })
     if (project.ownerId !== session.user.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
 
-    // Construire les filtres Prisma
+    // Construire les filtres (même logique que l'API de liste)
     const where: any = {
       projectId: validated.projectId,
     }
@@ -68,20 +63,10 @@ export async function GET(request: Request) {
       }
     }
 
-    // Pagination
-    const page = validated.page ?? 1
-    const limit = Math.min(validated.limit ?? 20, 100) // Max 100 par page
-    const skip = (page - 1) * limit
-
-    // Compter le total pour la pagination
-    const total = await prisma.document.count({ where })
-
-    // Récupérer les documents
+    // Récupérer tous les documents (sans pagination pour l'export)
     const docs = await prisma.document.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      skip,
-      take: limit,
       include: {
         template: {
           select: {
@@ -92,17 +77,44 @@ export async function GET(request: Request) {
       },
     })
 
-    return NextResponse.json({
-      documents: docs,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+    // Générer le CSV
+    const headers = ['ID', 'Template', 'Statut', 'Destinataire', 'Email', 'Date création', 'Date envoi', 'Message erreur']
+    const rows = docs.map((doc) => [
+      doc.id,
+      doc.template?.name || doc.templateId,
+      doc.status === 'sent' ? 'Envoyé' : doc.status === 'failed' ? 'Échoué' : 'Généré',
+      doc.recipient || '',
+      doc.recipientEmail || '',
+      doc.createdAt.toISOString(),
+      doc.emailSentAt ? doc.emailSentAt.toISOString() : '',
+      doc.errorMessage || '',
+    ])
+
+    // Échapper les valeurs CSV
+    const escapeCSV = (value: string): string => {
+      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+        return `"${value.replace(/"/g, '""')}"`
+      }
+      return value
+    }
+
+    const csvContent = [
+      headers.map(escapeCSV).join(','),
+      ...rows.map((row) => row.map((cell) => escapeCSV(String(cell ?? ''))).join(',')),
+    ].join('\n')
+
+    // Ajouter BOM pour Excel UTF-8
+    const bom = '\uFEFF'
+    const csvWithBom = bom + csvContent
+
+    return new NextResponse(csvWithBom, {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="documents_${new Date().toISOString().split('T')[0]}.csv"`,
       },
     })
   } catch (error) {
-    console.error('List documents error:', error)
+    console.error('Export CSV error:', error)
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -114,3 +126,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
+

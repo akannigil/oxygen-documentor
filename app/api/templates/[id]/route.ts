@@ -7,6 +7,55 @@ interface RouteParams {
   params: Promise<{ id: string }>
 }
 
+// GET handler remains the same...
+
+export async function PUT(request: Request, { params }: RouteParams) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    }
+
+    const { id } = await params
+    const body = await request.json()
+
+    const template = await prisma.template.findFirst({
+      where: { id, project: { ownerId: session.user.id } },
+    })
+
+    if (!template) {
+      return NextResponse.json({ error: 'Template non trouvé ou non autorisé' }, { status: 404 })
+    }
+
+    // Fields that can be updated
+    const { name, description, qrcodeConfigs } = body
+
+    const updatedTemplate = await prisma.template.update({
+      where: { id },
+      data: {
+        ...(name && { name }),
+        ...(description && { description }),
+        ...(qrcodeConfigs && { qrcodeConfigs }),
+      },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    })
+
+    return NextResponse.json(updatedTemplate)
+  } catch (error) {
+    console.error('Error updating template:', error)
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
+  }
+}
+
+// DELETE handler remains the same...
+
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     const session = await auth()

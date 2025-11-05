@@ -23,26 +23,51 @@ async function streamToBuffer(stream: any): Promise<Buffer> {
 }
 
 /**
+ * Construit une URL absolue à partir d'un chemin relatif en le préfixant avec NEXTAUTH_URL
+ * Si l'entrée est déjà absolue (http/https), elle est retournée telle quelle.
+ */
+function buildAbsoluteUrl(pathOrUrl: string): string {
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl
+  const base = process.env['NEXTAUTH_URL']
+  if (!base) return pathOrUrl
+  const baseTrimmed = base.endsWith('/') ? base.slice(0, -1) : base
+  const pathTrimmed = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`
+  return `${baseTrimmed}${pathTrimmed}`
+}
+
+/**
  * Adaptateur de stockage utilisant AWS S3
  */
 export class S3StorageAdapter implements StorageAdapter {
   private client: S3Client
   private bucket: string
   private region: string
+  private endpoint: string | undefined
+  private forcePathStyle: boolean
 
-  constructor(bucket: string, region: string, accessKeyId?: string, secretAccessKey?: string) {
+  constructor(
+    bucket: string,
+    region: string,
+    accessKeyId?: string,
+    secretAccessKey?: string,
+    options?: { endpoint?: string; forcePathStyle?: boolean }
+  ) {
     this.bucket = bucket
     this.region = region
+    this.endpoint = options?.endpoint
+    this.forcePathStyle = options?.forcePathStyle ?? false
 
-    this.client = new S3Client({
-      region: this.region,
-      ...(accessKeyId && secretAccessKey && {
-        credentials: {
-          accessKeyId,
-          secretAccessKey,
-        },
-      }),
-    })
+    const clientConfig: any = { region: this.region }
+    if (this.endpoint) {
+      clientConfig.endpoint = this.endpoint
+    }
+    if (typeof this.forcePathStyle === 'boolean') {
+      clientConfig.forcePathStyle = this.forcePathStyle
+    }
+    if (accessKeyId && secretAccessKey) {
+      clientConfig.credentials = { accessKeyId, secretAccessKey }
+    }
+    this.client = new S3Client(clientConfig)
   }
 
   async upload(buffer: Buffer, key: string, contentType: string): Promise<string> {
@@ -58,7 +83,13 @@ export class S3StorageAdapter implements StorageAdapter {
   }
 
   async getUrl(key: string): Promise<string> {
-    // URL publique si le bucket est public, sinon utiliser signed URL
+    // Si un endpoint custom est fourni (MinIO, R2, etc.), construire l'URL à partir de celui-ci.
+    if (this.endpoint) {
+      const endpointBase = this.endpoint.replace(/\/$/, '')
+      // Par compatibilité maximale, utiliser path-style par défaut sur endpoint custom
+      return `${endpointBase}/${this.bucket}/${key}`
+    }
+    // Par défaut AWS S3 (virtual-hosted style)
     return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`
   }
 
@@ -119,7 +150,7 @@ export class LocalStorageAdapter implements StorageAdapter {
 
   async getUrl(key: string): Promise<string> {
     // Pour le dev local, retourner une URL relative pointant vers la route API
-    return `/api/uploads/${key}`
+    return buildAbsoluteUrl(`/api/uploads/${key}`)
   }
 
   async getSignedUrl(key: string, _expiresIn?: number): Promise<string> {
@@ -255,15 +286,35 @@ export function createStorageAdapter(): StorageAdapter {
 
   switch (storageType) {
     case 's3':
-      if (!process.env['AWS_REGION'] || !process.env['S3_BUCKET_NAME']) {
-        throw new Error('AWS_REGION and S3_BUCKET_NAME are required for S3 storage')
+      if (!process.env['S3_BUCKET_NAME']) {
+        throw new Error('S3_BUCKET_NAME is required for S3 storage')
       }
-      return new S3StorageAdapter(
-        process.env['S3_BUCKET_NAME'],
-        process.env['AWS_REGION'],
-        process.env['AWS_ACCESS_KEY_ID'],
-        process.env['AWS_SECRET_ACCESS_KEY']
-      )
+      {
+        const endpoint = process.env['S3_ENDPOINT'] || process.env['MINIO_ENDPOINT']
+        const regionMaybe = process.env['AWS_REGION'] || (endpoint ? 'us-east-1' : undefined)
+        if (!regionMaybe) {
+          throw new Error('AWS_REGION is required unless S3_ENDPOINT/MINIO_ENDPOINT is provided')
+        }
+        const region: string = regionMaybe
+        const forcePathStyleEnv = process.env['S3_FORCE_PATH_STYLE'] || process.env['MINIO_FORCE_PATH_STYLE']
+        const forcePathStyle = forcePathStyleEnv ? forcePathStyleEnv === 'true' : Boolean(endpoint)
+
+        const options = {
+          ...(endpoint ? { endpoint } : {}),
+          ...(forcePathStyle ? { forcePathStyle } : {}),
+        }
+
+        const bucketNameEnv = process.env['S3_BUCKET_NAME']
+        const bucketName: string = bucketNameEnv!
+
+        return new S3StorageAdapter(
+          bucketName,
+          region,
+          process.env['AWS_ACCESS_KEY_ID'],
+          process.env['AWS_SECRET_ACCESS_KEY'],
+          options
+        )
+      }
 
     case 'ftp':
       if (!process.env['FTP_HOST'] || !process.env['FTP_USER'] || !process.env['FTP_PASSWORD']) {

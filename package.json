@@ -12,7 +12,8 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "user:create": "tsx scripts/create-user.ts"
+    "user:create": "tsx scripts/create-user.ts",
+    "workers": "tsx scripts/start-workers.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.922.0",
@@ -44,6 +45,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-konva": "^19.2.0",
+    "resend": "^6.4.1",
     "tailwind-merge": "^3.3.1",
     "use-image": "^1.1.4",
     "xlsx": "^0.18.5",
@@ -51,6 +53,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
+    "@types/nodemailer": "^7.0.3",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^7.13.0",

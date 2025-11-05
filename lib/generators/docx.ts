@@ -391,6 +391,12 @@ export async function generateDOCX(
             qrContent = qrContent.replace(variablePattern, String(value))
           })
 
+          // Support explicite d'un placeholder interne pour le chemin de fichier final
+          // Permet des patterns stables de type: https://app.example.com/redirect?path={{document_file_path}}
+          if (options.documentFilePath) {
+            qrContent = qrContent.replace(/\{\{document_file_path\}\}/g, options.documentFilePath)
+          }
+
           // Intégration URL de stockage si demandée ou si le pattern le requiert
           const wantsStorageUrl = Boolean(config.storageUrl?.enabled) || qrContent.includes('{{storage_url}}')
           if (wantsStorageUrl) {

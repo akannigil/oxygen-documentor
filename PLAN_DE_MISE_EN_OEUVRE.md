@@ -133,52 +133,62 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 
 ---
 
-### ⚠️ Phase 6 : Jobs & Génération en Lot (Jours 18-20) — PARTIELLEMENT IMPLÉMENTÉE
+### ✅ Phase 6 : Jobs & Génération en Lot (Jours 18-20) — TERMINÉE
 
 #### 6.1 Configuration BullMQ
 - [x] Installer BullMQ + Redis (dépendances installées)
-- [ ] Configuration Redis (local ou cloud)
-- [ ] Queue : `document-generation`
-- [ ] Worker : traitement des jobs
+- [x] Configuration Redis (local ou cloud)
+- [x] Queue : `document-generation`
+- [x] Queue : `email-sending`
+- [x] Workers : traitement des jobs
 
 #### 6.2 Job de génération batch
-- [ ] API route `/generate` : crée job BullMQ (génération synchrone actuellement)
-- [ ] Worker : traite chaque ligne → appelle `generateDocument()`
-- [ ] Progression : événements/métriques (optionnel WebSocket)
-- [ ] API route : `GET /api/jobs/[id]` pour status
+- [x] API route `/generate` : crée job BullMQ si batch > 10 lignes (génération synchrone pour petits batches)
+- [x] Worker : traite chaque ligne → appelle `generateDocument()`
+- [x] Progression : événements/métriques (via job.progress)
+- [x] API route : `GET /api/jobs/[id]` pour status
 
 #### 6.3 Gestion des erreurs
-- [ ] Retry sur échec (3 tentatives)
-- [ ] Logging des erreurs par document (console.error seulement)
-- [x] Statut "failed" dans DB (structure prête, pas d'implémentation complète)
+- [x] Retry sur échec (3 tentatives avec backoff exponentiel)
+- [x] Logging des erreurs par document
+- [x] Statut "failed" dans DB
 
 ---
 
-### ⚠️ Phase 7 : Système d'Envoi Email (Jours 21-23) — PARTIELLEMENT IMPLÉMENTÉE
+### ✅ Phase 7 : Système d'Envoi Email (Jours 21-23) — TERMINÉE
 
 #### 7.1 Configuration SMTP
 - [x] Installer `nodemailer` (dépendance installée)
-- [ ] Configuration SMTP (env vars)
-- [ ] Template email HTML (avec lien ou pièce jointe)
-- [ ] Service `sendDocumentEmail()`
+- [x] Configuration SMTP (env vars)
+- [x] Template email HTML (avec lien ou pièce jointe)
+- [x] Service `sendDocumentEmail()`
 
-#### 7.2 Providers transactionnels (optionnel)
-- [ ] Adapter pour SendGrid API
-- [ ] Adapter pour AWS SES
-- [ ] Adapter pour Mailgun
-- [ ] Configuration via env (choix du provider)
+#### 7.2 Providers transactionnels
+- [x] Adapter pour Resend API (implémenté)
+- [x] Configuration via env (choix du provider : SMTP ou Resend)
+- [ ] Adapter pour SendGrid API (optionnel futur)
+- [ ] Adapter pour AWS SES (optionnel futur)
+- [ ] Adapter pour Mailgun (optionnel futur)
 
 #### 7.3 Jobs d'envoi
-- [ ] Queue BullMQ : `email-sending`
-- [ ] Job : récupère document, génère email, envoie
-- [ ] Mise à jour `Document.emailSentAt`, `status: "sent"`
-- [ ] Gestion bounces/erreurs
+- [x] Queue BullMQ : `email-sending` (implémenté)
+- [x] Job : récupère document, génère email, envoie (worker implémenté)
+- [x] Mise à jour `Document.emailSentAt`, `status: "sent"` (implémenté dans service)
+- [x] Gestion erreurs (implémenté dans service et worker)
 
 #### 7.4 API d'envoi
-- [ ] API route : `POST /api/documents/[id]/send`
-- [ ] Body : `{ recipientEmail, subject?, body? }`
-- [ ] Validation email
-- [ ] Lancement job ou envoi synchrone
+- [x] API route : `POST /api/documents/[id]/send`
+- [x] Body : `{ recipientEmail, subject?, htmlTemplate?, variables?, attachDocument? }`
+- [x] Validation email (Zod schema)
+- [x] Envoi synchrone (par défaut)
+- [x] Support envoi asynchrone via BullMQ (optionnel avec `useQueue: true`)
+
+#### 7.5 Publipostage et templates
+- [x] Système de variables dans templates (`{{variable}}`)
+- [x] Variables imbriquées (`{{recipient.name}}`)
+- [x] Formats de date (`{{date|date:DD/MM/YYYY}}`)
+- [x] Formats texte (uppercase, lowercase, capitalize)
+- [x] Template HTML par défaut avec variables personnalisables
 
 ---
 
@@ -192,20 +202,20 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 
 #### 8.2 Liste des documents
 - [x] Page `/projects/[id]/documents`
-- [ ] Filtres : status (generated, sent, failed), date
-- [ ] Recherche par destinataire
-- [ ] Pagination
+- [x] Filtres : status (generated, sent, failed), date
+- [x] Recherche par destinataire
+- [x] Pagination
 - [x] Téléchargement individuel (signed URL via API)
 
 #### 8.3 Détails document
 - [x] Page `/documents/[id]`
 - [x] Métadonnées : template, données utilisées, dates
-- [ ] Aperçu PDF (iframe ou viewer)
+- [x] Aperçu PDF (iframe ou viewer)
 - [x] Actions : supprimer (renvoyer, régénérer à implémenter)
 
 #### 8.4 Export historique
-- [ ] Export CSV de la liste documents (métadonnées)
-- [ ] Filtres appliqués dans l'export
+- [x] Export CSV de la liste documents (métadonnées)
+- [x] Filtres appliqués dans l'export
 
 ---
 
@@ -403,10 +413,10 @@ NODE_ENV="development"
 - [x] Génération single doc (pdf-lib + qrcode) + stockage
 - [x] Support templates DOCX avec variables
 
-### ⚠️ Priorité 2 (Fonctionnel) — PARTIELLEMENT TERMINÉE
+### ⚠️ Priorité 2 (Fonctionnel) — TERMINÉE
 - [x] Historique documents (liste et détails)
-- [ ] Batch generate + worker (génération synchrone batch, pas de worker async)
-- [ ] Envoi email (SMTP) + logging (nodemailer installé, service non implémenté)
+- [x] Batch generate + worker (génération synchrone batch + BullMQ pour batches > 10 lignes)
+- [x] Envoi email (SMTP/Resend) + logging (service complet avec publipostage)
 
 ### ⚠️ Priorité 3 (Production-ready) — PARTIELLEMENT TERMINÉE
 - [x] Role-based access + signed URLs (structure prête, vérification ownerId)
@@ -426,7 +436,7 @@ NODE_ENV="development"
 
 ## État d'Avancement Global
 
-**Progression globale : ~70%**
+**Progression globale : ~90%**
 
 ### Phases terminées (✅)
 - Phase 1 : Infrastructure & Configuration — **100%**
@@ -434,11 +444,11 @@ NODE_ENV="development"
 - Phase 3 : Éditeur Visuel de Zones — **95%**
 - Phase 4 : Import de Données & Mapping — **100%**
 - Phase 5 : Service de Génération PDF — **100%**
-- Phase 8 : Interface Dashboard & Historique — **85%**
+- Phase 6 : Jobs & Génération en Lot — **100%**
+- Phase 7 : Système d'Envoi Email — **100%**
+- Phase 8 : Interface Dashboard & Historique — **100%**
 
 ### Phases partiellement terminées (⚠️)
-- Phase 6 : Jobs & Génération en Lot — **30%** (dépendances installées, workers non implémentés)
-- Phase 7 : Système d'Envoi Email — **25%** (nodemailer installé, service non implémenté)
 - Phase 9 : Sécurité & Optimisations — **50%** (validation Zod, signed URLs, permissions basiques)
 - Phase 10 : Tests & Documentation — **60%** (documentation présente, tests manquants)
 

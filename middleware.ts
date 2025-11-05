@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
   const session = await auth()
 
   // Routes publiques
-  const publicPaths = ['/login', '/signup', '/']
+  const publicPaths = ['/login', '/signup', '/', '/redirect']
   const isPublicPath = publicPaths.some((path) => request.nextUrl.pathname.startsWith(path))
 
   // Si pas de session et route protégée, rediriger vers login

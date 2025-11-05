@@ -34,6 +34,28 @@ FTP_BASE_PATH=""
 
 # Storage - Local (par défaut, si STORAGE_TYPE="local")
 LOCAL_STORAGE_DIR="./uploads"
+
+# Email Configuration (optionnel)
+# Options: 'smtp', 'resend'
+EMAIL_PROVIDER="smtp"
+
+# Email - SMTP (si EMAIL_PROVIDER="smtp")
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_SECURE="false"
+SMTP_USER=""
+SMTP_PASSWORD=""
+EMAIL_FROM=""
+
+# Email - Resend (si EMAIL_PROVIDER="resend")
+RESEND_API_KEY=""
+RESEND_FROM_EMAIL=""
+
+# Email - Informations optionnelles
+EMAIL_ORGANIZATION_NAME="Votre Organisation"
+EMAIL_APP_NAME="Oxygen Document"
+EMAIL_CONTACT="contact@example.com"
+EMAIL_REPLY_TO="contact@example.com"
 ```
 
 ### 2. Configuration de la base de données PostgreSQL
@@ -114,23 +136,46 @@ FTP_BASE_PATH="/documents"
 
 ### 6. Configuration Redis (optionnel, pour BullMQ)
 
-#### Option A : Redis local
+> **Note** : Redis est utilisé pour les queues de jobs (BullMQ). Si vous n'utilisez pas les fonctionnalités de génération en masse ou d'envoi d'emails asynchrone, vous pouvez désactiver Redis.
+
+#### Option A : Désactiver Redis (si non nécessaire)
+
+Si vous n'avez pas besoin des queues BullMQ, vous pouvez désactiver Redis complètement :
+
+```env
+REDIS_DISABLED="true"
+```
+
+> **Avantage** : Évite les erreurs de connexion si Redis n'est pas disponible. Les fonctionnalités qui nécessitent Redis seront désactivées automatiquement.
+
+#### Option B : Redis local avec Docker (recommandé pour dev)
 
 ```bash
 docker-compose up -d redis
 ```
 
-Ou installer Redis localement et utiliser :
+Puis ajouter dans `.env.local` :
 ```env
 REDIS_URL="redis://localhost:6379"
 ```
 
-#### Option B : Redis cloud (production)
+#### Option C : Redis local (installation native)
+
+Si Redis est installé localement :
+```env
+REDIS_URL="redis://localhost:6379"
+```
+
+#### Option D : Redis cloud (production)
 
 Utiliser un service comme Upstash ou Redis Cloud et configurer :
 ```env
 REDIS_URL="redis://username:password@host:port"
 ```
+
+**Dépannage** :
+- Si vous voyez des erreurs `ECONNREFUSED`, vérifiez que Redis est démarré : `docker ps` ou `redis-cli ping`
+- Pour désactiver temporairement Redis : définir `REDIS_DISABLED="true"`
 
 ### 7. Vérification avec Prisma Studio
 

@@ -9,6 +9,7 @@ interface Step {
   description: string;
   href: string;
   status: 'complete' | 'current' | 'upcoming';
+  actionLabel?: string; // Label optionnel pour le bouton d'action
 }
 
 interface WorkflowStepsProps {
@@ -46,24 +47,39 @@ export function WorkflowSteps({ steps, className }: WorkflowStepsProps) {
                 {stepIdx !== steps.length - 1 ? (
                   <div className="absolute left-4 top-4 -ml-px mt-0.5 h-full w-0.5 bg-gray-300" aria-hidden="true" />
                 ) : null}
-                <Link href={step.href} className="group relative flex items-start" aria-current="step">
-                  <span className="flex h-9 items-center" aria-hidden="true">
-                    <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 border-blue-600 bg-white">
-                      <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />
+                <div className="group relative flex items-start">
+                  <Link href={step.href} className="flex-1" aria-current="step">
+                    <span className="flex h-9 items-center" aria-hidden="true">
+                      <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 border-blue-600 bg-white">
+                        <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />
+                      </span>
                     </span>
-                  </span>
-                  <span className="ml-4 min-w-0 flex-1">
-                    <span className="text-sm font-medium text-blue-600">{step.name}</span>
-                    <span className="text-sm text-gray-500 block">{step.description}</span>
-                  </span>
-                </Link>
+                    <span className="ml-4 min-w-0 flex-1">
+                      <span className="text-sm font-medium text-blue-600">{step.name}</span>
+                      <span className="text-sm text-gray-500 block">{step.description}</span>
+                    </span>
+                  </Link>
+                  {step.actionLabel && (
+                    <div className="ml-4 flex items-center">
+                      <Link
+                        href={step.href}
+                        className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-purple-700 hover:shadow-md"
+                      >
+                        <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        {step.actionLabel}
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>
                 {stepIdx !== steps.length - 1 ? (
                   <div className="absolute left-4 top-4 -ml-px mt-0.5 h-full w-0.5 bg-gray-300" aria-hidden="true" />
                 ) : null}
-                <div className="group relative flex items-start">
+                <Link href={step.href} className="group relative flex items-start">
                   <span className="flex h-9 items-center" aria-hidden="true">
                     <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 border-gray-300 bg-white group-hover:border-gray-400">
                       <span className="h-2.5 w-2.5 rounded-full bg-transparent group-hover:bg-gray-300" />
@@ -73,7 +89,7 @@ export function WorkflowSteps({ steps, className }: WorkflowStepsProps) {
                     <span className="text-sm font-medium text-gray-500">{step.name}</span>
                     <span className="text-sm text-gray-500 block">{step.description}</span>
                   </span>
-                </div>
+                </Link>
               </>
             )}
           </li>

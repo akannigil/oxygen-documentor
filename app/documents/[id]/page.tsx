@@ -106,7 +106,7 @@ export default function DocumentPage() {
             </div>
           </dl>
 
-          <div className="mt-6">
+          <div className="mt-6 flex gap-2">
             <a
               href={doc.downloadUrl}
               target="_blank"
@@ -116,6 +116,21 @@ export default function DocumentPage() {
               Télécharger le PDF
             </a>
           </div>
+        </div>
+
+        {/* Aperçu PDF */}
+        <div className="mt-6 rounded-lg bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Aperçu</h2>
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <iframe
+              src={doc.downloadUrl}
+              className="w-full h-[600px]"
+              title="Aperçu du document"
+            />
+          </div>
+          <p className="mt-2 text-xs text-gray-500">
+            Si l'aperçu ne s'affiche pas, utilisez le bouton "Télécharger le PDF" ci-dessus.
+          </p>
         </div>
       </div>
     </div>
