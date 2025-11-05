@@ -11,11 +11,23 @@ interface SendEmailModalProps {
   document: Document
   onClose: () => void
   onEmailSent: () => void
+  defaultSubject?: string | undefined
+  defaultHtmlTemplate?: string | undefined
+  defaultFrom?: string | undefined
+  defaultReplyTo?: string | undefined
+  defaultCc?: string | string[] | undefined
+  defaultBcc?: string | string[] | undefined
 }
 
-export function SendEmailModal({ document, onClose, onEmailSent }: SendEmailModalProps) {
+export function SendEmailModal({ document, onClose, onEmailSent, defaultSubject, defaultHtmlTemplate, defaultFrom, defaultReplyTo, defaultCc, defaultBcc }: SendEmailModalProps) {
   const [recipient, setRecipient] = useState(document.recipientEmail || '')
-  const [subject, setSubject] = useState('Votre document')
+  const [subject, setSubject] = useState(defaultSubject || 'Votre document')
+  const [htmlTemplate, setHtmlTemplate] = useState(defaultHtmlTemplate || '')
+  const [from, setFrom] = useState(defaultFrom || '')
+  const [replyTo, setReplyTo] = useState(defaultReplyTo || '')
+  const [cc, setCc] = useState(typeof defaultCc === 'string' ? defaultCc : Array.isArray(defaultCc) ? defaultCc.join(', ') : '')
+  const [bcc, setBcc] = useState(typeof defaultBcc === 'string' ? defaultBcc : Array.isArray(defaultBcc) ? defaultBcc.join(', ') : '')
+  const [attachDocument, setAttachDocument] = useState(true)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,7 +42,12 @@ export function SendEmailModal({ document, onClose, onEmailSent }: SendEmailModa
         body: JSON.stringify({
             recipientEmail: recipient,
             subject: subject,
-            attachDocument: true 
+            htmlTemplate: htmlTemplate || undefined,
+            attachDocument: attachDocument,
+            from: from || undefined,
+            replyTo: replyTo || undefined,
+            cc: cc ? cc.split(',').map(e => e.trim()).filter(e => e) : undefined,
+            bcc: bcc ? bcc.split(',').map(e => e.trim()).filter(e => e) : undefined,
         }),
       });
 
@@ -58,12 +75,38 @@ export function SendEmailModal({ document, onClose, onEmailSent }: SendEmailModa
               <div className="mt-4 space-y-4">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">Destinataire</label>
-                  <input type="email" id="email" value={recipient} onChange={e => setRecipient(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" />
+                  <input type="email" id="email" value={recipient} onChange={e => setRecipient(e.target.value)} className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
                 </div>
                 <div>
                   <label htmlFor="subject" className="block text-sm font-medium text-gray-700">Sujet</label>
-                  <input type="text" id="subject" value={subject} onChange={e => setSubject(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" />
+                  <input type="text" id="subject" value={subject} onChange={e => setSubject(e.target.value)} className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
                 </div>
+                <div>
+                  <label htmlFor="from" className="block text-sm font-medium text-gray-700">From (optionnel)</label>
+                  <input type="email" id="from" value={from} onChange={e => setFrom(e.target.value)} className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
+                </div>
+                <div>
+                  <label htmlFor="replyTo" className="block text-sm font-medium text-gray-700">Reply-To (optionnel)</label>
+                  <input type="email" id="replyTo" value={replyTo} onChange={e => setReplyTo(e.target.value)} className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
+                </div>
+                <div>
+                  <label htmlFor="cc" className="block text-sm font-medium text-gray-700">Copie (CC) - optionnel</label>
+                  <input type="text" id="cc" value={cc} onChange={e => setCc(e.target.value)} placeholder="ex: archive@exemple.com, autre@exemple.com" className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
+                  <p className="mt-1 text-xs text-gray-500">Séparez plusieurs emails par des virgules</p>
+                </div>
+                <div>
+                  <label htmlFor="bcc" className="block text-sm font-medium text-gray-700">Copie cachée (CCI/BCC) - optionnel</label>
+                  <input type="text" id="bcc" value={bcc} onChange={e => setBcc(e.target.value)} placeholder="ex: archive@exemple.com, autre@exemple.com" className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
+                  <p className="mt-1 text-xs text-gray-500">Séparez plusieurs emails par des virgules</p>
+                </div>
+                <div>
+                  <label htmlFor="html" className="block text-sm font-medium text-gray-700">Template HTML (optionnel)</label>
+                  <textarea id="html" value={htmlTemplate} onChange={e => setHtmlTemplate(e.target.value)} rows={4} className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm font-mono" />
+                </div>
+                <label className="inline-flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={attachDocument} onChange={e => setAttachDocument(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  Joindre le document en pièce jointe
+                </label>
                 {error && <p className="text-sm text-red-600">{error}</p>}
               </div>
             </div>

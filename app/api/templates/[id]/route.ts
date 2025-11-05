@@ -28,7 +28,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     }
 
     // Fields that can be updated
-    const { name, description, qrcodeConfigs } = body
+    const { name, description, qrcodeConfigs, mailDefaults } = body
 
     const updatedTemplate = await prisma.template.update({
       where: { id },
@@ -36,7 +36,8 @@ export async function PUT(request: Request, { params }: RouteParams) {
         ...(name && { name }),
         ...(description && { description }),
         ...(qrcodeConfigs && { qrcodeConfigs }),
-      },
+        ...(mailDefaults && { mailDefaults: mailDefaults as any }),
+      } as any,
       include: {
         project: {
           select: {

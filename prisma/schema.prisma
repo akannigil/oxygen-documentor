@@ -49,6 +49,7 @@ model Template {
   fields      Json      @default("[]") // Array of zone definitions: {key, x, y, w, h, fontSize, align, type, format} (for PDF/image)
   variables   Json?     // Array of detected variables: [{name: "nom", occurrences: 5}] (for DOCX/PPTX)
   qrcodeConfigs Json?   // Array of QR Code configurations for DOCX: [{placeholder, contentPattern, options, auth, storageUrl}]
+  mailDefaults Json?    // Default mailing config: {subject, html, from, replyTo}
   documents   Document[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

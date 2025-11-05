@@ -16,6 +16,8 @@ export const sendEmailSchema = z.object({
   attachDocument: z.boolean().optional().default(false),
   from: z.string().email().optional(),
   replyTo: z.string().email().optional(),
+  cc: z.union([z.string().email(), z.array(z.string().email())]).optional(),
+  bcc: z.union([z.string().email(), z.array(z.string().email())]).optional(),
 })
 
 interface RouteParams {
@@ -83,6 +85,8 @@ export async function POST(request: Request, { params }: RouteParams) {
           attachDocument: validatedData.attachDocument,
           ...(validatedData.from && { from: validatedData.from }),
           ...(validatedData.replyTo && { replyTo: validatedData.replyTo }),
+          ...(validatedData.cc && { cc: validatedData.cc }),
+          ...(validatedData.bcc && { bcc: validatedData.bcc }),
         } satisfies EmailSendingJobData
       )
 
@@ -106,6 +110,8 @@ export async function POST(request: Request, { params }: RouteParams) {
       attachDocument: validatedData.attachDocument,
       ...(validatedData.from && { from: validatedData.from }),
       ...(validatedData.replyTo && { replyTo: validatedData.replyTo }),
+      ...(validatedData.cc && { cc: validatedData.cc }),
+      ...(validatedData.bcc && { bcc: validatedData.bcc }),
     })
 
     if (!result.success) {

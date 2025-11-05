@@ -9,6 +9,8 @@ export interface EmailAdapter {
     text?: string
     from?: string
     replyTo?: string
+    cc?: string | string[]
+    bcc?: string | string[]
     attachments?: Array<{
       filename: string
       content: Buffer
@@ -49,6 +51,8 @@ export class SMTPEmailAdapter implements EmailAdapter {
     text?: string
     from?: string
     replyTo?: string
+    cc?: string | string[]
+    bcc?: string | string[]
     attachments?: Array<{
       filename: string
       content: Buffer
@@ -63,6 +67,8 @@ export class SMTPEmailAdapter implements EmailAdapter {
         html: options.html,
         text: options.text,
         replyTo: options.replyTo,
+        ...(options.cc && { cc: Array.isArray(options.cc) ? options.cc.join(', ') : options.cc }),
+        ...(options.bcc && { bcc: Array.isArray(options.bcc) ? options.bcc.join(', ') : options.bcc }),
         attachments: options.attachments?.map((att) => ({
           filename: att.filename,
           content: att.content,
@@ -103,6 +109,8 @@ export class ResendEmailAdapter implements EmailAdapter {
     text?: string
     from?: string
     replyTo?: string
+    cc?: string | string[]
+    bcc?: string | string[]
     attachments?: Array<{
       filename: string
       content: Buffer
@@ -119,6 +127,8 @@ export class ResendEmailAdapter implements EmailAdapter {
         html: string
         text?: string
         replyTo?: string
+        cc?: string[]
+        bcc?: string[]
         attachments?: Array<{ filename: string; content: string }>
       } = {
         from: options.from || this.from,
@@ -133,6 +143,14 @@ export class ResendEmailAdapter implements EmailAdapter {
 
       if (options.replyTo) {
         emailOptions.replyTo = options.replyTo
+      }
+
+      if (options.cc) {
+        emailOptions.cc = Array.isArray(options.cc) ? options.cc : [options.cc]
+      }
+
+      if (options.bcc) {
+        emailOptions.bcc = Array.isArray(options.bcc) ? options.bcc : [options.bcc]
       }
 
       if (options.attachments && options.attachments.length > 0) {

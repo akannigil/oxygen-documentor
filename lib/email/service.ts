@@ -18,6 +18,8 @@ export interface SendDocumentEmailOptions {
   attachDocument?: boolean
   from?: string
   replyTo?: string
+  cc?: string | string[]
+  bcc?: string | string[]
 }
 
 export interface SendDocumentEmailResult {
@@ -96,7 +98,7 @@ export async function sendDocumentEmail(
     let downloadUrl = ''
     try {
       downloadUrl = await storage.getSignedUrl(document.filePath, 7 * 24 * 60 * 60)
-      variables.download_url = downloadUrl
+      variables['download_url'] = downloadUrl
     } catch (error) {
       console.error('Erreur lors de la génération de l\'URL signée:', error)
       // Continuer sans URL si erreur
@@ -149,9 +151,11 @@ export async function sendDocumentEmail(
       subject,
       html,
       text,
-      from: options.from || process.env['EMAIL_FROM'],
-      replyTo: options.replyTo || process.env['EMAIL_REPLY_TO'],
-      attachments,
+      ...(options.from || process.env['EMAIL_FROM'] ? { from: options.from || process.env['EMAIL_FROM']! } : {}),
+      ...(options.replyTo || process.env['EMAIL_REPLY_TO'] ? { replyTo: options.replyTo || process.env['EMAIL_REPLY_TO']! } : {}),
+      ...(options.cc ? { cc: options.cc } : {}),
+      ...(options.bcc ? { bcc: options.bcc } : {}),
+      ...(attachments ? { attachments } : {}),
     })
 
     if (result.success) {
@@ -168,7 +172,7 @@ export async function sendDocumentEmail(
 
       return {
         success: true,
-        messageId: result.messageId,
+        ...(result.messageId ? { messageId: result.messageId } : {}),
       }
     }
 
@@ -226,10 +230,10 @@ export async function sendDocumentEmailsBatch(
       sendDocumentEmail({
         documentId: doc.documentId,
         recipientEmail: doc.recipientEmail,
-        subject: doc.subject,
-        htmlTemplate: doc.htmlTemplate,
-        variables: doc.variables,
-        attachDocument: doc.attachDocument,
+        ...(doc.subject ? { subject: doc.subject } : {}),
+        ...(doc.htmlTemplate ? { htmlTemplate: doc.htmlTemplate } : {}),
+        ...(doc.variables ? { variables: doc.variables } : {}),
+        ...(doc.attachDocument !== undefined ? { attachDocument: doc.attachDocument } : {}),
       }).then((result) => ({ ...result, documentId: doc.documentId }))
     )
   )
