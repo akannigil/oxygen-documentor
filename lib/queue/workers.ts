@@ -1,7 +1,8 @@
 import { Worker, Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import type { Prisma } from '@prisma/client'
-import { storage } from '@/lib/storage'
+import { createStorageAdapterFromConfig } from '@/lib/storage/config'
+import type { StorageConfig } from '@/lib/storage/config'
 import { documentGenerationQueue, emailSendingQueue, createRedisConnection } from './queues'
 import { sendDocumentEmail } from '@/lib/email/service'
 import { generateDocumentBuffer } from '@/lib/generation/service'
@@ -79,6 +80,16 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
       const errors: Array<{ row: number; error: string }> = []
 
       try {
+        // Récupérer le projet avec sa configuration de stockage
+        const project = await prisma.project.findUnique({
+          where: { id: projectId },
+          select: { storageConfig: true },
+        })
+
+        // Récupérer la configuration de stockage du projet ou utiliser celle par défaut
+        const projectStorageConfig = project?.storageConfig as StorageConfig | null | undefined
+        const projectStorage = createStorageAdapterFromConfig(projectStorageConfig)
+
         const template = await prisma.template.findUnique({ where: { id: templateId } })
         if (!template) {
           throw new Error(`Template ${templateId} non trouvé`)
@@ -87,17 +98,10 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
           throw new Error(`Template ${templateId} n'appartient pas au projet ${projectId}`)
         }
         console.log(`[Worker] Template trouvé: ${template.name} (type: ${template.mimeType})`)
+        console.log(`[Worker] Configuration de stockage: ${projectStorageConfig?.type || 'défaut (env)'}`)
 
-        // Récupérer le mapping des colonnes depuis mailDefaults
-        const mailDefaults = ((template as unknown as { mailDefaults?: {
-          columnMapping?: {
-            recipient_name?: string
-            recipient_email?: string
-          }
-        } }).mailDefaults) ?? null
-        const columnMapping = mailDefaults?.columnMapping
-
-        const templateBuffer = await storage.getBuffer(template.filePath)
+        // Utiliser le stockage du projet pour récupérer le template
+        const templateBuffer = await projectStorage.getBuffer(template.filePath)
         console.log(`[Worker] Template buffer récupéré: ${templateBuffer.length} bytes`)
 
         const getTemplateType = (mimeType: string): 'pdf' | 'image' | 'docx' => {
@@ -113,7 +117,7 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
           : undefined
 
         const getStorageUrl = (filePath: string, signed = false, expiresIn = 3600) => {
-          return signed ? storage.getSignedUrl(filePath, expiresIn) : storage.getUrl(filePath)
+          return signed ? projectStorage.getSignedUrl(filePath, expiresIn) : projectStorage.getUrl(filePath)
         }
 
         for (let i = 0; i < rows.length; i++) {
@@ -126,8 +130,8 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
             const finalData = { ...data }
 
             // Simplification: Récupérer directement les données mappées depuis le front-end
-            const recipientEmail = (finalData.recipientEmail as string) || null
-            const recipientName = (finalData.recipientName as string) || (recipientEmail?.split('@')[0]) || null
+            const recipientEmail = (finalData['recipientEmail'] as string) || null
+            const recipientName = (finalData['recipientName'] as string) || (recipientEmail?.split('@')[0]) || null
 
             // Log pour debug si email manquant
             if (!recipientEmail) {
@@ -182,7 +186,7 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
             outputMimeType = genResult.mimeType
 
             console.log(`[Worker] Upload du document ${docId} vers ${documentKey}`)
-            await storage.upload(documentBuffer, documentKey, outputMimeType)
+            await projectStorage.upload(documentBuffer, documentKey, outputMimeType)
 
             await prisma.document.update({
               where: { id: docId },

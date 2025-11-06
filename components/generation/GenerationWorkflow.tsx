@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect } from 'react';
 import type { TemplateField } from '@/shared/types';
 import CSVExcelImport from '@/components/data-import/CSVExcelImport';
 import { VisualPreview } from './VisualPreview';
+import { StorageConfigForm } from '@/components/storage/StorageConfigForm';
+import type { StorageConfig } from '@/lib/storage/config';
 
 // ... (Existing imports)
 
@@ -64,6 +66,7 @@ export function GenerationWorkflow({ template, projectId, onGenerationComplete }
 
   const [monitoringJobId, setMonitoringJobId] = useState<string | null>(null);
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
+  const [storageConfig, setStorageConfig] = useState<StorageConfig | null>(null);
 
   const templateFieldKeys = useMemo(() => {
     if (template.templateType === 'docx' && template.variables) {
@@ -71,6 +74,22 @@ export function GenerationWorkflow({ template, projectId, onGenerationComplete }
     }
     return template.fields?.map(f => f.key) || [];
   }, [template.fields, template.variables, template.templateType]);
+
+  // Charger la configuration de stockage du projet
+  useEffect(() => {
+    const loadStorageConfig = async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/storage-config`);
+        if (res.ok) {
+          const data = await res.json();
+          setStorageConfig(data.config);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement de la configuration de stockage:', error);
+      }
+    };
+    loadStorageConfig();
+  }, [projectId]);
 
   useEffect(() => {
     if (!monitoringJobId) return;
@@ -547,6 +566,15 @@ export function GenerationWorkflow({ template, projectId, onGenerationComplete }
                   <p className="mt-1 text-xs">Les documents seront générés au format PDF avec les dimensions du template.</p>
                 </div>
               )}
+            </div>
+
+            {/* Configuration du stockage */}
+            <div className="mt-6">
+              <StorageConfigForm
+                projectId={projectId}
+                initialConfig={storageConfig}
+                onSave={(config) => setStorageConfig(config)}
+              />
             </div>
 
             <div className="flex justify-end gap-3">

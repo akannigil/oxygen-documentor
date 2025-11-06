@@ -22,15 +22,16 @@ model User {
 }
 
 model Project {
-  id          String     @id @default(cuid())
-  name        String
-  description String?
-  ownerId     String
-  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  templates   Template[]
-  documents   Document[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id            String     @id @default(cuid())
+  name          String
+  description   String?
+  ownerId       String
+  owner         User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  storageConfig Json?      // Configuration de stockage personnalisée: {type: 's3'|'local'|'ftp'|'google-drive', config: {...}}
+  templates     Template[]
+  documents     Document[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   @@map("projects")
 }
