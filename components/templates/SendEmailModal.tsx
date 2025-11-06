@@ -14,16 +14,18 @@ interface SendEmailModalProps {
   defaultSubject?: string | undefined
   defaultHtmlTemplate?: string | undefined
   defaultFrom?: string | undefined
+  defaultFromName?: string | undefined
   defaultReplyTo?: string | undefined
   defaultCc?: string | string[] | undefined
   defaultBcc?: string | string[] | undefined
 }
 
-export function SendEmailModal({ document, onClose, onEmailSent, defaultSubject, defaultHtmlTemplate, defaultFrom, defaultReplyTo, defaultCc, defaultBcc }: SendEmailModalProps) {
+export function SendEmailModal({ document, onClose, onEmailSent, defaultSubject, defaultHtmlTemplate, defaultFrom, defaultFromName, defaultReplyTo, defaultCc, defaultBcc }: SendEmailModalProps) {
   const [recipient, setRecipient] = useState(document.recipientEmail || '')
   const [subject, setSubject] = useState(defaultSubject || 'Votre document')
   const [htmlTemplate, setHtmlTemplate] = useState(defaultHtmlTemplate || '')
   const [from, setFrom] = useState(defaultFrom || '')
+  const [fromName, setFromName] = useState(defaultFromName || '')
   const [replyTo, setReplyTo] = useState(defaultReplyTo || '')
   const [cc, setCc] = useState(typeof defaultCc === 'string' ? defaultCc : Array.isArray(defaultCc) ? defaultCc.join(', ') : '')
   const [bcc, setBcc] = useState(typeof defaultBcc === 'string' ? defaultBcc : Array.isArray(defaultBcc) ? defaultBcc.join(', ') : '')
@@ -60,6 +62,7 @@ export function SendEmailModal({ document, onClose, onEmailSent, defaultSubject,
             htmlTemplate: htmlTemplate || undefined,
             attachDocument: attachDocument,
             from: from.trim() || undefined,
+            fromName: fromName.trim() || undefined,
             replyTo: replyTo.trim() || undefined,
             cc: cc.trim() ? cc.split(',').map(e => e.trim()).filter(e => e) : undefined,
             bcc: bcc.trim() ? bcc.split(',').map(e => e.trim()).filter(e => e) : undefined,
@@ -100,6 +103,10 @@ export function SendEmailModal({ document, onClose, onEmailSent, defaultSubject,
                 <div>
                   <label htmlFor="subject" className="block text-sm font-medium text-gray-700">Sujet</label>
                   <input type="text" id="subject" value={subject} onChange={e => setSubject(e.target.value)} className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
+                </div>
+                <div>
+                  <label htmlFor="fromName" className="block text-sm font-medium text-gray-700">Nom de l'expéditeur (optionnel)</label>
+                  <input type="text" id="fromName" value={fromName} onChange={e => setFromName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
                 </div>
                 <div>
                   <label htmlFor="from" className="block text-sm font-medium text-gray-700">From (optionnel)</label>

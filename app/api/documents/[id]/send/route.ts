@@ -19,6 +19,7 @@ export const sendEmailSchema = z.object({
   variables: z.record(z.unknown()).optional(),
   attachDocument: z.boolean().optional().default(false),
   from: z.string().trim().email().optional(),
+  fromName: z.string().optional(),
   replyTo: z.string().trim().email().optional(),
   cc: z
     .union([
@@ -166,6 +167,7 @@ export async function POST(request: Request, { params }: RouteParams) {
           ...(validatedData.variables && { variables: validatedData.variables }),
           attachDocument: validatedData.attachDocument,
           ...(validatedData.from && { from: validatedData.from }),
+          ...(validatedData.fromName && { fromName: validatedData.fromName }),
           ...(validatedData.replyTo && { replyTo: validatedData.replyTo }),
           ...(validatedData.cc && { cc: validatedData.cc }),
           ...(validatedData.bcc && { bcc: validatedData.bcc }),
@@ -191,6 +193,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       ...(validatedData.variables && { variables: validatedData.variables as EmailTemplateVariables }),
       attachDocument: validatedData.attachDocument,
       ...(validatedData.from && { from: validatedData.from }),
+      ...(validatedData.fromName && { fromName: validatedData.fromName }),
       ...(validatedData.replyTo && { replyTo: validatedData.replyTo }),
       ...(validatedData.cc && { cc: validatedData.cc }),
       ...(validatedData.bcc && { bcc: validatedData.bcc }),

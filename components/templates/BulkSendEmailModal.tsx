@@ -10,15 +10,17 @@ interface BulkSendEmailModalProps {
   defaultSubject?: string | undefined
   defaultHtmlTemplate?: string | undefined
   defaultFrom?: string | undefined
+  defaultFromName?: string | undefined
   defaultReplyTo?: string | undefined
   defaultCc?: string | string[] | undefined
   defaultBcc?: string | string[] | undefined
 }
 
-export function BulkSendEmailModal({ templateId, selectedDocuments, onClose, onQueued, defaultSubject, defaultHtmlTemplate, defaultFrom, defaultReplyTo, defaultCc, defaultBcc }: BulkSendEmailModalProps) {
+export function BulkSendEmailModal({ templateId, selectedDocuments, onClose, onQueued, defaultSubject, defaultHtmlTemplate, defaultFrom, defaultFromName, defaultReplyTo, defaultCc, defaultBcc }: BulkSendEmailModalProps) {
   const [subject, setSubject] = useState(defaultSubject || 'Votre document')
   const [htmlTemplate, setHtmlTemplate] = useState(defaultHtmlTemplate || '')
   const [from, setFrom] = useState(defaultFrom || '')
+  const [fromName, setFromName] = useState(defaultFromName || '')
   const [replyTo, setReplyTo] = useState(defaultReplyTo || '')
   const [cc, setCc] = useState(typeof defaultCc === 'string' ? defaultCc : Array.isArray(defaultCc) ? defaultCc.join(', ') : '')
   const [bcc, setBcc] = useState(typeof defaultBcc === 'string' ? defaultBcc : Array.isArray(defaultBcc) ? defaultBcc.join(', ') : '')
@@ -44,6 +46,7 @@ export function BulkSendEmailModal({ templateId, selectedDocuments, onClose, onQ
           htmlTemplate: htmlTemplate || undefined,
           attachDocument,
           from: from || undefined,
+          fromName: fromName || undefined,
           replyTo: replyTo || undefined,
           cc: cc ? cc.split(',').map(e => e.trim()).filter(e => e) : undefined,
           bcc: bcc ? bcc.split(',').map(e => e.trim()).filter(e => e) : undefined,
@@ -82,25 +85,29 @@ export function BulkSendEmailModal({ templateId, selectedDocuments, onClose, onQ
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
+                    <label className="block text-sm font-medium text-gray-700">Nom de l'expéditeur (optionnel)</label>
+                    <input type="text" value={fromName} onChange={e => setFromName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700">From (optionnel)</label>
                     <input type="email" value={from} onChange={e => setFrom(e.target.value)} className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
                   </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Reply-To (optionnel)</label>
                     <input type="email" value={replyTo} onChange={e => setReplyTo(e.target.value)} className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
                   </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Copie (CC) - optionnel</label>
                     <input type="text" value={cc} onChange={e => setCc(e.target.value)} placeholder="ex: archive@exemple.com, autre@exemple.com" className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
                     <p className="mt-1 text-xs text-gray-500">Séparez plusieurs emails par des virgules</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Copie cachée (CCI/BCC) - optionnel</label>
-                    <input type="text" value={bcc} onChange={e => setBcc(e.target.value)} placeholder="ex: archive@exemple.com, autre@exemple.com" className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
-                    <p className="mt-1 text-xs text-gray-500">Séparez plusieurs emails par des virgules</p>
-                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Copie cachée (CCI/BCC) - optionnel</label>
+                  <input type="text" value={bcc} onChange={e => setBcc(e.target.value)} placeholder="ex: archive@exemple.com, autre@exemple.com" className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
+                  <p className="mt-1 text-xs text-gray-500">Séparez plusieurs emails par des virgules</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Sujet</label>

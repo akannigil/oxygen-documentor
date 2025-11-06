@@ -18,6 +18,8 @@ interface CSVExcelImportProps {
   onDataMapped: (rows: Record<string, string | number>[]) => void;
 }
 
+const RECIPIENT_EMAIL_KEY = 'recipientEmail';
+
 export default function CSVExcelImport({ templateFieldKeys, onDataMapped }: CSVExcelImportProps) {
   const [error, setError] = useState<string>('');
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
@@ -91,11 +93,19 @@ export default function CSVExcelImport({ templateFieldKeys, onDataMapped }: CSVE
     
     const mapped = importResult.rows.map((row) => {
       const out: Record<string, string | number> = {};
+      // 1. Mapper les clés du template
       for (const key of templateFieldKeys) {
         const col = mapping[key];
         const value = col && col in row ? row[col] : '';
         out[key] = value ?? '';
       }
+      
+      // 2. Mapper l'e-mail du destinataire
+      const emailCol = mapping[RECIPIENT_EMAIL_KEY];
+      if (emailCol && emailCol in row) {
+        out[RECIPIENT_EMAIL_KEY] = row[emailCol] ?? '';
+      }
+      
       return out;
     });
     
@@ -119,6 +129,8 @@ export default function CSVExcelImport({ templateFieldKeys, onDataMapped }: CSVE
     return importResult.rows.slice(0, 10);
   }, [importResult]);
 
+  const allMappingKeys = useMemo(() => [RECIPIENT_EMAIL_KEY, ...templateFieldKeys], [templateFieldKeys]);
+
   return (
     <div className="space-y-4">
       <div>
@@ -136,6 +148,27 @@ export default function CSVExcelImport({ templateFieldKeys, onDataMapped }: CSVE
       {importResult && (
         <div className="rounded-lg border border-gray-200 p-4">
           <h3 className="mb-3 text-sm font-semibold text-gray-900">Mapping des colonnes</h3>
+          
+          {/* Champ dédié pour l'email */}
+          <div className="rounded-md border border-blue-200 bg-blue-50 p-3 mb-4">
+            <div className="space-y-1">
+              <div className="text-sm font-semibold text-blue-800">E-mail du Destinataire</div>
+              <p className="text-xs text-blue-700 mb-2">Champ requis pour l'envoi d'e-mails groupé ou individuel.</p>
+              <select
+                className="block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                value={mapping[RECIPIENT_EMAIL_KEY] ?? ''}
+                onChange={(e) => handleMappingChange(RECIPIENT_EMAIL_KEY, e.target.value)}
+              >
+                <option value="">— Sélectionner la colonne de l'e-mail —</option>
+                {importResult.headers.map((h) => (
+                  <option key={`${RECIPIENT_EMAIL_KEY}-${h}`} value={h}>
+                    {h}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="grid gap-3 md:grid-cols-2">
             {templateFieldKeys.map((key) => (
               <div key={key} className="space-y-1">
@@ -162,8 +195,8 @@ export default function CSVExcelImport({ templateFieldKeys, onDataMapped }: CSVE
               <table className="min-w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    {templateFieldKeys.map((k) => (
-                      <th key={`h-${k}`} className="px-2 py-2 text-left font-medium text-gray-700">
+                    {allMappingKeys.map((k) => (
+                      <th key={`h-${k}`} className={`px-2 py-2 text-left font-medium text-gray-700 ${k === RECIPIENT_EMAIL_KEY ? 'bg-blue-100' : ''}`}>
                         {k}
                       </th>
                     ))}
@@ -172,11 +205,11 @@ export default function CSVExcelImport({ templateFieldKeys, onDataMapped }: CSVE
                 <tbody>
                   {previewRows.map((row, i) => (
                     <tr key={`r-${i}`} className="odd:bg-white even:bg-gray-50">
-                      {templateFieldKeys.map((k) => {
+                      {allMappingKeys.map((k) => {
                         const col = mapping[k];
                         const value = col && col in row ? row[col] : '';
                         return (
-                          <td key={`c-${k}-${i}`} className="px-2 py-2 text-gray-800">
+                          <td key={`c-${k}-${i}`} className={`px-2 py-2 text-gray-800 ${k === RECIPIENT_EMAIL_KEY ? 'bg-blue-50' : ''}`}>
                             {String(value ?? '')}
                           </td>
                         );

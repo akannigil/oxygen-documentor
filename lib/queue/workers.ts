@@ -123,122 +123,15 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
           try {
             console.log(`[Worker] Traitement ligne ${i + 1}/${rows.length}`)
             
-            // Appliquer le mapping des colonnes pour recipient_name et recipient_email
-            // Vérifier d'abord si les clés existent déjà (cas où le mapping CSV a été fait)
-            // Sinon, utiliser le mapping du template pour trouver dans les colonnes originales
-            const getRecipientName = (): string | null => {
-              // 1. Vérifier si recipient_name existe déjà dans les données (mapping CSV déjà fait)
-              if (data['recipient_name'] !== undefined && data['recipient_name'] !== null && data['recipient_name'] !== '') {
-                const value = String(data['recipient_name']).trim()
-                return value || null
-              }
-              
-              // 2. Utiliser le mapping du template si configuré
-              if (columnMapping?.recipient_name) {
-                const mappedValue = data[columnMapping.recipient_name]
-                if (mappedValue !== undefined && mappedValue !== null && mappedValue !== '') {
-                  const value = String(mappedValue).trim()
-                  return value || null
-                }
-              }
-              
-              return null
-            }
-            
-            const getRecipientEmail = (): string | null => {
-              // Helper pour normaliser les noms de colonnes (insensible à la casse et aux espaces)
-              const normalizeKey = (key: string): string => key.trim().toLowerCase()
-              
-              // Helper pour trouver une valeur par clé normalisée
-              const findValueByNormalizedKey = (obj: Record<string, unknown>, searchKey: string): unknown => {
-                const normalizedSearch = normalizeKey(searchKey)
-                for (const [key, value] of Object.entries(obj)) {
-                  if (normalizeKey(key) === normalizedSearch) {
-                    return value
-                  }
-                }
-                return undefined
-              }
-              
-              // 1. Vérifier si recipient_email existe déjà dans les données (mapping CSV déjà fait)
-              const recipientEmailValue = findValueByNormalizedKey(data, 'recipient_email')
-              if (recipientEmailValue !== undefined && recipientEmailValue !== null && recipientEmailValue !== '') {
-                const value = String(recipientEmailValue).trim()
-                // Valider que c'est un email valide (format basique)
-                if (value && value.includes('@')) {
-                  return value
-                }
-              }
-              
-              // 2. Utiliser le mapping du template si configuré (avec recherche insensible à la casse)
-              if (columnMapping?.recipient_email) {
-                const mappedColumnName = columnMapping.recipient_email.trim()
-                // Essayer d'abord avec le nom exact
-                let mappedValue = data[mappedColumnName]
-                
-                // Si pas trouvé, chercher de manière insensible à la casse
-                if (mappedValue === undefined || mappedValue === null || mappedValue === '') {
-                  mappedValue = findValueByNormalizedKey(data, mappedColumnName)
-                }
-                
-                if (mappedValue !== undefined && mappedValue !== null && mappedValue !== '') {
-                  const value = String(mappedValue).trim()
-                  // Valider que c'est un email valide (format basique)
-                  if (value && value.includes('@')) {
-                    return value
-                  }
-                }
-              }
-              
-              // 3. Recherche automatique dans toutes les colonnes (fallback)
-              // Chercher des colonnes qui pourraient contenir un email (email, mail, courriel, etc.)
-              const emailKeywords = ['email', 'mail', 'courriel', 'e-mail', 'e_mail', 'adresse email']
-              for (const keyword of emailKeywords) {
-                const foundValue = findValueByNormalizedKey(data, keyword)
-                if (foundValue !== undefined && foundValue !== null && foundValue !== '') {
-                  const value = String(foundValue).trim()
-                  // Valider que c'est un email valide (format basique)
-                  if (value && value.includes('@')) {
-                    console.log(`[Worker] Email trouvé automatiquement dans la colonne "${keyword}" via recherche insensible à la casse`)
-                    return value
-                  }
-                }
-              }
-              
-              return null
-            }
-            
-            const recipientName = getRecipientName()
-            const recipientEmail = getRecipientEmail()
-            
-            // Ajouter les valeurs trouvées au finalData si elles n'existent pas déjà
             const finalData = { ...data }
-            if (recipientName && !finalData['recipient_name']) {
-              finalData['recipient_name'] = recipientName
-            }
-            if (recipientEmail && !finalData['recipient_email']) {
-              finalData['recipient_email'] = recipientEmail
-            }
-            
+
+            // Simplification: Récupérer directement les données mappées depuis le front-end
+            const recipientEmail = (finalData.recipientEmail as string) || null
+            const recipientName = (finalData.recipientName as string) || (recipientEmail?.split('@')[0]) || null
+
             // Log pour debug si email manquant
             if (!recipientEmail) {
-              console.warn(`[Worker] Ligne ${i + 1}: Aucun email destinataire trouvé. Colonnes disponibles:`, Object.keys(data))
-              if (columnMapping?.recipient_email) {
-                const mappedValue = data[columnMapping.recipient_email]
-                console.warn(`[Worker] Mapping configuré pour recipient_email: "${columnMapping.recipient_email}", valeur trouvée:`, mappedValue)
-                // Afficher aussi les colonnes similaires pour aider au debug
-                const availableColumns = Object.keys(data)
-                const similarColumns = availableColumns.filter(col => 
-                  col.toLowerCase().includes('email') || 
-                  col.toLowerCase().includes('mail') || 
-                  col.toLowerCase().includes('courriel')
-                )
-                if (similarColumns.length > 0) {
-                  console.warn(`[Worker] Colonnes similaires trouvées:`, similarColumns)
-                }
-              } else {
-                console.warn(`[Worker] Aucun mapping configuré pour recipient_email`)
-              }
+              console.warn(`[Worker] Ligne ${i + 1}: Aucun email destinataire trouvé dans les données mappées. Colonnes disponibles:`, Object.keys(finalData))
             }
             
             const doc = await prisma.document.create({
@@ -255,7 +148,6 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
             })
             docId = doc.id
             console.log(`[Worker] Document créé en DB: ${docId}`)
-
             let outputMimeType: string
             let fileExtension: string
 
@@ -369,6 +261,7 @@ export interface EmailSendingJobData {
   variables?: Record<string, unknown>
   attachDocument?: boolean
   from?: string
+  fromName?: string
   replyTo?: string
   cc?: string | string[]
   bcc?: string | string[]
@@ -388,7 +281,7 @@ export function createEmailSendingWorker(): Worker<EmailSendingJobData, { succes
   const worker = new Worker<EmailSendingJobData, { success: boolean; messageId?: string }>(
     'email-sending',
     async (job: Job<EmailSendingJobData, { success: boolean; messageId?: string }>) => {
-      const { documentId, recipientEmail, subject, htmlTemplate, textTemplate, variables, attachDocument, from, replyTo, cc, bcc } = job.data
+      const { documentId, recipientEmail, subject, htmlTemplate, textTemplate, variables, attachDocument, from, fromName, replyTo, cc, bcc } = job.data
 
       const result = await sendDocumentEmail({
         documentId,
@@ -399,6 +292,7 @@ export function createEmailSendingWorker(): Worker<EmailSendingJobData, { succes
         ...(variables && { variables: variables as EmailTemplateVariables }),
         ...(attachDocument !== undefined && { attachDocument }),
         ...(from && { from }),
+        ...(fromName && { fromName }),
         ...(replyTo && { replyTo }),
         ...(cc && { cc }),
         ...(bcc && { bcc }),
@@ -408,12 +302,15 @@ export function createEmailSendingWorker(): Worker<EmailSendingJobData, { succes
         throw new Error(result.error || 'Erreur lors de l\'envoi de l\'email')
       }
 
+      // Ajouter un délai pour respecter les limites de taux du service d'envoi d'emails
+      await new Promise(resolve => setTimeout(resolve, 500)); // 500ms de délai = 2 requêtes/seconde
+
       return {
         success: true,
         ...(result.messageId && { messageId: result.messageId }),
       }
     },
-    { connection: redisConnection, concurrency: 10 }
+    { connection: redisConnection, concurrency: 1 }
   )
 
   worker.on('completed', (job) => {

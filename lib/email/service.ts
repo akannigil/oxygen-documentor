@@ -17,6 +17,7 @@ export interface SendDocumentEmailOptions {
   variables?: EmailTemplateVariables
   attachDocument?: boolean
   from?: string
+  fromName?: string // Ajout du nom de l'expéditeur
   replyTo?: string
   cc?: string | string[]
   bcc?: string | string[]
@@ -26,6 +27,17 @@ export interface SendDocumentEmailResult {
   success: boolean
   messageId?: string
   error?: string
+}
+
+/**
+ * Formate l'en-tête "From" avec un nom et une adresse e-mail.
+ */
+function formatFrom(name?: string, email?: string): string | undefined {
+  if (!email) return undefined
+  if (!name) return email
+  // Échapper les guillemets dans le nom
+  const sanitizedName = name.replace(/"/g, '\"')
+  return `"${sanitizedName}" <${email}>`
 }
 
 /**
@@ -145,13 +157,18 @@ export async function sendDocumentEmail(
         ]
       : undefined
 
+    // Construire l'en-tête "From"
+    const fromAddress = options.from || process.env['EMAIL_FROM']
+    const fromName = options.fromName || process.env['EMAIL_SENDER_NAME']
+    const fromHeader = formatFrom(fromName, fromAddress)
+
     // Envoyer l'email
     const result = await emailAdapter.send({
       to: options.recipientEmail,
       subject,
       html,
       text,
-      ...(options.from || process.env['EMAIL_FROM'] ? { from: options.from || process.env['EMAIL_FROM']! } : {}),
+      ...(fromHeader ? { from: fromHeader } : {}),
       ...(options.replyTo || process.env['EMAIL_REPLY_TO'] ? { replyTo: options.replyTo || process.env['EMAIL_REPLY_TO']! } : {}),
       ...(options.cc ? { cc: options.cc } : {}),
       ...(options.bcc ? { bcc: options.bcc } : {}),
