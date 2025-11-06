@@ -3,6 +3,7 @@
  */
 
 export type TemplateType = 'pdf' | 'image' | 'docx' | 'pptx'
+export type OutputFormat = 'docx' | 'pdf'
 
 /**
  * Options de personnalisation pour les QR codes

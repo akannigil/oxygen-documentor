@@ -78,9 +78,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       where.status = 'generated'
     }
 
-    // Exclure les documents sans email de destinataire
-    where.recipientEmail = { not: null }
-
+    // Récupérer tous les documents correspondants (sans filtrer par recipientEmail ici)
     const documents = await prisma.document.findMany({
       where,
       select: {
@@ -91,7 +89,25 @@ export async function POST(request: Request, { params }: RouteParams) {
       },
     })
 
-    if (documents.length === 0) {
+    // Extraire l'email depuis document.recipientEmail OU document.data['recipient_email']
+    const documentsWithEmail = documents
+      .map((doc) => {
+        let email: string | null = doc.recipientEmail
+
+        // Si pas d'email dans recipientEmail, chercher dans data
+        if (!email && doc.data && typeof doc.data === 'object') {
+          const data = doc.data as Record<string, unknown>
+          const emailFromData = data['recipient_email']
+          if (emailFromData && typeof emailFromData === 'string' && emailFromData.trim()) {
+            email = emailFromData.trim()
+          }
+        }
+
+        return { ...doc, recipientEmail: email }
+      })
+      .filter((doc) => doc.recipientEmail !== null && doc.recipientEmail !== '') // Filtrer les documents sans email
+
+    if (documentsWithEmail.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -109,7 +125,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     if (useQueue && emailSendingQueue) {
       // Créer des jobs BullMQ pour chaque document
       const jobs = await Promise.all(
-        documents.map((doc) =>
+        documentsWithEmail.map((doc) =>
           emailSendingQueue.add(
             'send-email',
             {
@@ -133,15 +149,15 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({
         success: true,
         jobIds: jobs.map((j) => j.id),
-        documentsCount: documents.length,
+        documentsCount: documentsWithEmail.length,
         queue: 'email-sending',
-        message: `${documents.length} email(s) en cours d'envoi via la queue. Utilisez GET /api/jobs/[id] pour suivre la progression.`,
+        message: `${documentsWithEmail.length} email(s) en cours d'envoi via la queue. Utilisez GET /api/jobs/[id] pour suivre la progression.`,
         status: 'queued',
       })
     }
 
     // Envoi synchrone (par défaut)
-    const emailPayloads = documents.map((doc) => ({
+    const emailPayloads = documentsWithEmail.map((doc) => ({
       documentId: doc.id,
       recipientEmail: doc.recipientEmail!,
       subject: validatedData.subject,
@@ -159,7 +175,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       success: failureCount === 0,
       results,
       summary: {
-        total: documents.length,
+        total: documentsWithEmail.length,
         success: successCount,
         failed: failureCount,
       },

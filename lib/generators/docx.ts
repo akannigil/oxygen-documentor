@@ -7,6 +7,8 @@ import {
   type CertificateData,
 } from '@/lib/qrcode/certificate-auth'
 import type { DOCXQRCodeConfig } from '@/shared/types'
+import { applyVariableStyles, type DOCXStyleOptions } from './docx-style-module'
+import { embedGoogleFontInDOCX, POPULAR_GOOGLE_FONTS } from './google-fonts'
 
 /**
  * Formate une valeur selon son type pour DOCX
@@ -98,6 +100,12 @@ export interface GenerateDOCXOptions {
    * (Avancé) Callback pour obtenir l'URL de stockage (signée ou publique)
    */
   getStorageUrl?: (filePath: string, signed?: boolean, expiresIn?: number) => Promise<string>
+
+  /**
+   * Configuration des styles pour les variables DOCX (optionnel)
+   * Permet de définir la police, la taille et autres propriétés de style pour les variables
+   */
+  styleOptions?: DOCXStyleOptions
 
   /**
    * Configuration pour authentification de certificat (optionnel)
@@ -238,6 +246,27 @@ export async function generateDOCX(
 
     // Rendre le template avec les données
     doc.render(formattedData)
+
+    // Appliquer les styles aux variables si configuré
+    if (options.styleOptions) {
+      // Vérifier si une Google Font est utilisée
+      const fontFamily = options.styleOptions.defaultStyle?.fontFamily || 
+                        Object.values(options.styleOptions.variableStyles || {})[0]?.fontFamily
+      
+      if (fontFamily && POPULAR_GOOGLE_FONTS[fontFamily]) {
+        // Télécharger et intégrer la Google Font
+        try {
+          const zip = doc.getZip()
+          const variant = options.styleOptions.defaultStyle?.bold ? 'bold' : 'regular'
+          await embedGoogleFontInDOCX(zip, fontFamily, variant)
+        } catch (error) {
+          console.warn(`Impossible d'intégrer la Google Font ${fontFamily}:`, error)
+          // Continuer sans intégrer la police (le document utilisera une police de substitution)
+        }
+      }
+      
+      applyVariableStyles(doc.getZip(), formattedData, options.styleOptions)
+    }
 
     // Générer le buffer initial
     const buffer = doc.getZip().generate({

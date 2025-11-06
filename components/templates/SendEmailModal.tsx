@@ -35,19 +35,34 @@ export function SendEmailModal({ document, onClose, onEmailSent, defaultSubject,
     setSending(true)
     setError(null)
 
+    // Validation côté client seulement si un email est fourni
+    const trimmedRecipient = recipient.trim()
+    
+    // Si un email est fourni, le valider
+    if (trimmedRecipient) {
+      // Validation basique de l'email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(trimmedRecipient)) {
+        setError('L\'email du destinataire est invalide')
+        setSending(false)
+        return
+      }
+    }
+
     try {
       const res = await fetch(`/api/documents/${document.id}/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            recipientEmail: recipient,
+            // Envoyer recipientEmail seulement s'il est fourni, sinon l'API le récupérera du document
+            ...(trimmedRecipient && { recipientEmail: trimmedRecipient }),
             subject: subject,
             htmlTemplate: htmlTemplate || undefined,
             attachDocument: attachDocument,
-            from: from || undefined,
-            replyTo: replyTo || undefined,
-            cc: cc ? cc.split(',').map(e => e.trim()).filter(e => e) : undefined,
-            bcc: bcc ? bcc.split(',').map(e => e.trim()).filter(e => e) : undefined,
+            from: from.trim() || undefined,
+            replyTo: replyTo.trim() || undefined,
+            cc: cc.trim() ? cc.split(',').map(e => e.trim()).filter(e => e) : undefined,
+            bcc: bcc.trim() ? bcc.split(',').map(e => e.trim()).filter(e => e) : undefined,
         }),
       });
 
@@ -75,7 +90,12 @@ export function SendEmailModal({ document, onClose, onEmailSent, defaultSubject,
               <div className="mt-4 space-y-4">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">Destinataire</label>
-                  <input type="email" id="email" value={recipient} onChange={e => setRecipient(e.target.value)} className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
+                  <input type="email" id="email" value={recipient} onChange={e => setRecipient(e.target.value)} placeholder={document.recipientEmail || "Laisser vide pour utiliser l'email du document"} className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm" />
+                  {!document.recipientEmail && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Si vide, l'email sera récupéré depuis le mapping du template si configuré.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="subject" className="block text-sm font-medium text-gray-700">Sujet</label>

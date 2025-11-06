@@ -400,7 +400,12 @@ export function TemplateWorkflow({ template: initialTemplate }: TemplateWorkflow
                                 placeholder="Ex: email, mail, courriel..."
                                 className="mt-1 w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 placeholder-gray-600 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                               />
-                              <p className="mt-1 text-xs text-gray-500">Laissez vide si votre colonne s&apos;appelle déjà &quot;recipient_email&quot;</p>
+                              <p className="mt-1 text-xs text-gray-500">
+                                <strong>Important:</strong> Entrez le nom exact de la colonne dans votre fichier CSV/Excel (ex: &quot;email&quot;, &quot;mail&quot;, &quot;courriel&quot;).
+                                <br />
+                                Ne pas mettre <code className="text-xs bg-gray-100 px-1 rounded">{'{{recipient_email}}'}</code> ici, mais le nom de votre colonne CSV.
+                              </p>
+                              <p className="mt-1 text-xs text-gray-500">Laissez vide si votre colonne s&apos;appelle déjà exactement &quot;recipient_email&quot;</p>
                               <p className="mt-1 text-xs text-red-600">* Obligatoire pour l&apos;envoi d&apos;emails</p>
                             </div>
                           </div>
