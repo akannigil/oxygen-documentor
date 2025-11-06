@@ -1,33 +1,27 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # ============================================================================
-# Dépendances
+# Dépendances (installées dans le conteneur)
 # ============================================================================
-/node_modules
-/.pnp
-.pnp.js
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
 # ============================================================================
-# Build & Production
+# Build & Production (reconstruits dans le conteneur)
 # ============================================================================
-/.next/
-/out/
-/build
-/dist
+.next/
+out/
+build/
+dist/
+.turbo/
 *.tsbuildinfo
-.turbo
 
 # ============================================================================
-# Environnement & Secrets
+# Environnement & Secrets (injectés via variables d'environnement)
 # ============================================================================
 .env
 .env*.local
@@ -45,158 +39,92 @@ secrets/
 # ============================================================================
 # Logs & Debug
 # ============================================================================
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 *.log
+logs/
 dev-output.log
 npm-dev.log
 start-error.txt
 start-log.txt
-logs/
-*.log.*
 
 # ============================================================================
 # Tests & Coverage
 # ============================================================================
-/coverage
-/.nyc_output
-*.lcov
-.nyc_output
 coverage/
+.nyc_output/
 *.test.js.snap
 .jest/
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
 
 # ============================================================================
 # IDE & Éditeurs
 # ============================================================================
-# VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.code-workspace
-
-# IntelliJ / WebStorm
+.vscode/
 .idea/
 *.iml
-*.iws
-*.ipr
-out/
-
-# Sublime Text
 *.sublime-project
 *.sublime-workspace
-
-# Vim
 *.swp
 *.swo
 *~
-.vim/
-
-# Emacs
-*~
-\#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-*.elc
-auto-save-list
-tramp
-.\#*
 
 # ============================================================================
 # OS
 # ============================================================================
-# macOS
 .DS_Store
-.AppleDouble
-.LSOverride
-Icon
-._*
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
-
-# Windows
 Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-ehthumbs_vista.db
-*.stackdump
-[Dd]esktop.ini
+Desktop.ini
 $RECYCLE.BIN/
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-*.lnk
-
-# Linux
-*~
-.fuse_hidden*
-.directory
-.Trash-*
-.nfs*
 
 # ============================================================================
-# TypeScript
+# Documentation (non nécessaire dans le conteneur)
 # ============================================================================
-*.tsbuildinfo
-next-env.d.ts
+docs/
+*.md
+!README.md
+PLAN_DE_MISE_EN_OEUVRE.md
 
 # ============================================================================
-# Prisma
+# Exemples & Scripts de développement
 # ============================================================================
-# Note: Les migrations sont généralement versionnées, mais les fichiers générés non
-/prisma/migrations/*.sql
-/prisma/migrations/*.sqlite
-/prisma/migrations/*.db
+examples/
+scripts/
+*.ps1
+*.sh
 
 # ============================================================================
-# Uploads & Storage Local
+# Uploads & Storage Local (montés via volumes)
 # ============================================================================
-/uploads
-/uploads/*
-!/uploads/.gitkeep
-/storage
-/storage/*
-!/storage/.gitkeep
+uploads/
+storage/
 temp/
 tmp/
 *.tmp
 
 # ============================================================================
-# Redis
+# Redis & Database (montés via volumes)
 # ============================================================================
-/dump.rdb
+dump.rdb
 *.rdb
 redis-data/
+postgres-data/
 
 # ============================================================================
 # Docker
 # ============================================================================
+docker-compose.yml
 docker-compose.override.yml
+Dockerfile*
+.dockerignore
 .dockerignore.local
 
 # ============================================================================
 # Vercel & Déploiements
 # ============================================================================
-.vercel
-.vercel/*
-!.vercel/project.json
+.vercel/
 .vercelignore
 
 # ============================================================================
@@ -210,54 +138,38 @@ docker-compose.override.yml
 .rts2_cache_cjs/
 .rts2_cache_es/
 .rts2_cache_umd/
-.node_repl_history
-*.tgz
-*.tar.gz
 
 # ============================================================================
-# Puppeteer & Chrome
+# Puppeteer & Chrome (installés dans le conteneur si nécessaire)
 # ============================================================================
 .local-chromium/
 .chromium/
 
 # ============================================================================
-# LibreOffice / Conversion PDF
+# Git
 # ============================================================================
-*.odt
-*.ods
-*.odp
-*.odg
-*.odf
-*.pdf.tmp
-conversion-temp/
-libreoffice-temp/
+.git/
+.gitignore
+.gitattributes
+.gitmodules
 
 # ============================================================================
-# BullMQ / Queue
+# CI/CD
 # ============================================================================
-queue-data/
-bullmq-data/
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+azure-pipelines.yml
 
 # ============================================================================
-# Documentation générée
-# ============================================================================
-docs/build/
-docs/.vitepress/cache/
-docs/.vitepress/dist/
-
-# ============================================================================
-# Autres
+# Autres fichiers de développement
 # ============================================================================
 *.bak
 *.backup
 *.old
 *.orig
 *.rej
-*~
-.#*
-\#*#
-.*.sw[a-z]
-*.un~
 Session.vim
 .netrwhist
 tags
@@ -266,6 +178,4 @@ TAGS
 *.seed
 *.pid.lock
 .npm
-.eslintcache
-.stylelintcache
-.rollup.cache
+

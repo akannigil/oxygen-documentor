@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Activer le mode standalone pour Docker (optimisation de la taille)
+  output: 'standalone',
+  
   images: {
     remotePatterns: [
       {

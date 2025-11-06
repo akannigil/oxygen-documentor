@@ -436,7 +436,7 @@ NODE_ENV="development"
 
 ## État d'Avancement Global
 
-**Progression globale : ~90%**
+**Progression globale : ~92%**
 
 ### Phases terminées (✅)
 - Phase 1 : Infrastructure & Configuration — **100%**
@@ -461,42 +461,73 @@ NODE_ENV="development"
 
 ## Prochaines Étapes Immédiates
 
-1. ✅ ~~Initialiser le projet Next.js avec TypeScript strict~~ — **FAIT**
-2. ✅ ~~Configurer Prisma avec le schéma complet~~ — **FAIT**
-3. ✅ ~~Mettre en place l'authentification NextAuth~~ — **FAIT**
-4. ✅ ~~Créer les premiers composants UI de base~~ — **FAIT**
-5. ✅ ~~Implémenter l'upload de templates~~ — **FAIT**
+1. Mettre en place le rate limiting sur `/api/projects/[id]/generate`, `/api/import`, `/api/documents/[id]/send`
+2. Finaliser le RBAC: interdire au rôle `viewer` toute modification/génération; clarifier les droits `editor`
+3. Activer le cache Redis des templates et métadonnées
+4. Ajouter l'Export/Import JSON de configuration de l'éditeur
+5. Écrire les tests unitaires (PDF, QR, storage) et d’intégration (API, flux complet)
+6. Ajouter le monitoring (Sentry) et les logs structurés (Pino/Winston)
+7. Optimiser: compression PDF, optimisation images, lazy loading des listes
 
 ### Prochaines priorités
 
-1. **Implémenter le système d'envoi d'emails** (Phase 7)
-   - Service `sendDocumentEmail()` avec nodemailer
-   - API route `POST /api/documents/[id]/send`
-   - Template email HTML
+1. **Sécurité**
+   - Rate limiting
+   - Sanitization des inputs
 
-2. **Implémenter les workers BullMQ** (Phase 6)
-   - Configuration Redis
-   - Queue `document-generation`
-   - Worker pour batch processing
-   - API route pour suivre le statut des jobs
+2. **Permissions (RBAC)**
+   - Restrictions `viewer`
+   - Droits `editor` pour édition sans génération
 
-3. **Améliorer la sécurité** (Phase 9)
-   - Rate limiting sur les routes sensibles
-   - RBAC complet (viewer/editor/owner)
-   - Optimisations performance (cache Redis)
+3. **Performance**
+   - Cache Redis des templates
+   - Lazy loading des listes
 
-4. **Tests et documentation** (Phase 10)
-   - Tests unitaires pour services critiques
-   - Tests d'intégration pour API routes
-   - Documentation API (Swagger/OpenAPI)
+4. **Qualité**
+   - Tests unitaires et d’intégration
+   - Documentation API (OpenAPI/Swagger)
 
-5. **Améliorer le positionnement des QR codes DOCX** (à planifier)
+5. **Observabilité**
+   - Monitoring (Sentry)
+   - Logs structurés
+
+6. **UX Éditeur**
+   - Export/Import JSON de configuration
+
+7. **Optimisations**
+   - Compression des PDFs
+   - Optimisation images
+
+8. **Améliorer le positionnement des QR codes DOCX** (optionnel)
    - Exposer options d'ancrage: alignement horizontal (left/center/right), offsets X/Y
    - Gérer le wrapping: `wrapNone` (par défaut), `wrapSquare`, `wrapTopAndBottom`
    - Z-order configurable: `behindDoc` (par défaut avant-plan = 0)
    - Fallback: insertion inline si versions Word anciennes posent problème
    - Tests: templates avec image de fond, zones de texte, tableaux, proximité bord de page
    - Docs: mettre à jour `GUIDE_QRCODE_DOCX_WORKFLOW.md` (section positionnement/overlays)
+
+## Points Restants
+
+#### Must-have (avant mise en production)
+- [ ] Rate limiting sur routes sensibles (`/generate`, `/import`, `/documents/[id]/send`)
+- [ ] RBAC: interdire toute modification/génération au rôle `viewer`; définir droits `editor`
+- [ ] Sanitization des inputs (complémentaire à la validation Zod)
+- [ ] Cache Redis des templates et métadonnées
+- [ ] Tests unitaires (PDF, QR, storage, utils) et d’intégration (API, flux complet)
+- [ ] Monitoring (Sentry) et logs structurés (Pino/Winston)
+
+#### Should-have
+- [ ] Export/Import JSON de configuration de l'éditeur
+- [ ] Lazy loading des listes volumineuses
+- [ ] Documentation API (Swagger/OpenAPI)
+- [ ] Compression des PDFs générés
+- [ ] Optimisation d’images avant upload
+
+#### Nice-to-have / Optionnels
+- [ ] Adapters email supplémentaires: SendGrid, AWS SES, Mailgun
+- [ ] Audit log (qui a fait quoi, quand)
+- [ ] Améliorations avancées DOCX/QR (alignements, wrapping, z-order)
+- [ ] Configuration Vercel/Production finalisée
 
 ---
 

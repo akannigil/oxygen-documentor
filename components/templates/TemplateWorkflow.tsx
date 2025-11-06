@@ -24,9 +24,11 @@ type MailDefaults = {
   subject?: string; 
   html?: string; 
   from?: string; 
+  fromName?: string;
   replyTo?: string;
   cc?: string | string[];
   bcc?: string | string[];
+  attachmentNamePattern?: string;
   columnMapping?: {
     recipient_name?: string; // Nom de la colonne CSV pour recipient_name
     recipient_email?: string; // Nom de la colonne CSV pour recipient_email
@@ -40,9 +42,11 @@ export function TemplateWorkflow({ template: initialTemplate }: TemplateWorkflow
   const [emailSubjectDefault, setEmailSubjectDefault] = useState<string>('Votre document')
   const [emailHtmlDefault, setEmailHtmlDefault] = useState<string>('')
   const [emailFromDefault, setEmailFromDefault] = useState<string>('')
+  const [emailFromNameDefault, setEmailFromNameDefault] = useState<string>('')
   const [emailReplyToDefault, setEmailReplyToDefault] = useState<string>('')
   const [emailCcDefault, setEmailCcDefault] = useState<string>('')
   const [emailBccDefault, setEmailBccDefault] = useState<string>('')
+  const [attachmentNamePatternDefault, setAttachmentNamePatternDefault] = useState<string>('')
   const [columnMappingRecipientName, setColumnMappingRecipientName] = useState<string>('')
   const [columnMappingRecipientEmail, setColumnMappingRecipientEmail] = useState<string>('')
 
@@ -105,9 +109,11 @@ export function TemplateWorkflow({ template: initialTemplate }: TemplateWorkflow
         if (parsed.subject) setEmailSubjectDefault(parsed.subject)
         if (parsed.html) setEmailHtmlDefault(parsed.html)
         if (parsed.from) setEmailFromDefault(parsed.from)
+        if (parsed.fromName) setEmailFromNameDefault(parsed.fromName)
         if (parsed.replyTo) setEmailReplyToDefault(parsed.replyTo)
         if (parsed.cc) setEmailCcDefault(typeof parsed.cc === 'string' ? parsed.cc : Array.isArray(parsed.cc) ? parsed.cc.join(', ') : '')
         if (parsed.bcc) setEmailBccDefault(typeof parsed.bcc === 'string' ? parsed.bcc : Array.isArray(parsed.bcc) ? parsed.bcc.join(', ') : '')
+        if (parsed.attachmentNamePattern) setAttachmentNamePatternDefault(parsed.attachmentNamePattern)
         if (parsed.columnMapping) {
           if (parsed.columnMapping.recipient_name) setColumnMappingRecipientName(parsed.columnMapping.recipient_name)
           if (parsed.columnMapping.recipient_email) setColumnMappingRecipientEmail(parsed.columnMapping.recipient_email)
@@ -118,9 +124,11 @@ export function TemplateWorkflow({ template: initialTemplate }: TemplateWorkflow
         if (serverDefaults.subject) setEmailSubjectDefault(serverDefaults.subject)
         if (serverDefaults.html) setEmailHtmlDefault(serverDefaults.html)
         if (serverDefaults.from) setEmailFromDefault(serverDefaults.from)
+        if (serverDefaults.fromName) setEmailFromNameDefault(serverDefaults.fromName)
         if (serverDefaults.replyTo) setEmailReplyToDefault(serverDefaults.replyTo)
         if (serverDefaults.cc) setEmailCcDefault(typeof serverDefaults.cc === 'string' ? serverDefaults.cc : Array.isArray(serverDefaults.cc) ? serverDefaults.cc.join(', ') : '')
         if (serverDefaults.bcc) setEmailBccDefault(typeof serverDefaults.bcc === 'string' ? serverDefaults.bcc : Array.isArray(serverDefaults.bcc) ? serverDefaults.bcc.join(', ') : '')
+        if (serverDefaults.attachmentNamePattern) setAttachmentNamePatternDefault(serverDefaults.attachmentNamePattern)
         if (serverDefaults.columnMapping) {
           if (serverDefaults.columnMapping.recipient_name) setColumnMappingRecipientName(serverDefaults.columnMapping.recipient_name)
           if (serverDefaults.columnMapping.recipient_email) setColumnMappingRecipientEmail(serverDefaults.columnMapping.recipient_email)
@@ -137,9 +145,11 @@ export function TemplateWorkflow({ template: initialTemplate }: TemplateWorkflow
           subject: emailSubjectDefault, 
           html: emailHtmlDefault, 
           from: emailFromDefault, 
+          fromName: emailFromNameDefault,
           replyTo: emailReplyToDefault,
           cc: emailCcDefault || undefined,
           bcc: emailBccDefault || undefined,
+          attachmentNamePattern: attachmentNamePatternDefault || undefined,
           columnMapping: {
             recipient_name: columnMappingRecipientName,
             recipient_email: columnMappingRecipientEmail,
@@ -147,7 +157,7 @@ export function TemplateWorkflow({ template: initialTemplate }: TemplateWorkflow
         })
       )
     } catch {}
-  }, [template.id, emailSubjectDefault, emailHtmlDefault, emailFromDefault, emailReplyToDefault, emailCcDefault, emailBccDefault, columnMappingRecipientName, columnMappingRecipientEmail])
+  }, [template.id, emailSubjectDefault, emailHtmlDefault, emailFromDefault, emailFromNameDefault, emailReplyToDefault, emailCcDefault, emailBccDefault, attachmentNamePatternDefault, columnMappingRecipientName, columnMappingRecipientEmail])
 
   const handleSaveMailDefaults = async () => {
     setIsSavingMail(true)
@@ -162,9 +172,11 @@ export function TemplateWorkflow({ template: initialTemplate }: TemplateWorkflow
             subject: emailSubjectDefault || undefined,
             html: emailHtmlDefault || undefined,
             from: emailFromDefault || undefined,
+            fromName: emailFromNameDefault || undefined,
             replyTo: emailReplyToDefault || undefined,
             cc: emailCcDefault ? emailCcDefault.split(',').map(e => e.trim()).filter(e => e) : undefined,
             bcc: emailBccDefault ? emailBccDefault.split(',').map(e => e.trim()).filter(e => e) : undefined,
+            attachmentNamePattern: attachmentNamePatternDefault || undefined,
             columnMapping: {
               recipient_name: columnMappingRecipientName || undefined,
               recipient_email: columnMappingRecipientEmail || undefined,
@@ -183,9 +195,11 @@ export function TemplateWorkflow({ template: initialTemplate }: TemplateWorkflow
             subject: emailSubjectDefault, 
             html: emailHtmlDefault, 
             from: emailFromDefault, 
+            fromName: emailFromNameDefault,
             replyTo: emailReplyToDefault,
             cc: emailCcDefault || undefined,
             bcc: emailBccDefault || undefined,
+            attachmentNamePattern: attachmentNamePatternDefault || undefined,
             columnMapping: {
               recipient_name: columnMappingRecipientName,
               recipient_email: columnMappingRecipientEmail,
@@ -300,6 +314,17 @@ export function TemplateWorkflow({ template: initialTemplate }: TemplateWorkflow
                           />
                         </div>
                         <div>
+                          <label className="block text-sm font-medium text-gray-700">Nom du fichier joint par défaut (optionnel)</label>
+                          <input
+                            type="text"
+                            value={attachmentNamePatternDefault}
+                            onChange={(e) => setAttachmentNamePatternDefault(e.target.value)}
+                            placeholder="Ex: {{template_name}}-{{recipient_name}}.pdf"
+                            className="mt-1 w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 placeholder-gray-600 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                          />
+                           <p className="mt-1 text-xs text-gray-500">Utilisez des variables comme <code>{'{{recipient_name}}'}</code>, <code>{'{{created_at}}'}</code>, etc.</p>
+                        </div>
+                        <div>
                           <label className="block text-sm font-medium text-gray-700">Template HTML par défaut (optionnel)</label>
                           <textarea
                             value={emailHtmlDefault}
@@ -313,6 +338,16 @@ export function TemplateWorkflow({ template: initialTemplate }: TemplateWorkflow
                           </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Nom de l&apos;expéditeur par défaut</label>
+                            <input
+                              type="text"
+                              value={emailFromNameDefault}
+                              onChange={(e) => setEmailFromNameDefault(e.target.value)}
+                              placeholder="Ex: Support Client"
+                              className="mt-1 w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 placeholder-gray-600 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                            />
+                          </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700">Adresse d&apos;expédition par défaut (From)</label>
                             <input
@@ -456,6 +491,7 @@ export function TemplateWorkflow({ template: initialTemplate }: TemplateWorkflow
             refreshCounter={refreshCounter}
             defaultSubject={emailSubjectDefault}
             defaultHtmlTemplate={emailHtmlDefault}
+            defaultFromName={emailFromNameDefault}
             defaultFrom={emailFromDefault}
             defaultReplyTo={emailReplyToDefault}
             {...(emailCcDefault ? { defaultCc: emailCcDefault.split(',').map(e => e.trim()).filter(e => e) } : {})}

@@ -2,6 +2,20 @@
 
 Application web Next.js pour la gestion et génération en masse d'attestations personnalisées avec édition visuelle de templates, import de données, génération PDF avec QR codes, et envoi par email.
 
+## 🐳 Déploiement Docker en Production
+
+**✅ Configuration complète pour déploiement avec Docker + Nginx Proxy Manager disponible !**
+
+- 📦 **Dockerfile** multi-stage optimisé
+- 🚀 **Scripts de déploiement** automatisés (Linux/Mac/Windows)
+- 📚 **Documentation complète** avec guides pas-à-pas
+- 🔒 **Sécurité** : HTTPS, secrets, utilisateur non-root
+- ⚡ **Performance** : Mode standalone, cache, compression
+
+👉 **[Guide de déploiement rapide (5 min)](./QUICKSTART-DEPLOY.md)**
+👉 **[Documentation complète](./DEPLOIEMENT.md)**
+👉 **[Récapitulatif des fichiers](./DOCKER-DEPLOYMENT-READY.md)**
+
 ## 🚀 Technologies
 
 - **Framework**: Next.js 14+ (App Router)
@@ -11,7 +25,8 @@ Application web Next.js pour la gestion et génération en masse d'attestations 
 - **ORM**: Prisma 5+
 - **Storage**: AWS S3 (ou Local/FTP pour dev)
 - **Auth**: NextAuth.js 5+
-- **PDF**: pdf-lib
+- **PDF**: pdf-lib + Puppeteer
+- **LibreOffice**: Conversion DOCX/PPTX/XLSX → PDF
 - **QR Code**: qrcode
 - **Canvas**: react-konva
 - **CSV/Excel**: papaparse, xlsx

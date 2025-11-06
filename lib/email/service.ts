@@ -63,6 +63,7 @@ export async function sendDocumentEmail(
           select: {
             id: true,
             name: true,
+            mailDefaults: true,
           },
         },
         project: {
@@ -96,7 +97,7 @@ export async function sendDocumentEmail(
       message: 'Vous trouverez ci-joint votre document généré.',
       additional_info: '',
       created_at: document.createdAt.toLocaleDateString('fr-FR'),
-      created_at_full: document.createdAt.toLocaleString('fr-FR'),
+      created_at_full: document.createdAt.toLocaleString('fr-FR',
     }
 
     // Fusionner avec les variables fournies
@@ -150,7 +151,21 @@ export async function sendDocumentEmail(
     const attachments = options.attachDocument
       ? [
           {
-            filename: `${document.template.name}-${document.id}.pdf`,
+            filename: (() => {
+              const mailDefaults = document.template.mailDefaults as { attachmentNamePattern?: string } | undefined;
+              const pattern = mailDefaults?.attachmentNamePattern;
+              const defaultName = `${document.template.name}-${document.id}.pdf`;
+              if (pattern) {
+                try {
+                  // Basic sanitization to remove invalid filename characters
+                  return renderEmailTemplate(pattern, variables).replace(/[/\\?%*:|"<>]/g, '-') + '.pdf';
+                } catch (e) {
+                  console.error('Error rendering attachment filename:', e);
+                  return defaultName;
+                }
+              }
+              return defaultName;
+            })(),
             content: await storage.getBuffer(document.filePath),
             contentType: document.mimeType,
           },

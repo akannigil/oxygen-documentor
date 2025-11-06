@@ -15,6 +15,7 @@ interface DocumentListProps {
   refreshCounter: number
   defaultSubject?: string
   defaultHtmlTemplate?: string
+  defaultFromName?: string
   defaultFrom?: string
   defaultReplyTo?: string
   defaultCc?: string | string[]
@@ -28,7 +29,7 @@ const statusStyles: Record<string, { bg: string; text: string }> = {
   failed: { bg: 'bg-red-100', text: 'text-red-800' },
 }
 
-export function DocumentList({ templateId, refreshCounter, defaultSubject, defaultHtmlTemplate, defaultFrom, defaultReplyTo, defaultCc, defaultBcc }: DocumentListProps) {
+export function DocumentList({ templateId, refreshCounter, defaultSubject, defaultHtmlTemplate, defaultFromName, defaultFrom, defaultReplyTo, defaultCc, defaultBcc }: DocumentListProps) {
   const [documents, setDocuments] = useState<DocumentSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -198,6 +199,7 @@ export function DocumentList({ templateId, refreshCounter, defaultSubject, defau
           onEmailSent={fetchDocuments}
           defaultSubject={defaultSubject || 'Votre document'}
           defaultHtmlTemplate={defaultHtmlTemplate}
+          defaultFromName={defaultFromName}
           defaultFrom={defaultFrom}
           defaultReplyTo={defaultReplyTo}
           defaultCc={defaultCc}
@@ -213,6 +215,7 @@ export function DocumentList({ templateId, refreshCounter, defaultSubject, defau
           onQueued={() => { setShowBulkModal(false); setSelectedIds(new Set()); fetchDocuments() }}
           defaultSubject={defaultSubject}
           defaultHtmlTemplate={defaultHtmlTemplate}
+          defaultFromName={defaultFromName}
           defaultFrom={defaultFrom}
           defaultReplyTo={defaultReplyTo}
           defaultCc={defaultCc}

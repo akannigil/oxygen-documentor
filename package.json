@@ -1,5 +1,5 @@
 {
-  "name": "oxygen-document",
+  "name": "oxygen-documentor",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -13,7 +13,8 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "user:create": "tsx scripts/create-user.ts",
-    "workers": "tsx scripts/start-workers.ts"
+    "workers": "tsx scripts/start-workers.ts",
+    "test:libreoffice": "tsx scripts/test-libreoffice.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.922.0",

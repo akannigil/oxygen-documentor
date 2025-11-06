@@ -1,0 +1,379 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                                                                          ║
+║            🚀 CONFIGURATION DOCKER COMPLÈTE - OXYGEN DOCUMENT            ║
+║                                                                          ║
+║                    Déploiement Production sur VPS                        ║
+║                     avec Nginx Proxy Manager                             ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+📦 FICHIERS CRÉÉS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Configuration Docker
+   • Dockerfile (multi-stage optimisé)
+   • docker-compose.prod.yml (PostgreSQL + Redis + App)
+   • docker-compose.yml (développement)
+   • .dockerignore.prod
+
+✅ Scripts de déploiement
+   • deploy.sh (Linux/Mac)
+   • deploy.ps1 (Windows)
+   • Makefile (commandes simplifiées)
+   • test-docker-local.sh (test en local)
+
+✅ Sécurité et configuration
+   • env.production.example (template)
+   • scripts/generate-secrets.sh (Linux/Mac)
+   • scripts/generate-secrets.ps1 (Windows)
+   • scripts/docker-entrypoint.sh (initialisation)
+
+✅ Documentation
+   • DEPLOIEMENT.md (guide complet)
+   • QUICKSTART-DEPLOY.md (guide rapide 5 min)
+   • RESUME-DEPLOIEMENT.md (résumé des fichiers)
+   • DOCKER-DEPLOYMENT-READY.md (récapitulatif)
+   • scripts/README.md (documentation scripts)
+   • nginx-advanced.conf (config NPM avancée)
+
+✅ Code applicatif
+   • app/api/health/route.ts (monitoring)
+   • next.config.js (mode standalone activé)
+
+
+🚀 DÉPLOIEMENT EN 5 ÉTAPES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 1 : Générer les secrets                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Linux/Mac :
+    chmod +x scripts/generate-secrets.sh
+    ./scripts/generate-secrets.sh
+
+Windows :
+    .\scripts\generate-secrets.ps1
+
+→ Les secrets seront automatiquement générés (ou affichés à copier)
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 2 : Compléter la configuration                                   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Éditez .env.production et configurez :
+
+⚠️  OBLIGATOIRE :
+    NEXTAUTH_URL=https://votre-domaine.com
+    NEXTAUTH_SECRET=<généré automatiquement>
+    POSTGRES_PASSWORD=<généré automatiquement>
+    REDIS_PASSWORD=<généré automatiquement>
+
+📦 Stockage (recommandé S3) :
+    STORAGE_TYPE=s3
+    AWS_REGION=eu-west-3
+    AWS_ACCESS_KEY_ID=votre_key
+    AWS_SECRET_ACCESS_KEY=votre_secret
+    AWS_S3_BUCKET=votre_bucket
+
+📧 Email (recommandé Resend) :
+    EMAIL_PROVIDER=resend
+    RESEND_API_KEY=re_votre_cle
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 3 : Transférer sur le VPS                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Option A - Via SCP :
+    scp -r ./oxygen-document user@votre-vps:/var/www/
+
+Option B - Via Git :
+    ssh user@vps
+    cd /var/www
+    git clone https://votre-repo.git oxygen-document
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 4 : Déployer                                                     │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Sur le VPS :
+    ssh user@vps
+    cd /var/www/oxygen-document
+    chmod +x deploy.sh
+    ./deploy.sh --migrate
+
+Ou avec Make :
+    make deploy
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 5 : Configurer Nginx Proxy Manager                               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+1. Ouvrir NPM : http://votre-vps:81
+
+2. Ajouter un Proxy Host :
+   Domain Names       : votre-domaine.com
+   Scheme             : http
+   Forward Hostname/IP: oxygen-document-app
+   Forward Port       : 3000
+   ✅ Cache Assets
+   ✅ Block Common Exploits
+   ✅ Websockets Support
+
+3. Onglet SSL :
+   ✅ Request new SSL Certificate (Let's Encrypt)
+   ✅ Force SSL
+   ✅ HTTP/2 Support
+   ✅ HSTS Enabled
+   Email: votre@email.com
+
+4. (Optionnel) Onglet Advanced :
+   Copier le contenu de nginx-advanced.conf
+
+
+✅ VÉRIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Statut des services :
+    make status
+    # ou
+    docker-compose -f docker-compose.prod.yml ps
+
+Voir les logs :
+    make logs
+    # ou
+    docker-compose -f docker-compose.prod.yml logs -f
+
+Tester l'API de santé :
+    curl https://votre-domaine.com/api/health
+
+Résultat attendu :
+    {
+      "status": "healthy",
+      "checks": {
+        "app": "ok",
+        "database": "ok",
+        "timestamp": "2025-11-06T12:00:00.000Z"
+      }
+    }
+
+
+👤 CRÉER LE PREMIER UTILISATEUR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    make db-seed
+    # ou
+    docker-compose -f docker-compose.prod.yml exec app npm run user:create
+
+
+🛠️  COMMANDES UTILES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 Aide :
+    make help
+
+🚀 Déploiement :
+    make deploy                    # Déployer avec migrations
+    make deploy-no-cache           # Déployer sans cache Docker
+
+⚙️  Gestion :
+    make start                     # Démarrer les services
+    make stop                      # Arrêter les services
+    make restart                   # Redémarrer les services
+    make logs                      # Voir tous les logs
+    make logs-app                  # Voir les logs de l'app
+    make status                    # Statut des services
+    make health                    # Vérifier la santé
+
+🗄️  Base de données :
+    make migrate                   # Exécuter les migrations
+    make backup                    # Sauvegarder la DB
+    make restore FILE=backup.sql   # Restaurer la DB
+    make db-seed                   # Créer un utilisateur
+    make shell-db                  # Shell PostgreSQL
+
+🔧 Maintenance :
+    make update                    # Mettre à jour l'app
+    make clean                     # Nettoyer Docker
+    make shell                     # Shell du conteneur
+
+
+📊 ARCHITECTURE DÉPLOYÉE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    Internet
+       ↓
+    ┌──────────────────────┐
+    │  Nginx Proxy Manager │  HTTPS (443) + Let's Encrypt
+    └──────────┬───────────┘
+               ↓ Reverse Proxy
+    ┌──────────────────────────────┐
+    │   oxygen-document-app        │  Port 3000
+    │   • Next.js                  │
+    │   • Workers BullMQ           │
+    │   • Prisma                   │
+    └───┬──────────────┬───────────┘
+        │              │
+        ↓              ↓
+    ┌───────────┐  ┌──────────┐  ┌─────────┐
+    │PostgreSQL │  │  Redis   │  │  S3/FTP │
+    │+ Volumes  │  │+ Volumes │  │ Storage │
+    └───────────┘  └──────────┘  └─────────┘
+
+
+🧪 TEST EN LOCAL (avant déploiement)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Pour tester la configuration Docker localement :
+
+    chmod +x test-docker-local.sh
+    ./test-docker-local.sh
+
+→ Cela va :
+   • Créer un .env.production de test
+   • Construire l'image Docker
+   • Démarrer tous les services
+   • Tester le health check
+   • Afficher le résultat
+
+
+🔒 CHECKLIST SÉCURITÉ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Avant le déploiement :
+   ☐ Secrets générés aléatoirement (32+ caractères)
+   ☐ .env.production avec chmod 600
+   ☐ .env.production NON committé dans Git
+   ☐ Domaine configuré et pointant vers le VPS
+   ☐ Pare-feu configuré (UFW)
+   ☐ SSH par clés uniquement
+
+Après le déploiement :
+   ☐ HTTPS activé (Let's Encrypt)
+   ☐ Health check fonctionnel
+   ☐ Backups configurés
+   ☐ Monitoring en place
+   ☐ Logs vérifiés
+
+
+💾 SAUVEGARDES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Manuelle :
+    make backup                              # Créer une sauvegarde
+    make restore FILE=backups/backup.sql     # Restaurer
+
+Automatique (cron) :
+    crontab -e
+    # Ajouter :
+    0 2 * * * cd /var/www/oxygen-document && make backup
+
+
+🔄 MISES À JOUR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Simple :
+    make update
+
+Manuel :
+    cd /var/www/oxygen-document
+    git pull origin main
+    ./deploy.sh --migrate
+
+
+📚 DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌────────────────────────────┬──────────────────────────────────────────┐
+│ Fichier                    │ Description                              │
+├────────────────────────────┼──────────────────────────────────────────┤
+│ QUICKSTART-DEPLOY.md       │ Guide rapide (5 minutes)                 │
+│ DEPLOIEMENT.md             │ Guide complet et détaillé                │
+│ RESUME-DEPLOIEMENT.md      │ Résumé de tous les fichiers              │
+│ DOCKER-DEPLOYMENT-READY.md │ Récapitulatif et checklist               │
+│ scripts/README.md          │ Documentation des scripts                │
+│ make help                  │ Liste de toutes les commandes            │
+└────────────────────────────┴──────────────────────────────────────────┘
+
+
+🐛 DÉPANNAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Les conteneurs ne démarrent pas :
+    make logs
+    docker-compose -f docker-compose.prod.yml down
+    ./deploy.sh --no-cache --migrate
+
+Erreur de connexion à la base de données :
+    make shell-db
+    # Vérifier la connexion
+
+L'application ne répond pas :
+    make health
+    make restart
+    make logs-app
+
+Problème de génération PDF :
+    make shell
+    /usr/bin/chromium-browser --version
+
+
+✨ FONCTIONNALITÉS INCLUSES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Base de données PostgreSQL 15 avec volumes persistants
+✅ Redis 7 avec authentification et persistance AOF
+✅ Workers BullMQ automatiquement démarrés
+✅ Génération PDF avec Puppeteer/Chromium
+✅ LibreOffice pour conversion Office → PDF
+✅ Support DOCX, PPTX, XLSX, Images, QR Codes
+✅ Stockage S3, FTP ou local
+✅ Envoi d'emails (Resend ou SMTP)
+✅ HTTPS avec Let's Encrypt
+✅ Health checks sur tous les services
+✅ Mode standalone Next.js (optimisé)
+✅ Build multi-stage (image légère)
+✅ Utilisateur non-root (sécurité)
+✅ Cache Nginx pour assets statiques
+✅ Compression Gzip
+
+
+📞 SUPPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+En cas de problème :
+   1. Vérifiez les logs : make logs
+   2. Consultez DEPLOIEMENT.md
+   3. Vérifiez la configuration dans .env.production
+   4. Testez le health check : curl https://votre-domaine.com/api/health
+
+
+🎉 PRÊT POUR LA PRODUCTION !
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Votre application Oxygen Document est maintenant complètement configurée
+et prête à être déployée en production sur votre VPS avec Docker et
+Nginx Proxy Manager.
+
+Tous les fichiers nécessaires ont été créés, documentés et optimisés
+pour un déploiement professionnel.
+
+✨ Points forts :
+   • Configuration production-ready
+   • Sécurité renforcée
+   • Performance optimisée
+   • Documentation complète
+   • Scripts automatisés
+   • Support multi-plateforme
+
+BON DÉPLOIEMENT ! 🚀
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Configuration créée le 6 novembre 2025 pour Oxygen Document
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+

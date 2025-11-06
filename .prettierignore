@@ -1,0 +1,54 @@
+# Dépendances
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+.next/
+out/
+build/
+dist/
+.turbo/
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Logs
+*.log
+logs/
+
+# Environnement
+.env
+.env*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Prisma généré
+prisma/migrations/
+
+# Uploads
+uploads/
+storage/
+
+# Documentation générée
+docs/build/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
+# Autres
+*.tsbuildinfo
+next-env.d.ts
+
