@@ -72,11 +72,23 @@ export async function insertQRCodeInDOCX(
       console.log(`[QR Code DOCX] Aperçu: ${preview}`)
     }
 
+    // Déterminer la taille du QR code
+    const qrWidth = options.width ?? 300
+
+    // Pour les QR codes de petite taille (< 300px), utiliser un niveau de correction d'erreur élevé (H)
+    // pour améliorer la lisibilité malgré la petite taille
+    let errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H' = options.errorCorrectionLevel ?? 'Q'
+    if (qrWidth < 300 || normalizedQrData.length > 500) {
+      errorCorrectionLevel = 'H'
+    } else if (normalizedQrData.length > 1000) {
+      errorCorrectionLevel = 'H'
+    }
+
     // Générer le QR code avec des paramètres optimisés pour la lisibilité
     const qrOptions: QRCodeOptions = {
-      width: options.width ?? 300, // Taille augmentée pour meilleure lisibilité
+      width: qrWidth,
       margin: options.margin ?? 2, // Marge augmentée pour éviter les problèmes de lecture
-      errorCorrectionLevel: options.errorCorrectionLevel ?? 'Q', // Niveau élevé pour résister à la dégradation
+      errorCorrectionLevel, // Niveau ajusté selon la taille et le contenu
       type: options.type ?? 'image/png',
       quality: options.quality ?? 1.0, // Qualité maximale
     }
@@ -149,8 +161,7 @@ export async function insertQRCodeInDOCX(
     }
 
     // Dimensions en EMUs
-    // Utiliser une taille minimale de 300px pour une bonne lisibilité
-    const qrWidth = options.width ?? 300
+    // Utiliser la taille déterminée précédemment
     const widthEMU = options.docxWidth ?? pixelsToEMUs(qrWidth)
     const heightEMU = options.docxHeight ?? pixelsToEMUs(qrWidth) // QR codes sont carrés
     const altText = options.altText ?? 'QR Code'

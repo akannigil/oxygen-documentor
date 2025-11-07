@@ -110,9 +110,10 @@ export async function generateQRCodeBuffer(
     // Marge minimale recommandée : 2 modules pour éviter les problèmes de lecture
     const defaultMargin = 2
     // Niveau de correction d'erreur élevé pour résister à la dégradation lors de la conversion
-    // Utiliser 'H' si le contenu est long pour une meilleure robustesse
+    // Utiliser 'H' si le contenu est long ou si la taille est petite pour une meilleure robustesse
+    const qrWidth = options.width ?? defaultWidth
     const defaultErrorCorrectionLevel: 'L' | 'M' | 'Q' | 'H' =
-      normalizedData.length > 1000 ? 'H' : 'Q'
+      normalizedData.length > 1000 || qrWidth < 300 ? 'H' : 'Q'
     
     const qrOptions: QRCode.QRCodeToDataURLOptions = {
       width: options.width ?? defaultWidth,

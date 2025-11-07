@@ -15,6 +15,31 @@ import { generateQRCodeBuffer } from './generator'
 import type { QRCodeOptions } from './generator'
 
 /**
+ * Construit une URL absolue à partir d'un chemin relatif
+ */
+function buildAbsoluteUrl(pathOrUrl: string): string {
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl
+  const base = process.env['NEXTAUTH_URL'] || process.env['NEXT_PUBLIC_APP_URL']
+  if (!base) return pathOrUrl
+  const baseTrimmed = base.endsWith('/') ? base.slice(0, -1) : base
+  const pathTrimmed = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`
+  return `${baseTrimmed}${pathTrimmed}`
+}
+
+/**
+ * Génère une URL raccourcie via la route /redirect pour réduire la taille du QR code
+ * Cette fonction encode le chemin du fichier dans l'URL de redirection
+ *
+ * @param filePath Chemin du fichier dans le stockage
+ * @param expiresIn Durée de validité en secondes
+ * @returns URL raccourcie pointant vers /redirect?path=...
+ */
+function generateShortUrl(filePath: string, expiresIn: number = 3600): string {
+  const encodedPath = encodeURIComponent(filePath)
+  return buildAbsoluteUrl(`/redirect?path=${encodedPath}&expiresIn=${expiresIn}`)
+}
+
+/**
  * Options pour générer le contenu d'un QR code dans le workflow
  */
 export interface QRCodeWorkflowOptions {
@@ -47,13 +72,27 @@ export interface QRCodeWorkflowOptions {
    * Instance du storage adapter pour générer les URLs
    */
   getStorageUrl?: (filePath: string, signed?: boolean, expiresIn?: number) => Promise<string>
+
+  /**
+   * Taille maximale du QR code en pixels (pour décider d'utiliser une URL raccourcie)
+   * @default 300
+   */
+  maxQRCodeSize?: number
 }
 
 /**
  * Génère le contenu du QR code selon la configuration du champ
  */
 export async function generateQRCodeContent(options: QRCodeWorkflowOptions): Promise<string> {
-  const { field, data, documentFilePath, documentBuffer, authConfig, getStorageUrl } = options
+  const {
+    field,
+    data,
+    documentFilePath,
+    documentBuffer,
+    authConfig,
+    getStorageUrl,
+    maxQRCodeSize = 300,
+  } = options
 
   // Si l'authentification est activée
   if (field.qrcodeAuth?.enabled && authConfig) {
@@ -85,6 +124,32 @@ export async function generateQRCodeContent(options: QRCodeWorkflowOptions): Pro
 
     try {
       const storageUrl = await getStorageUrl(documentFilePath, useSigned, expiresIn)
+
+      // Déterminer la taille du QR code (depuis les options du champ ou la taille par défaut)
+      const qrCodeWidth = field.qrcodeOptions?.width ?? maxQRCodeSize
+
+      // Si la taille du QR code est inférieure à 300px, utiliser une URL raccourcie
+      // pour réduire la quantité de données à encoder
+      if (qrCodeWidth < 300 && storageUrl.length > 200) {
+        const shortUrl = generateShortUrl(documentFilePath, expiresIn)
+
+        // Vérifier que l'URL raccourcie est effectivement plus courte
+        if (shortUrl.length < storageUrl.length) {
+          if (process.env['NODE_ENV'] === 'development') {
+            console.log(
+              `[QR Code] URL raccourcie utilisée: ${storageUrl.length} → ${shortUrl.length} caractères (taille QR: ${qrCodeWidth}px)`
+            )
+          }
+
+          // Si on a aussi une valeur de base, on peut combiner (optionnel)
+          const baseValue = getFieldValue(field, data)
+          if (baseValue && baseValue !== shortUrl) {
+            return `${baseValue}\n${shortUrl}`
+          }
+
+          return shortUrl
+        }
+      }
 
       // Si on a aussi une valeur de base, on peut combiner (optionnel)
       const baseValue = getFieldValue(field, data)
@@ -164,11 +229,27 @@ export async function generateQRCodeWithOptions(
   field: TemplateField,
   defaultWidth: number
 ): Promise<Buffer> {
+  // Déterminer la taille du QR code
+  const qrCodeWidth = field.qrcodeOptions?.width ?? Math.max(defaultWidth, 300)
+
+  // Pour les QR codes de petite taille (< 300px), utiliser un niveau de correction d'erreur élevé (H)
+  // et ajuster automatiquement si le contenu est long
+  let errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H' =
+    field.qrcodeOptions?.errorCorrectionLevel ?? 'Q'
+
+  // Si la taille est petite (< 300px) ou si le contenu est long, utiliser le niveau H
+  if (qrCodeWidth < 300 || content.length > 500) {
+    errorCorrectionLevel = 'H'
+  } else if (content.length > 1000) {
+    // Pour les contenus très longs, forcer le niveau H même pour les grandes tailles
+    errorCorrectionLevel = 'H'
+  }
+
   // Utiliser les paramètres améliorés par défaut pour une meilleure lisibilité
   const options: QRCodeOptions = {
-    width: field.qrcodeOptions?.width ?? Math.max(defaultWidth, 300), // Minimum 300px
+    width: qrCodeWidth,
     margin: field.qrcodeOptions?.margin ?? 2, // Marge augmentée
-    errorCorrectionLevel: field.qrcodeOptions?.errorCorrectionLevel ?? 'Q', // Niveau élevé
+    errorCorrectionLevel, // Niveau ajusté selon la taille et le contenu
   }
 
   // Ajouter color seulement s'il est défini

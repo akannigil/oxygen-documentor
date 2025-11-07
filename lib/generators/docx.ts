@@ -11,6 +11,31 @@ import { applyVariableStyles, type DOCXStyleOptions } from './docx-style-module'
 import { embedGoogleFontInDOCX, POPULAR_GOOGLE_FONTS } from './google-fonts'
 
 /**
+ * Construit une URL absolue à partir d'un chemin relatif
+ */
+function buildAbsoluteUrl(pathOrUrl: string): string {
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl
+  const base = process.env['NEXTAUTH_URL'] || process.env['NEXT_PUBLIC_APP_URL']
+  if (!base) return pathOrUrl
+  const baseTrimmed = base.endsWith('/') ? base.slice(0, -1) : base
+  const pathTrimmed = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`
+  return `${baseTrimmed}${pathTrimmed}`
+}
+
+/**
+ * Génère une URL raccourcie via la route /redirect pour réduire la taille du QR code
+ * Cette fonction encode le chemin du fichier dans l'URL de redirection
+ *
+ * @param filePath Chemin du fichier dans le stockage
+ * @param expiresIn Durée de validité en secondes
+ * @returns URL raccourcie pointant vers /redirect?path=...
+ */
+function generateShortUrl(filePath: string, expiresIn: number = 3600): string {
+  const encodedPath = encodeURIComponent(filePath)
+  return buildAbsoluteUrl(`/redirect?path=${encodedPath}&expiresIn=${expiresIn}`)
+}
+
+/**
  * Formate une valeur selon son type pour DOCX
  */
 function formatValueForDOCX(value: string | number | Date | undefined, format?: string): string {
@@ -452,11 +477,31 @@ export async function generateDOCX(
               expiresIn
             )
 
+            // Déterminer la taille du QR code (depuis les options ou la taille par défaut)
+            const qrCodeWidth = qrOptions.width ?? 300
+
+            // Si la taille du QR code est inférieure à 300px, utiliser une URL raccourcie
+            // pour réduire la quantité de données à encoder
+            let finalUrl = storageUrl
+            if (qrCodeWidth < 300 && storageUrl.length > 200) {
+              const shortUrl = generateShortUrl(options.documentFilePath, expiresIn)
+
+              // Vérifier que l'URL raccourcie est effectivement plus courte
+              if (shortUrl.length < storageUrl.length) {
+                if (process.env['NODE_ENV'] === 'development') {
+                  console.log(
+                    `[QR Code DOCX] URL raccourcie utilisée: ${storageUrl.length} → ${shortUrl.length} caractères (taille QR: ${qrCodeWidth}px)`
+                  )
+                }
+                finalUrl = shortUrl
+              }
+            }
+
             if (qrContent.trim().length === 0 || qrContent.trim() === '{{storage_url}}') {
-              qrContent = storageUrl
+              qrContent = finalUrl
             } else {
               // Remplacer toutes les occurrences explicites
-              qrContent = qrContent.replace(/\{\{storage_url\}\}/g, storageUrl)
+              qrContent = qrContent.replace(/\{\{storage_url\}\}/g, finalUrl)
             }
           }
         }

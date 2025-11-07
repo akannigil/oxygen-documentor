@@ -31,6 +31,7 @@ export async function generatePDF(
       const qrContent = await generateQRCodeContent({
         field,
         data,
+        maxQRCodeSize: field.w, // Passer la largeur du champ comme taille maximale
         ...qrcodeOptions,
       })
 
@@ -118,6 +119,7 @@ export async function generateDocumentFromTemplate(
       const qrContent = await generateQRCodeContent({
         field,
         data,
+        maxQRCodeSize: field.w, // Passer la largeur du champ comme taille maximale
         ...qrcodeOptions,
       })
 
@@ -227,6 +229,7 @@ async function generatePDFWithCoordinateConversion(
       const qrContent = await generateQRCodeContent({
         field,
         data,
+        maxQRCodeSize: field.w, // Passer la largeur du champ comme taille maximale
         ...qrcodeOptions,
       })
 
