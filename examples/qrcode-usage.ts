@@ -1,6 +1,6 @@
 /**
  * Exemples d'utilisation de la génération de QR codes
- * 
+ *
  * Ce fichier contient des exemples concrets d'utilisation
  * du module de génération de QR codes dans différents scénarios.
  */
@@ -22,16 +22,16 @@ import { generateDOCX } from '@/lib/generators/docx'
 
 export async function exempleSimpleURL() {
   console.log('=== Exemple 1 : QR Code URL simple ===')
-  
+
   const url = 'https://example.com'
   const qrBuffer = await generateQRCodeBuffer(url, {
     width: 200,
     margin: 1,
     errorCorrectionLevel: 'M',
   })
-  
+
   console.log(`✓ QR code généré : ${qrBuffer.length} bytes`)
-  
+
   // Vous pouvez maintenant :
   // - Sauvegarder le buffer dans un fichier
   // - L'envoyer via une API
@@ -44,7 +44,7 @@ export async function exempleSimpleURL() {
 
 export async function exempleVCard() {
   console.log('=== Exemple 2 : vCard ===')
-  
+
   const content: QRCodeContent = {
     type: 'vcard',
     data: {
@@ -59,14 +59,14 @@ export async function exempleVCard() {
       address: '123 Rue de la Paix, 75001 Paris',
     },
   }
-  
+
   const qrBuffer = await generateQRCodeFromContent(content, {
     width: 250,
     errorCorrectionLevel: 'H', // Haute correction pour impression
   })
-  
+
   console.log(`✓ vCard QR code généré : ${qrBuffer.length} bytes`)
-  
+
   // Formater en texte pour voir le contenu
   const vcardText = formatQRCodeContent(content)
   console.log('Contenu vCard :', vcardText)
@@ -78,7 +78,7 @@ export async function exempleVCard() {
 
 export async function exempleDocumentCommande(templateBuffer: Buffer) {
   console.log('=== Exemple 3 : Document de commande avec QR code ===')
-  
+
   const orderData = {
     orderId: 'CMD-2024-001',
     customerName: 'Marie Martin',
@@ -86,10 +86,10 @@ export async function exempleDocumentCommande(templateBuffer: Buffer) {
     totalAmount: 149.99,
     orderDate: new Date('2024-11-02'),
   }
-  
+
   // URL de suivi de commande
   const trackingUrl = `https://tracking.example.com/order/${orderData.orderId}`
-  
+
   // Générer le document avec variables et QR code
   const docxBuffer = await generateDOCX(templateBuffer, {
     variables: {
@@ -111,9 +111,9 @@ export async function exempleDocumentCommande(templateBuffer: Buffer) {
       errorCorrectionLevel: 'H',
     },
   })
-  
+
   console.log(`✓ Document généré : ${docxBuffer.length} bytes`)
-  
+
   return docxBuffer
 }
 
@@ -123,7 +123,7 @@ export async function exempleDocumentCommande(templateBuffer: Buffer) {
 
 export async function exempleBadgeEvenement(templateBuffer: Buffer) {
   console.log('=== Exemple 4 : Badge événement ===')
-  
+
   const participantData = {
     firstName: 'Sophie',
     lastName: 'Bernard',
@@ -132,7 +132,7 @@ export async function exempleBadgeEvenement(templateBuffer: Buffer) {
     organization: 'TechCorp',
     title: 'Développeuse Senior',
   }
-  
+
   const eventData = {
     title: 'Conférence Tech 2024',
     location: 'Centre des Congrès, Paris',
@@ -140,19 +140,19 @@ export async function exempleBadgeEvenement(templateBuffer: Buffer) {
     start: '2024-12-10T09:00:00Z',
     end: '2024-12-10T18:00:00Z',
   }
-  
+
   // QR code vCard pour le contact
   const vcardData = formatQRCodeContent({
     type: 'vcard',
     data: participantData,
   })
-  
+
   // QR code événement
   const eventQRData = formatQRCodeContent({
     type: 'event',
     data: eventData,
   })
-  
+
   const docxBuffer = await generateDOCX(templateBuffer, {
     variables: {
       participant_name: `${participantData.firstName} ${participantData.lastName}`,
@@ -170,9 +170,9 @@ export async function exempleBadgeEvenement(templateBuffer: Buffer) {
       errorCorrectionLevel: 'Q',
     },
   })
-  
+
   console.log(`✓ Badge généré : ${docxBuffer.length} bytes`)
-  
+
   return docxBuffer
 }
 
@@ -182,7 +182,7 @@ export async function exempleBadgeEvenement(templateBuffer: Buffer) {
 
 export async function exempleCertificat(templateBuffer: Buffer) {
   console.log('=== Exemple 5 : Certificat avec vérification (basique) ===')
-  
+
   const certificateData = {
     studentName: 'Pierre Durand',
     courseName: 'Formation TypeScript Avancé',
@@ -191,10 +191,10 @@ export async function exempleCertificat(templateBuffer: Buffer) {
     instructor: 'Prof. Martin',
     grade: 'Excellent',
   }
-  
+
   // URL de vérification publique
   const verificationUrl = `https://certificates.example.com/verify/${certificateData.certificateId}`
-  
+
   // Données structurées pour application mobile (scan avancé)
   const verificationData = formatQRCodeContent({
     type: 'custom',
@@ -211,7 +211,7 @@ export async function exempleCertificat(templateBuffer: Buffer) {
       signature: 'abc123...', // Placeholder - non sécurisé
     },
   })
-  
+
   const docxBuffer = await generateDOCX(templateBuffer, {
     variables: {
       student_name: certificateData.studentName,
@@ -232,12 +232,12 @@ export async function exempleCertificat(templateBuffer: Buffer) {
       errorCorrectionLevel: 'Q',
     },
   })
-  
+
   console.log(`✓ Certificat généré : ${docxBuffer.length} bytes`)
   console.log(`  URL de vérification : ${verificationUrl}`)
   console.log(`  ⚠️  Ce certificat n'est PAS authentifié cryptographiquement`)
   console.log(`  💡 Pour une vraie authentification, voir certificate-auth-usage.ts`)
-  
+
   return docxBuffer
 }
 
@@ -247,7 +247,7 @@ export async function exempleCertificat(templateBuffer: Buffer) {
 
 export async function exempleCertificatAuthentifie(templateBuffer: Buffer) {
   console.log('=== Exemple 5B : Certificat authentifié (sécurisé) ===')
-  
+
   // Configuration d'authentification
   const authConfig: CertificateAuthConfig = {
     secretKey: process.env['CERTIFICATE_SECRET_KEY'] ?? 'demo-key-change-in-production',
@@ -255,7 +255,7 @@ export async function exempleCertificatAuthentifie(templateBuffer: Buffer) {
     algorithm: 'sha256',
     expiresIn: 10 * 365 * 24 * 60 * 60, // 10 ans
   }
-  
+
   const certificateData: CertificateData = {
     certificateId: 'CERT-2024-TS-456',
     holderName: 'Pierre Durand',
@@ -268,18 +268,15 @@ export async function exempleCertificatAuthentifie(templateBuffer: Buffer) {
       duration: '40 heures',
     },
   }
-  
+
   // Générer le certificat authentifié avec signature cryptographique
-  const authenticated = generateAuthenticatedCertificate(
-    certificateData,
-    authConfig
-  )
-  
+  const authenticated = generateAuthenticatedCertificate(certificateData, authConfig)
+
   console.log(`✓ Certificat authentifié généré`)
   console.log(`  ID: ${authenticated.certificate.certificateId}`)
   console.log(`  Signature: ${authenticated.signature.substring(0, 16)}...`)
   console.log(`  URL: ${authenticated.verificationUrl}`)
-  
+
   // Générer le document avec le QR code authentifié
   const docxBuffer = await generateDOCX(templateBuffer, {
     variables: {
@@ -301,11 +298,11 @@ export async function exempleCertificatAuthentifie(templateBuffer: Buffer) {
       errorCorrectionLevel: 'Q',
     },
   })
-  
+
   console.log(`✓ Document généré : ${docxBuffer.length} bytes`)
   console.log(`  🔐 Certificat protégé par signature HMAC SHA-256`)
   console.log(`  📖 Voir docs/GUIDE_AUTHENTIFICATION_CERTIFICATS.md pour plus d'infos`)
-  
+
   return docxBuffer
 }
 
@@ -315,7 +312,7 @@ export async function exempleCertificatAuthentifie(templateBuffer: Buffer) {
 
 export async function exempleInvitation(templateBuffer: Buffer) {
   console.log('=== Exemple 6 : Invitation avec QR codes multiples ===')
-  
+
   const invitationData = {
     guestName: 'Lucie Petit',
     eventName: 'Soirée de Gala 2024',
@@ -323,7 +320,7 @@ export async function exempleInvitation(templateBuffer: Buffer) {
     venue: 'Grand Hôtel, Paris',
     invitationCode: 'INV-2024-789',
   }
-  
+
   // QR code 1 : Confirmation de présence (email pré-rempli)
   const confirmationEmailData = formatQRCodeContent({
     type: 'email',
@@ -333,7 +330,7 @@ export async function exempleInvitation(templateBuffer: Buffer) {
       body: `Je confirme ma présence à ${invitationData.eventName}`,
     },
   })
-  
+
   // QR code 2 : Localisation du lieu
   const locationData = formatQRCodeContent({
     type: 'geo',
@@ -342,7 +339,7 @@ export async function exempleInvitation(templateBuffer: Buffer) {
       longitude: 2.3522,
     },
   })
-  
+
   // QR code 3 : Ajout au calendrier
   const calendarData = formatQRCodeContent({
     type: 'event',
@@ -354,7 +351,7 @@ export async function exempleInvitation(templateBuffer: Buffer) {
       end: new Date(invitationData.eventDate.getTime() + 4 * 60 * 60 * 1000).toISOString(), // +4h
     },
   })
-  
+
   // QR code 4 : Code d'accès (données personnalisées)
   const accessCodeData = formatQRCodeContent({
     type: 'custom',
@@ -365,7 +362,7 @@ export async function exempleInvitation(templateBuffer: Buffer) {
       eventDate: invitationData.eventDate.toISOString(),
     },
   })
-  
+
   const docxBuffer = await generateDOCX(templateBuffer, {
     variables: {
       guest_name: invitationData.guestName,
@@ -388,10 +385,10 @@ export async function exempleInvitation(templateBuffer: Buffer) {
       errorCorrectionLevel: 'M',
     },
   })
-  
+
   console.log(`✓ Invitation générée : ${docxBuffer.length} bytes`)
   console.log(`  4 QR codes insérés`)
-  
+
   return docxBuffer
 }
 
@@ -401,7 +398,7 @@ export async function exempleInvitation(templateBuffer: Buffer) {
 
 export async function exemplePartageWiFi() {
   console.log('=== Exemple 7 : Partage WiFi ===')
-  
+
   const wifiData = formatQRCodeContent({
     type: 'wifi',
     data: {
@@ -411,15 +408,15 @@ export async function exemplePartageWiFi() {
       hidden: false,
     },
   })
-  
+
   const qrBuffer = await generateQRCodeBuffer(wifiData, {
     width: 300,
     errorCorrectionLevel: 'L', // WiFi n'a pas besoin de haute correction
   })
-  
+
   console.log(`✓ QR code WiFi généré : ${qrBuffer.length} bytes`)
   console.log(`  Les utilisateurs peuvent scanner pour se connecter automatiquement`)
-  
+
   return qrBuffer
 }
 
@@ -429,7 +426,7 @@ export async function exemplePartageWiFi() {
 
 export async function exempleTracabiliteProduit() {
   console.log('=== Exemple 8 : Traçabilité produit ===')
-  
+
   const productData = {
     sku: 'PROD-2024-001',
     name: 'Widget Premium',
@@ -438,7 +435,7 @@ export async function exempleTracabiliteProduit() {
     expiryDate: '2025-11-01',
     location: 'Entrepôt A - Allée 3 - Étagère 12',
   }
-  
+
   // Créer des données structurées pour le système de traçabilité
   const traceabilityData = formatQRCodeContent({
     type: 'custom',
@@ -452,15 +449,15 @@ export async function exempleTracabiliteProduit() {
       trackingUrl: `https://tracking.example.com/product/${productData.sku}`,
     },
   })
-  
+
   const qrBuffer = await generateQRCodeBuffer(traceabilityData, {
     width: 200,
     errorCorrectionLevel: 'Q', // Bonne correction pour étiquettes
   })
-  
+
   console.log(`✓ QR code traçabilité généré : ${qrBuffer.length} bytes`)
   console.log(`  Produit : ${productData.name} (${productData.sku})`)
-  
+
   return qrBuffer
 }
 
@@ -470,14 +467,14 @@ export async function exempleTracabiliteProduit() {
 
 export async function exempleMenuRestaurant() {
   console.log('=== Exemple 9 : Menu restaurant ===')
-  
+
   const restaurantData = {
     name: 'Le Gourmet',
     table: 15,
     menuUrl: 'https://menu.example.com',
     orderUrl: 'https://order.example.com/table/15',
   }
-  
+
   // QR code pour accéder au menu et commander
   const menuData = formatQRCodeContent({
     type: 'custom',
@@ -490,15 +487,15 @@ export async function exempleMenuRestaurant() {
       timestamp: new Date().toISOString(),
     },
   })
-  
+
   const qrBuffer = await generateQRCodeBuffer(menuData, {
     width: 250,
     errorCorrectionLevel: 'M',
   })
-  
+
   console.log(`✓ QR code menu généré : ${qrBuffer.length} bytes`)
   console.log(`  Table ${restaurantData.table} - ${restaurantData.name}`)
-  
+
   return qrBuffer
 }
 
@@ -508,22 +505,22 @@ export async function exempleMenuRestaurant() {
 
 export async function exempleCouleursPersonnalisees() {
   console.log('=== Exemple 10 : QR code avec couleurs personnalisées ===')
-  
+
   const url = 'https://brand.example.com'
-  
+
   // QR code aux couleurs de la marque
   const qrBuffer = await generateQRCodeBuffer(url, {
     width: 300,
     errorCorrectionLevel: 'H',
     color: {
-      dark: '#1a73e8',  // Bleu de la marque
+      dark: '#1a73e8', // Bleu de la marque
       light: '#ffffff', // Fond blanc
     },
   })
-  
+
   console.log(`✓ QR code personnalisé généré : ${qrBuffer.length} bytes`)
   console.log(`  Couleurs : #1a73e8 sur #ffffff`)
-  
+
   return qrBuffer
 }
 
@@ -534,44 +531,42 @@ export async function exempleCouleursPersonnalisees() {
 export async function runQrCodeExamples() {
   try {
     console.log('\n🚀 Démarrage des exemples de génération QR codes\n')
-    
+
     // Exemples sans template DOCX
     await exempleSimpleURL()
     console.log('')
-    
+
     await exempleVCard()
     console.log('')
-    
+
     await exemplePartageWiFi()
     console.log('')
-    
+
     await exempleTracabiliteProduit()
     console.log('')
-    
+
     await exempleMenuRestaurant()
     console.log('')
-    
+
     await exempleCouleursPersonnalisees()
     console.log('')
-    
+
     console.log('✅ Tous les exemples ont été exécutés avec succès !\n')
-    
+
     // Note : Les exemples avec template DOCX nécessitent un buffer de template
     // Pour les exécuter, fournissez un templateBuffer :
-    // 
+    //
     // const fs = require('fs')
     // const templateBuffer = fs.readFileSync('template.docx')
     // await exempleDocumentCommande(templateBuffer)
     // await exempleBadgeEvenement(templateBuffer)
     // await exempleCertificat(templateBuffer)
     // await exempleInvitation(templateBuffer)
-    
   } catch (error) {
-    console.error('❌ Erreur lors de l\'exécution des exemples :', error)
+    console.error("❌ Erreur lors de l'exécution des exemples :", error)
     throw error
   }
 }
 
 // Pour exécuter les exemples dans un contexte Node.js :
 // runAllExamples().catch(console.error)
-

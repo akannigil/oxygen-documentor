@@ -132,7 +132,7 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://...
@@ -204,11 +204,13 @@ ls -l test.pdf
 ### Test dans l'Application
 
 1. **Démarrer l'application :**
+
    ```bash
    npm run dev
    ```
 
 2. **Regarder les logs au démarrage :**
+
    ```
    ✅ LibreOffice trouvé avec: libreoffice --version
    ```
@@ -230,11 +232,13 @@ ls -l test.pdf
 **Cause :** LibreOffice n'est pas dans le PATH
 
 **Solution Windows :**
+
 1. Vérifier l'installation : `C:\Program Files\LibreOffice\program\soffice.exe`
 2. Ajouter au PATH (voir section ci-dessus)
 3. Redémarrer le terminal/serveur
 
 **Solution Linux/macOS :**
+
 ```bash
 which libreoffice
 # Si vide, réinstaller LibreOffice
@@ -245,6 +249,7 @@ which libreoffice
 **Cause :** Problèmes de permissions sur les fichiers temporaires
 
 **Solution Linux/macOS :**
+
 ```bash
 # Vérifier les permissions du dossier temp
 ls -la /tmp
@@ -252,6 +257,7 @@ chmod 1777 /tmp
 ```
 
 **Solution Docker :**
+
 ```dockerfile
 # Donner les bonnes permissions
 RUN chmod -R 755 /tmp
@@ -262,6 +268,7 @@ RUN chmod -R 755 /tmp
 **Cause :** Document trop complexe ou serveur surchargé
 
 **Solutions :**
+
 1. Augmenter le timeout dans le code
 2. Allouer plus de RAM au conteneur Docker
 3. Simplifier le document source
@@ -271,6 +278,7 @@ RUN chmod -R 755 /tmp
 **Cause :** Polices manquantes
 
 **Solution Linux/Docker :**
+
 ```bash
 sudo apt-get install -y \
   fonts-liberation \
@@ -281,32 +289,35 @@ sudo apt-get install -y \
 ### L'Application Utilise Puppeteer au lieu de LibreOffice
 
 **Vérifier les logs :**
+
 ```
 ⚠️ LibreOffice non disponible, utilisation de Puppeteer
 ```
 
 **Causes possibles :**
+
 1. LibreOffice non installé → Installer LibreOffice
 2. LibreOffice pas dans le PATH → Ajouter au PATH
 3. Serveur Node.js pas redémarré → Redémarrer le serveur
 
 ## 📊 Comparaison des Méthodes
 
-| Critère | LibreOffice | Puppeteer (mammoth) |
-|---------|-------------|---------------------|
-| Fidélité au DOCX | ⭐⭐⭐⭐⭐ Parfaite | ⭐⭐⭐ Approximative |
-| Images de fond | ✅ Préservées | ❌ Souvent perdues |
-| Positionnement | ✅ Exact | ⚠️ Approximatif |
-| Polices complexes | ✅ Supportées | ⚠️ Limitées |
-| Vitesse | ⭐⭐⭐⭐ Rapide (2-3s) | ⭐⭐⭐⭐ Rapide (2-3s) |
-| Mémoire requise | ~500 MB | ~300 MB |
-| Installation | Requiert LibreOffice | Déjà inclus |
+| Critère           | LibreOffice            | Puppeteer (mammoth)    |
+| ----------------- | ---------------------- | ---------------------- |
+| Fidélité au DOCX  | ⭐⭐⭐⭐⭐ Parfaite    | ⭐⭐⭐ Approximative   |
+| Images de fond    | ✅ Préservées          | ❌ Souvent perdues     |
+| Positionnement    | ✅ Exact               | ⚠️ Approximatif        |
+| Polices complexes | ✅ Supportées          | ⚠️ Limitées            |
+| Vitesse           | ⭐⭐⭐⭐ Rapide (2-3s) | ⭐⭐⭐⭐ Rapide (2-3s) |
+| Mémoire requise   | ~500 MB                | ~300 MB                |
+| Installation      | Requiert LibreOffice   | Déjà inclus            |
 
 ## 🚀 Recommandations de Production
 
 ### Pour un Hébergement Cloud
 
 **AWS EC2 / Azure VM / Google Compute Engine :**
+
 ```bash
 # Installer LibreOffice sur le serveur
 sudo apt-get update
@@ -317,6 +328,7 @@ pm2 restart app
 ```
 
 **Vercel / Netlify / Heroku :**
+
 - Ces plateformes ne supportent généralement pas LibreOffice
 - L'application utilisera automatiquement Puppeteer en fallback
 - **Alternative :** Utiliser un service de conversion externe (CloudConvert, etc.)
@@ -353,16 +365,16 @@ spec:
   template:
     spec:
       containers:
-      - name: app
-        image: your-image:latest
-        resources:
-          requests:
-            memory: "1Gi"
-            cpu: "500m"
-          limits:
-            memory: "2Gi"
-            cpu: "1000m"
-        # LibreOffice est inclus dans l'image
+        - name: app
+          image: your-image:latest
+          resources:
+            requests:
+              memory: '1Gi'
+              cpu: '500m'
+            limits:
+              memory: '2Gi'
+              cpu: '1000m'
+          # LibreOffice est inclus dans l'image
 ```
 
 ## 📞 Support
@@ -387,12 +399,14 @@ console.log('LibreOffice disponible:', available)
 ### Alternatives si LibreOffice ne Fonctionne Pas
 
 1. **unoconv** (basé sur LibreOffice)
+
    ```bash
    sudo apt-get install unoconv
    unoconv -f pdf document.docx
    ```
 
 2. **pandoc** (pour documents simples)
+
    ```bash
    sudo apt-get install pandoc
    pandoc document.docx -o document.pdf
@@ -408,4 +422,3 @@ console.log('LibreOffice disponible:', available)
 **Dernière mise à jour :** 2 Novembre 2025  
 **Version :** 2.1  
 **Auteur :** Assistant IA
-

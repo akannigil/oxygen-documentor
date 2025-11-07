@@ -7,6 +7,7 @@ J'ai créé un système complet et sécurisé pour authentifier les certificats 
 ## 📦 Fichiers créés
 
 ### 1. Module principal
+
 - **`lib/qrcode/certificate-auth.ts`** - Module d'authentification complet
   - Génération de certificats signés cryptographiquement (HMAC SHA-256/512)
   - Vérification de signatures
@@ -15,9 +16,11 @@ J'ai créé un système complet et sécurisé pour authentifier les certificats 
   - Gestion de l'expiration
 
 ### 2. Exports
+
 - **`lib/qrcode/index.ts`** - Exports mis à jour avec les nouvelles fonctions
 
 ### 3. Exemples
+
 - **`examples/certificate-auth-usage.ts`** - 8 exemples détaillés :
   1. Certificat de formation basique
   2. Certificat avec hash du document
@@ -31,6 +34,7 @@ J'ai créé un système complet et sécurisé pour authentifier les certificats 
 - **`examples/qrcode-usage.ts`** - Mis à jour avec exemple 5B (certificat authentifié)
 
 ### 4. Documentation
+
 - **`docs/GUIDE_AUTHENTIFICATION_CERTIFICATS.md`** - Guide complet (808 lignes)
   - Explications détaillées du fonctionnement
   - Architecture de sécurité
@@ -117,10 +121,7 @@ const certificateData: CertificateData = {
   grade: 'Excellent',
 }
 
-const authenticated = generateAuthenticatedCertificate(
-  certificateData,
-  authConfig
-)
+const authenticated = generateAuthenticatedCertificate(certificateData, authConfig)
 
 // Utiliser authenticated.qrCodeData pour générer le QR code
 ```
@@ -151,10 +152,7 @@ const docxBuffer = await generateDOCX(templateBuffer, {
 ```typescript
 import { verifyCertificateSignature } from '@/lib/qrcode'
 
-const isValid = verifyCertificateSignature(
-  scannedQrData,
-  process.env['CERTIFICATE_SECRET_KEY']!
-)
+const isValid = verifyCertificateSignature(scannedQrData, process.env['CERTIFICATE_SECRET_KEY']!)
 
 if (isValid) {
   console.log('✓ Certificat authentique')
@@ -183,25 +181,28 @@ if (isValid) {
 
 ## 🛡️ Avantages vs autres solutions
 
-| Solution | Sécurité | Complexité | Coût | Vitesse |
-|----------|----------|------------|------|---------|
-| QR Code simple | ❌ Faible | ✅ Très simple | ✅ Gratuit | ✅ Instantané |
-| **HMAC (cette solution)** | ✅ **Élevée** | ✅ **Simple** | ✅ **Gratuit** | ✅ **Instantané** |
-| Blockchain | ✅ Très élevée | ❌ Complexe | ❌ Coûteux | ⚠️ Lent |
-| PKI (X.509) | ✅ Maximale | ❌ Très complexe | ❌ Très coûteux | ⚠️ Moyen |
+| Solution                  | Sécurité       | Complexité       | Coût            | Vitesse           |
+| ------------------------- | -------------- | ---------------- | --------------- | ----------------- |
+| QR Code simple            | ❌ Faible      | ✅ Très simple   | ✅ Gratuit      | ✅ Instantané     |
+| **HMAC (cette solution)** | ✅ **Élevée**  | ✅ **Simple**    | ✅ **Gratuit**  | ✅ **Instantané** |
+| Blockchain                | ✅ Très élevée | ❌ Complexe      | ❌ Coûteux      | ⚠️ Lent           |
+| PKI (X.509)               | ✅ Maximale    | ❌ Très complexe | ❌ Très coûteux | ⚠️ Moyen          |
 
 ## 📚 Documentation
 
 ### Démarrage
+
 1. **[README Rapide](./docs/AUTHENTIFICATION_CERTIFICATS_README.md)** - Commencer ici
 2. **[Guide Complet](./docs/GUIDE_AUTHENTIFICATION_CERTIFICATS.md)** - Tout savoir
 3. **[Configuration](./docs/CONFIGURATION_CERTIFICATS.md)** - Setup détaillé
 
 ### Exemples
+
 - **[Exemples d'authentification](./examples/certificate-auth-usage.ts)** - 8 exemples
 - **[Exemples QR codes](./examples/qrcode-usage.ts)** - Usage général
 
 ### API
+
 - **[Module principal](./lib/qrcode/certificate-auth.ts)** - Code source documenté
 - **[Index](./lib/qrcode/index.ts)** - Exports
 
@@ -216,6 +217,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### 2. Configurer l'environnement
 
 Créer un fichier `.env` :
+
 ```bash
 CERTIFICATE_SECRET_KEY=votre_cle_generee_ci_dessus
 VERIFICATION_BASE_URL=https://certificates.example.com/verify
@@ -279,6 +281,7 @@ Pour comprendre en profondeur :
 ## 💡 Support
 
 En cas de questions :
+
 1. Consulter le [Guide Complet](./docs/GUIDE_AUTHENTIFICATION_CERTIFICATS.md)
 2. Vérifier les [exemples](./examples/certificate-auth-usage.ts)
 3. Lire la [configuration](./docs/CONFIGURATION_CERTIFICATS.md)
@@ -304,4 +307,3 @@ En cas de questions :
 **Date** : 2 novembre 2024  
 **Auteur** : Assistant IA  
 **Licence** : Propriétaire (oxygen-app)
-

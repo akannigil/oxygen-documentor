@@ -32,7 +32,9 @@ export function DeleteProjectButton({ projectId }: DeleteProjectButtonProps) {
       router.push('/dashboard')
     } catch (error) {
       console.error('Error deleting project:', error)
-      alert(error instanceof Error ? error.message : 'Une erreur est survenue lors de la suppression')
+      alert(
+        error instanceof Error ? error.message : 'Une erreur est survenue lors de la suppression'
+      )
       setLoading(false)
       setShowConfirm(false)
     }
@@ -69,10 +71,14 @@ export function DeleteProjectButton({ projectId }: DeleteProjectButtonProps) {
       className="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50"
     >
       <svg className="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+        />
       </svg>
       Supprimer le projet
     </button>
   )
 }
-

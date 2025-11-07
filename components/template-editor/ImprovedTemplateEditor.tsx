@@ -28,10 +28,15 @@ export function ImprovedTemplateEditor({
   const [selectedFieldIndex, setSelectedFieldIndex] = useState<number | null>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(null)
-  const [currentRect, setCurrentRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
+  const [currentRect, setCurrentRect] = useState<{
+    x: number
+    y: number
+    w: number
+    h: number
+  } | null>(null)
   const [showGrid, setShowGrid] = useState(true)
   const [snapToGrid, setSnapToGrid] = useState(true)
-  
+
   const transformerRef = useRef<Konva.Transformer>(null)
   const stageRef = useRef<Konva.Stage>(null)
 
@@ -72,8 +77,9 @@ export function ImprovedTemplateEditor({
   }
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
-    const clickedOnEmpty = e.target === e.target.getStage() || e.target.name() === 'background-image'
-    
+    const clickedOnEmpty =
+      e.target === e.target.getStage() || e.target.name() === 'background-image'
+
     if (clickedOnEmpty) {
       setSelectedFieldIndex(null)
       setIsDrawing(true)
@@ -93,12 +99,12 @@ export function ImprovedTemplateEditor({
     if (pos) {
       const snappedX = snapToGridValue(pos.x)
       const snappedY = snapToGridValue(pos.y)
-      
+
       const x = Math.min(drawStart.x, snappedX)
       const y = Math.min(drawStart.y, snappedY)
       const w = Math.abs(snappedX - drawStart.x)
       const h = Math.abs(snappedY - drawStart.y)
-      
+
       setCurrentRect({ x, y, w, h })
     }
   }
@@ -116,13 +122,13 @@ export function ImprovedTemplateEditor({
         fontSize: 12,
         align: 'left',
       }
-      
+
       const updatedFields = [...fields, newField]
       setFields(updatedFields)
       onFieldsChange(updatedFields)
       setSelectedFieldIndex(updatedFields.length - 1)
     }
-    
+
     setIsDrawing(false)
     setDrawStart(null)
     setCurrentRect(null)
@@ -136,10 +142,10 @@ export function ImprovedTemplateEditor({
     const node = e.target
     const snappedX = snapToGridValue(node.x())
     const snappedY = snapToGridValue(node.y())
-    
+
     node.x(snappedX)
     node.y(snappedY)
-    
+
     const updatedFields = [...fields]
     const updatedField = {
       ...updatedFields[index],
@@ -155,19 +161,19 @@ export function ImprovedTemplateEditor({
     const node = e.target
     const scaleX = node.scaleX()
     const scaleY = node.scaleY()
-    
+
     const newWidth = snapToGridValue(node.width() * scaleX)
     const newHeight = snapToGridValue(node.height() * scaleY)
     const newX = snapToGridValue(node.x())
     const newY = snapToGridValue(node.y())
-    
+
     node.scaleX(1)
     node.scaleY(1)
     node.width(newWidth)
     node.height(newHeight)
     node.x(newX)
     node.y(newY)
-    
+
     const updatedFields = [...fields]
     const updatedField = {
       ...updatedFields[index],
@@ -217,7 +223,7 @@ export function ImprovedTemplateEditor({
   const gridLines = useMemo(() => {
     if (!showGrid) return []
     const lines = []
-    
+
     // Lignes verticales
     for (let i = 0; i <= displayWidth; i += gridSize) {
       lines.push(
@@ -230,7 +236,7 @@ export function ImprovedTemplateEditor({
         />
       )
     }
-    
+
     // Lignes horizontales
     for (let i = 0; i <= displayHeight; i += gridSize) {
       lines.push(
@@ -243,7 +249,7 @@ export function ImprovedTemplateEditor({
         />
       )
     }
-    
+
     return lines
   }, [showGrid, displayWidth, displayHeight])
 
@@ -321,7 +327,7 @@ export function ImprovedTemplateEditor({
                 const displayY = realToDisplay(field.y)
                 const displayW = realToDisplay(field.w)
                 const displayH = realToDisplay(field.h)
-                
+
                 return (
                   <React.Fragment key={index}>
                     <Rect
@@ -383,7 +389,7 @@ export function ImprovedTemplateEditor({
           <h3 className="mb-4 text-sm font-semibold text-gray-900">
             {selectedField ? `Éditer: ${selectedField.key}` : 'Propriétés du champ'}
           </h3>
-          
+
           {selectedField && selectedFieldIndex !== null ? (
             <FieldPropertiesPanel
               field={selectedField}
@@ -392,12 +398,24 @@ export function ImprovedTemplateEditor({
               onDelete={handleFieldDelete}
             />
           ) : (
-            <div className="text-center py-8">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+            <div className="py-8 text-center">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
+                />
               </svg>
               <p className="mt-2 text-sm text-gray-500">
-                Dessinez un rectangle sur l&apos;image<br />ou cliquez sur un champ existant
+                Dessinez un rectangle sur l&apos;image
+                <br />
+                ou cliquez sur un champ existant
               </p>
             </div>
           )}
@@ -417,7 +435,7 @@ interface FieldPropertiesPanelProps {
 
 function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropertiesPanelProps) {
   return (
-    <div className="space-y-3 max-h-[600px] overflow-y-auto">
+    <div className="max-h-[600px] space-y-3 overflow-y-auto">
       <div>
         <label className="block text-xs font-medium text-gray-700">Clé du champ</label>
         <input
@@ -432,7 +450,9 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
         <label className="block text-xs font-medium text-gray-700">Type</label>
         <select
           value={field.type}
-          onChange={(e) => onUpdate(index, { type: e.target.value as 'text' | 'number' | 'date' | 'qrcode' })}
+          onChange={(e) =>
+            onUpdate(index, { type: e.target.value as 'text' | 'number' | 'date' | 'qrcode' })
+          }
           className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
         >
           <option value="text">Texte</option>
@@ -460,7 +480,17 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
             <label className="block text-xs font-medium text-gray-700">Police</label>
             <select
               value={field.fontFamily || 'Helvetica'}
-              onChange={(e) => onUpdate(index, { fontFamily: e.target.value as 'Helvetica' | 'Helvetica-Bold' | 'Times-Roman' | 'Times-Bold' | 'Courier' | 'Courier-Bold' })}
+              onChange={(e) =>
+                onUpdate(index, {
+                  fontFamily: e.target.value as
+                    | 'Helvetica'
+                    | 'Helvetica-Bold'
+                    | 'Times-Roman'
+                    | 'Times-Bold'
+                    | 'Courier'
+                    | 'Courier-Bold',
+                })
+              }
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
             >
               <option value="Helvetica">Helvetica</option>
@@ -476,7 +506,9 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
             <label className="block text-xs font-medium text-gray-700">Alignement</label>
             <select
               value={field.align || 'left'}
-              onChange={(e) => onUpdate(index, { align: e.target.value as 'left' | 'center' | 'right' })}
+              onChange={(e) =>
+                onUpdate(index, { align: e.target.value as 'left' | 'center' | 'right' })
+              }
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
             >
               <option value="left">Gauche</option>
@@ -509,7 +541,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
         <QRCodeConfiguration field={field} index={index} onUpdate={onUpdate} />
       )}
 
-      <div className="pt-3 border-t border-gray-200">
+      <div className="border-t border-gray-200 pt-3">
         <button
           onClick={() => onDelete(index)}
           className="w-full rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500"

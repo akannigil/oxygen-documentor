@@ -17,9 +17,8 @@ try {
     globalForPrisma.prisma = prismaInstance
   }
 } catch (error) {
-  console.error('Erreur lors de l\'initialisation du client Prisma:', error)
+  console.error("Erreur lors de l'initialisation du client Prisma:", error)
   throw error
 }
 
 export const prisma = prismaInstance!
-

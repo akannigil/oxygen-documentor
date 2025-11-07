@@ -63,24 +63,29 @@ README_QRCODE_IMPLEMENTATION.md  # Ce fichier
 ## 🚀 Installation
 
 Les dépendances sont déjà installées :
+
 - ✅ `qrcode` - Génération de QR codes
 - ✅ `@xmldom/xmldom` - Manipulation XML pour DOCX
 
 ## 📖 Documentation
 
 ### 1. Guide de démarrage rapide
+
 **Fichier :** [`docs/QRCODE_QUICKSTART.md`](docs/QRCODE_QUICKSTART.md)
 
 Exemples simples pour démarrer en 5 minutes :
+
 - QR code URL simple
 - Intégration dans DOCX
 - vCard, WiFi, événements
 - Options communes
 
 ### 2. Guide complet
+
 **Fichier :** [`docs/GUIDE_QR_CODES.md`](docs/GUIDE_QR_CODES.md)
 
 Documentation exhaustive incluant :
+
 - Tous les types de QR codes avec exemples
 - Configuration avancée
 - Intégration dans les documents
@@ -89,9 +94,11 @@ Documentation exhaustive incluant :
 - Dépannage
 
 ### 3. Exemples pratiques
+
 **Fichier :** [`examples/qrcode-usage.ts`](examples/qrcode-usage.ts)
 
 10 exemples complets prêts à l'emploi :
+
 1. QR Code URL simple
 2. Carte de visite (vCard)
 3. Document de commande avec suivi
@@ -127,7 +134,7 @@ const qrBuffer = await generateQRCodeBuffer('https://example.com')
 // Avec options
 const qrBuffer = await generateQRCodeBuffer('https://example.com', {
   width: 300,
-  errorCorrectionLevel: 'H'
+  errorCorrectionLevel: 'H',
 })
 ```
 
@@ -135,18 +142,21 @@ const qrBuffer = await generateQRCodeBuffer('https://example.com', {
 
 ```typescript
 // vCard
-const qrBuffer = await generateQRCodeFromContent({
-  type: 'vcard',
-  data: {
-    firstName: 'Jean',
-    lastName: 'Dupont',
-    email: 'jean.dupont@example.com',
-    phone: '+33123456789'
+const qrBuffer = await generateQRCodeFromContent(
+  {
+    type: 'vcard',
+    data: {
+      firstName: 'Jean',
+      lastName: 'Dupont',
+      email: 'jean.dupont@example.com',
+      phone: '+33123456789',
+    },
+  },
+  {
+    width: 250,
+    errorCorrectionLevel: 'M',
   }
-}, {
-  width: 250,
-  errorCorrectionLevel: 'M'
-})
+)
 ```
 
 ### Intégration DOCX
@@ -157,16 +167,16 @@ import { generateDOCX } from '@/lib/generators/docx'
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: {
     nom: 'Dupont',
-    prenom: 'Jean'
+    prenom: 'Jean',
   },
   qrcodes: {
     '{{qrcode_url}}': 'https://example.com',
-    '{{qrcode_email}}': 'mailto:contact@example.com'
+    '{{qrcode_email}}': 'mailto:contact@example.com',
   },
   qrcodeOptions: {
     width: 200,
-    errorCorrectionLevel: 'M'
-  }
+    errorCorrectionLevel: 'M',
+  },
 })
 ```
 
@@ -182,28 +192,25 @@ const fields: TemplateField[] = [
     x: 450,
     y: 50,
     w: 100,
-    h: 100
-  }
+    h: 100,
+  },
 ]
 
-const pdfBuffer = await generateDocumentFromTemplate(
-  templateBuffer,
-  'application/pdf',
-  fields,
-  {
-    tracking_url: 'https://tracking.example.com/order/12345'
-  }
-)
+const pdfBuffer = await generateDocumentFromTemplate(templateBuffer, 'application/pdf', fields, {
+  tracking_url: 'https://tracking.example.com/order/12345',
+})
 ```
 
 ## 🎨 Types de contenu
 
 ### 1. URL
+
 ```typescript
 { type: 'url', data: { url: 'https://example.com' } }
 ```
 
 ### 2. Email
+
 ```typescript
 {
   type: 'email',
@@ -216,6 +223,7 @@ const pdfBuffer = await generateDocumentFromTemplate(
 ```
 
 ### 3. vCard (Carte de visite)
+
 ```typescript
 {
   type: 'vcard',
@@ -231,6 +239,7 @@ const pdfBuffer = await generateDocumentFromTemplate(
 ```
 
 ### 4. WiFi
+
 ```typescript
 {
   type: 'wifi',
@@ -243,6 +252,7 @@ const pdfBuffer = await generateDocumentFromTemplate(
 ```
 
 ### 5. Événement
+
 ```typescript
 {
   type: 'event',
@@ -256,6 +266,7 @@ const pdfBuffer = await generateDocumentFromTemplate(
 ```
 
 ### 6. Géolocalisation
+
 ```typescript
 {
   type: 'geo',
@@ -267,6 +278,7 @@ const pdfBuffer = await generateDocumentFromTemplate(
 ```
 
 ### 7. Données personnalisées
+
 ```typescript
 {
   type: 'custom',
@@ -298,19 +310,21 @@ const validated = qrCodeContentSchema.parse(content)
 ### Pour documents DOCX
 
 1. **Créer un template Word** avec des placeholders :
+
    ```
    Nom : {{nom}}
    Email : {{email}}
-   
+
    Scannez ce QR code :
    {{qrcode_portal}}
    ```
 
 2. **Générer le document** :
+
    ```typescript
    const docxBuffer = await generateDOCX(templateBuffer, {
      variables: { nom: 'Dupont', email: 'email@example.com' },
-     qrcodes: { '{{qrcode_portal}}': 'https://portal.example.com' }
+     qrcodes: { '{{qrcode_portal}}': 'https://portal.example.com' },
    })
    ```
 
@@ -322,47 +336,48 @@ const validated = qrCodeContentSchema.parse(content)
 ### Pour documents PDF/Images
 
 1. **Définir les champs** avec type `qrcode` :
+
    ```typescript
-   const fields = [
-     { key: 'tracking_url', type: 'qrcode', x: 450, y: 50, w: 100, h: 100 }
-   ]
+   const fields = [{ key: 'tracking_url', type: 'qrcode', x: 450, y: 50, w: 100, h: 100 }]
    ```
 
 2. **Générer le document** :
    ```typescript
-   const pdfBuffer = await generateDocumentFromTemplate(
-     templateBuffer,
-     'application/pdf',
-     fields,
-     { tracking_url: 'https://example.com' }
-   )
+   const pdfBuffer = await generateDocumentFromTemplate(templateBuffer, 'application/pdf', fields, {
+     tracking_url: 'https://example.com',
+   })
    ```
 
 ## 🎯 Cas d'usage recommandés
 
 ### 1. **Suivi de commandes**
+
 - QR code avec URL de suivi
 - Niveau de correction : H (impression)
 - Taille : 250-300 pixels
 
 ### 2. **Badges événements**
+
 - QR code vCard pour contact
 - QR code événement pour calendrier
 - Niveau de correction : Q
 - Taille : 180-200 pixels
 
 ### 3. **Certificats**
+
 - QR code de vérification avec URL
 - Données structurées (custom)
 - Niveau de correction : Q
 - Taille : 180-200 pixels
 
 ### 4. **Partage WiFi**
+
 - QR code WiFi
 - Niveau de correction : L (pas besoin de haute correction)
 - Taille : 250-300 pixels
 
 ### 5. **Traçabilité produits**
+
 - QR code personnalisé (custom)
 - Niveau de correction : Q (étiquettes)
 - Taille : 200 pixels
@@ -371,14 +386,14 @@ const validated = qrCodeContentSchema.parse(content)
 
 ### Fonctions principales
 
-| Fonction | Usage | Retour |
-|----------|-------|--------|
-| `generateQRCodeBuffer(data, options?)` | QR code simple | `Promise<Buffer>` |
-| `generateQRCodeDataURL(data, options?)` | QR code base64 | `Promise<string>` |
-| `generateQRCodeFromContent(content, options?)` | QR code structuré | `Promise<Buffer>` |
-| `formatQRCodeContent(content)` | Formater contenu | `string` |
-| `validateQRCodeContent(content)` | Valider contenu | `boolean` |
-| `insertQRCodeInDOCX(buffer, placeholder, data, options?)` | Insertion DOCX | `Promise<Buffer>` |
+| Fonction                                                  | Usage             | Retour            |
+| --------------------------------------------------------- | ----------------- | ----------------- |
+| `generateQRCodeBuffer(data, options?)`                    | QR code simple    | `Promise<Buffer>` |
+| `generateQRCodeDataURL(data, options?)`                   | QR code base64    | `Promise<string>` |
+| `generateQRCodeFromContent(content, options?)`            | QR code structuré | `Promise<Buffer>` |
+| `formatQRCodeContent(content)`                            | Formater contenu  | `string`          |
+| `validateQRCodeContent(content)`                          | Valider contenu   | `boolean`         |
+| `insertQRCodeInDOCX(buffer, placeholder, data, options?)` | Insertion DOCX    | `Promise<Buffer>` |
 
 ### Options communes
 
@@ -423,22 +438,26 @@ try {
 ## 🔍 Dépannage
 
 ### QR code illisible
+
 - ✓ Augmenter `width` (300+)
 - ✓ Augmenter `errorCorrectionLevel` ('H')
 - ✓ Augmenter `margin` (2+)
 - ✓ Simplifier le contenu
 
 ### Erreur d'insertion DOCX
+
 - ✓ Vérifier que le placeholder existe
 - ✓ Utiliser un placeholder simple (`{{qrcode}}`)
 - ✓ Vérifier que le placeholder n'est pas fragmenté
 
 ### Données trop longues
+
 - ✓ Utiliser une URL courte
 - ✓ Réduire le contenu du vCard
 - ✓ Diviser en plusieurs QR codes
 
 ### QR code pixelisé
+
 - ✓ Augmenter `width`
 - ✓ Utiliser PNG au lieu de JPEG
 - ✓ Augmenter `quality` pour JPEG (0.95+)
@@ -446,16 +465,19 @@ try {
 ## 🎓 Formation
 
 ### Niveau débutant
+
 1. Lire [`QRCODE_QUICKSTART.md`](docs/QRCODE_QUICKSTART.md)
 2. Tester les exemples 1-3 de [`qrcode-usage.ts`](examples/qrcode-usage.ts)
 3. Générer un QR code simple dans votre projet
 
 ### Niveau intermédiaire
+
 1. Lire [`GUIDE_QR_CODES.md`](docs/GUIDE_QR_CODES.md) (sections 1-4)
 2. Tester les exemples 4-7 de [`qrcode-usage.ts`](examples/qrcode-usage.ts)
 3. Intégrer des QR codes dans vos templates DOCX
 
 ### Niveau avancé
+
 1. Lire [`GUIDE_QR_CODES.md`](docs/GUIDE_QR_CODES.md) (complet)
 2. Tester les exemples 8-10 de [`qrcode-usage.ts`](examples/qrcode-usage.ts)
 3. Créer des QR codes personnalisés (custom)
@@ -522,4 +544,3 @@ Pour toute question ou problème :
 **Auteur :** Implémentation complète du système de génération de QR codes  
 **Date :** 2024-11-02  
 **Version :** 1.0.0
-

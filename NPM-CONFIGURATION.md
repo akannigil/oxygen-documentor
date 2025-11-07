@@ -15,6 +15,7 @@ Conteneur Docker (oxygen-document-app:PORT)
 ```
 
 **NPM fait le lien entre :**
+
 - L'extérieur (votre domaine HTTPS)
 - Votre conteneur Docker (réseau interne)
 
@@ -34,7 +35,7 @@ Forward Hostname/IP: oxygen-document-app
 Forward Port: 3000 (ou la valeur de APP_PORT dans votre .env.production)
 
 ☑ Cache Assets
-☑ Block Common Exploits  
+☑ Block Common Exploits
 ☑ Websockets Support
 ```
 
@@ -42,7 +43,7 @@ Forward Port: 3000 (ou la valeur de APP_PORT dans votre .env.production)
 
 - **Domain Names** : Votre domaine public (ex: `oxygen.votredomaine.com`)
 - **Scheme** : `http` car la communication NPM ↔ Docker est locale (pas besoin de HTTPS)
-- **Forward Hostname/IP** : 
+- **Forward Hostname/IP** :
   - `oxygen-document-app` = nom du conteneur Docker (recommandé si Docker Compose)
   - OU `localhost` si vous n'utilisez pas Docker Compose
 - **Forward Port** : Le port de votre application (défini par `APP_PORT` dans `.env.production`, par défaut `3000`)
@@ -65,6 +66,7 @@ Email: votre@email.com
 C'est ici que vous pouvez copier le contenu de `nginx-advanced.conf` **si vous le souhaitez**.
 
 **Ce n'est PAS obligatoire !** C'est seulement pour :
+
 - Optimiser le cache des assets statiques Next.js
 - Augmenter les limites d'upload
 - Headers de sécurité supplémentaires
@@ -75,6 +77,7 @@ C'est ici que vous pouvez copier le contenu de `nginx-advanced.conf` **si vous l
 ### Si vous utilisez un port différent de 3000
 
 1. **Dans `.env.production` :**
+
    ```bash
    APP_PORT=8080  # Par exemple
    ```
@@ -98,12 +101,13 @@ services:
   app:
     container_name: oxygen-document-app
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - '${APP_PORT:-3000}:3000'
     networks:
       - oxygen-network
 ```
 
 **Dans NPM :**
+
 - Forward Hostname: `oxygen-document-app`
 - Forward Port: `3000` (port interne du conteneur)
 
@@ -119,6 +123,7 @@ docker run -d \
 ```
 
 **Dans NPM :**
+
 - Forward Hostname: `localhost` ou `127.0.0.1`
 - Forward Port: `3000`
 
@@ -129,6 +134,7 @@ npm run start  # Port 3000
 ```
 
 **Dans NPM :**
+
 - Forward Hostname: `localhost` ou `127.0.0.1`
 - Forward Port: `3000`
 
@@ -140,15 +146,17 @@ npm run start  # Port 3000
 # docker-compose.prod.yml
 networks:
   oxygen-network:
-    external: true  # Réseau partagé avec NPM
+    external: true # Réseau partagé avec NPM
 ```
 
 **Avantages :**
+
 - Communication directe via nom du conteneur
 - Pas besoin d'exposer le port sur l'hôte
 - Plus sécurisé
 
 **Dans NPM :**
+
 - Forward Hostname: `oxygen-document-app`
 - Forward Port: `3000`
 
@@ -161,10 +169,11 @@ networks:
 services:
   app:
     ports:
-      - "127.0.0.1:3000:3000"  # Expose seulement sur localhost
+      - '127.0.0.1:3000:3000' # Expose seulement sur localhost
 ```
 
 **Dans NPM :**
+
 - Forward Hostname: `host.docker.internal` (si NPM est dans Docker)
 - OU `localhost` (si NPM est directement sur l'hôte)
 - Forward Port: `3000`
@@ -186,9 +195,10 @@ Ce fichier contient des **configurations Nginx avancées** pour :
 
 5. **Compression Gzip** optimisée
 
-**Vous n'êtes PAS obligé de l'utiliser !** 
+**Vous n'êtes PAS obligé de l'utiliser !**
 
 NPM fonctionne très bien sans. Ces optimisations sont pour :
+
 - Meilleures performances
 - Meilleure sécurité
 - Support de gros fichiers
@@ -219,18 +229,22 @@ curl https://votre-domaine.com/api/health
 ### Erreur 502 Bad Gateway
 
 **Causes possibles :**
+
 1. L'application Docker n'est pas démarrée
+
    ```bash
    docker-compose -f docker-compose.prod.yml ps
    ```
 
 2. Mauvais nom de conteneur dans NPM
+
    ```bash
    docker ps | grep oxygen
    # Utilisez le nom exact dans NPM
    ```
 
 3. Mauvais réseau Docker
+
    ```bash
    docker network ls
    docker network inspect oxygen-network
@@ -255,6 +269,7 @@ proxy_read_timeout 300s;
 ### L'app est accessible en HTTP mais pas en HTTPS
 
 **Solution :** Vérifiez le certificat SSL dans NPM :
+
 - Onglet SSL
 - Vérifiez que le certificat est valide
 - Essayez de le renouveler
@@ -316,4 +331,3 @@ proxy_read_timeout 300s;
 ---
 
 **En résumé :** `nginx-advanced.conf` est **optionnel** et sert uniquement à optimiser NPM. La configuration de base de NPM suffit largement pour commencer ! 🚀
-

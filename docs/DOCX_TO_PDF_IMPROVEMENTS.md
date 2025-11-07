@@ -3,6 +3,7 @@
 ## 📋 Problème Résolu
 
 Lors de la conversion de documents DOCX vers PDF, le texte positionné au-dessus d'images de fond était déplacé en bas de page. Ce problème affectait particulièrement les templates DOCX contenant :
+
 - Du texte entre accolades (variables de template)
 - Des images de fond
 - Des text boxes avec positionnement absolu
@@ -13,6 +14,7 @@ Lors de la conversion de documents DOCX vers PDF, le texte positionné au-dessus
 ### 1. Analyse du Document DOCX
 
 **Nouvelle fonction : `analyzeDocumentPositioning()`**
+
 - Analyse le XML du document DOCX (`word/document.xml`)
 - Détecte les éléments avec positionnement absolu (`<wp:anchor>`, `<w:txbxContent>`, `<w:pict>`)
 - Identifie les images de fond (`<v:background>`, `<w:background>`)
@@ -25,6 +27,7 @@ const positioning = await analyzeDocumentPositioning(docxBuffer)
 ### 2. Extraction des Images
 
 **Nouvelle fonction : `extractImagesFromDOCX()`**
+
 - Extrait toutes les images du DOCX (dossier `word/media/`)
 - Détermine automatiquement le type MIME (PNG, JPEG, GIF, BMP)
 - Prépare les images pour l'inclusion dans le HTML
@@ -32,6 +35,7 @@ const positioning = await analyzeDocumentPositioning(docxBuffer)
 ### 3. Conversion HTML Améliorée
 
 **Améliorations de la conversion Mammoth :**
+
 - Conversion des images en base64 pour inclusion directe dans le HTML
 - Préservation des styles de paragraphe
 - Support des text boxes et formes
@@ -58,7 +62,15 @@ body {
 }
 
 /* Tout le texte au-dessus (z-index: 10) */
-p, h1, h2, h3, h4, h5, h6, div, span {
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+div,
+span {
   position: relative;
   z-index: 10;
 }
@@ -94,33 +106,33 @@ body > img:first-child {
 **Script exécuté dans le navigateur avant la conversion PDF :**
 
 ```javascript
-window.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('DOMContentLoaded', function () {
   // Détecter automatiquement les images de fond
-  const firstImg = document.querySelector('body > img:first-child');
+  const firstImg = document.querySelector('body > img:first-child')
   if (firstImg) {
-    firstImg.addEventListener('load', function() {
-      const imgWidth = this.naturalWidth;
-      const bodyWidth = document.body.offsetWidth;
-      
+    firstImg.addEventListener('load', function () {
+      const imgWidth = this.naturalWidth
+      const bodyWidth = document.body.offsetWidth
+
       // Si l'image occupe ≥80% de la largeur = image de fond
       if (imgWidth >= bodyWidth * 0.8) {
-        this.classList.add('background-image');
-        this.style.position = 'absolute';
-        this.style.zIndex = '0';
+        this.classList.add('background-image')
+        this.style.position = 'absolute'
+        this.style.zIndex = '0'
         // ...
       }
-    });
+    })
   }
-  
+
   // Forcer le z-index de tous les textes
-  const allText = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, div, span');
-  allText.forEach(function(el) {
+  const allText = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, div, span')
+  allText.forEach(function (el) {
     if (el.textContent && el.textContent.trim()) {
-      el.style.position = 'relative';
-      el.style.zIndex = '10';
+      el.style.position = 'relative'
+      el.style.zIndex = '10'
     }
-  });
-});
+  })
+})
 ```
 
 ### 6. Optimisations Puppeteer
@@ -149,7 +161,7 @@ await page.evaluate(() => {
 })
 
 // Délai pour le JavaScript de positionnement
-await new Promise(resolve => setTimeout(resolve, 500))
+await new Promise((resolve) => setTimeout(resolve, 500))
 
 // Options PDF optimisées
 const pdfOptions = {
@@ -157,19 +169,21 @@ const pdfOptions = {
   landscape: false,
   printBackground: true, // Crucial pour les images de fond
   omitBackground: false, // Ne pas omettre les images de fond
-  margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' }
+  margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
 }
 ```
 
 ## 🎯 Résultat
 
 ### Avant les Améliorations
+
 ❌ Le texte entre accolades était déplacé en bas de page  
 ❌ Les images de fond n'étaient pas préservées  
 ❌ Le positionnement absolu était ignoré  
 ❌ La superposition texte/image était perdue
 
 ### Après les Améliorations
+
 ✅ Le texte reste au-dessus des images de fond  
 ✅ Les images de fond sont correctement positionnées  
 ✅ Le positionnement absolu est préservé  
@@ -227,21 +241,25 @@ const pdfBuffer = await convertDOCXToPDFWithStyles(docxBuffer, {
 ## 🎨 Cas d'Usage Supportés
 
 ### 1. Certificats avec Image de Fond
+
 - Image de fond pleine page
 - Texte (nom, date, etc.) superposé
 - Variables de template `{{nom}}`, `{{date}}`
 
 ### 2. Badges avec Photo
+
 - Photo en arrière-plan
 - Informations textuelles au-dessus
 - QR codes et logos
 
 ### 3. Documents Officiels
+
 - En-tête avec logo
 - Texte avec mise en forme complexe
 - Images et tableaux intégrés
 
 ### 4. Templates Marketing
+
 - Design graphique riche
 - Zones de texte variables
 - Images décoratives
@@ -290,6 +308,7 @@ const pdfBuffer = await convertDOCXToPDFWithStyles(docxBuffer, {
 Si le texte n'est toujours pas correctement positionné :
 
 1. **Vérifier les logs console**
+
    ```javascript
    console.log('Analyse du document DOCX:', positioning)
    ```
@@ -316,4 +335,3 @@ Si le texte n'est toujours pas correctement positionné :
 **Date de mise à jour :** 2 novembre 2025  
 **Version :** 2.0  
 **Auteur :** Assistant IA
-

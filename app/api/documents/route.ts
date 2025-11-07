@@ -9,8 +9,14 @@ const documentsQuerySchema = z.object({
   search: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-  page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
-  limit: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 20)),
+  page: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 1)),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 20)),
 })
 
 export async function GET(request: Request) {
@@ -19,7 +25,7 @@ export async function GET(request: Request) {
     if (!session?.user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
     const { searchParams } = new URL(request.url)
-    
+
     // Valider les paramètres de requête
     const queryParams = {
       projectId: searchParams.get('projectId') ?? undefined,
@@ -39,7 +45,8 @@ export async function GET(request: Request) {
 
     const project = await prisma.project.findUnique({ where: { id: validated.projectId } })
     if (!project) return NextResponse.json({ error: 'Projet non trouvé' }, { status: 404 })
-    if (project.ownerId !== session.user.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
+    if (project.ownerId !== session.user.id)
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
 
     // Construire les filtres Prisma
     const where: any = {
@@ -103,7 +110,7 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error('List documents error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Paramètres invalides', details: error.errors },

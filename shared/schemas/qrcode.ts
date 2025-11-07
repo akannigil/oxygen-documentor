@@ -13,10 +13,20 @@ export const qrCodeOptionsSchema = z.object({
   errorCorrectionLevel: z.enum(['L', 'M', 'Q', 'H']).optional().default('M'),
   type: z.enum(['image/png', 'image/jpeg']).optional().default('image/png'),
   quality: z.number().min(0).max(1).optional().default(0.92),
-  color: z.object({
-    dark: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional().default('#000000'),
-    light: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional().default('#FFFFFF'),
-  }).optional(),
+  color: z
+    .object({
+      dark: z
+        .string()
+        .regex(/^#[0-9A-Fa-f]{6}$/)
+        .optional()
+        .default('#000000'),
+      light: z
+        .string()
+        .regex(/^#[0-9A-Fa-f]{6}$/)
+        .optional()
+        .default('#FFFFFF'),
+    })
+    .optional(),
 })
 
 export type QRCodeOptionsInput = z.infer<typeof qrCodeOptionsSchema>
@@ -79,22 +89,21 @@ const smsQRCodeDataSchema = z.object({
  */
 const vcardQRCodeDataSchema = z.object({
   type: z.literal('vcard'),
-  data: z.object({
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    organization: z.string().optional(),
-    title: z.string().optional(),
-    phone: z.string().optional(),
-    mobile: z.string().optional(),
-    email: z.string().email().optional(),
-    website: z.string().url().optional(),
-    address: z.string().optional(),
-  }).refine(
-    (data) => data.firstName || data.lastName,
-    {
+  data: z
+    .object({
+      firstName: z.string().optional(),
+      lastName: z.string().optional(),
+      organization: z.string().optional(),
+      title: z.string().optional(),
+      phone: z.string().optional(),
+      mobile: z.string().optional(),
+      email: z.string().email().optional(),
+      website: z.string().url().optional(),
+      address: z.string().optional(),
+    })
+    .refine((data) => data.firstName || data.lastName, {
       message: 'Au moins un nom (firstName ou lastName) est requis',
-    }
-  ),
+    }),
 })
 
 /**
@@ -177,11 +186,13 @@ export type GenerateQRCodeRequest = z.infer<typeof generateQRCodeRequestSchema>
 export const insertQRCodeInDOCXRequestSchema = z.object({
   placeholder: z.string().min(1, 'Le placeholder ne peut pas être vide'),
   qrData: z.string().min(1, 'Les données du QR code ne peuvent pas être vides'),
-  options: qrCodeOptionsSchema.extend({
-    docxWidth: z.number().min(0).optional(),
-    docxHeight: z.number().min(0).optional(),
-    altText: z.string().optional().default('QR Code'),
-  }).optional(),
+  options: qrCodeOptionsSchema
+    .extend({
+      docxWidth: z.number().min(0).optional(),
+      docxHeight: z.number().min(0).optional(),
+      altText: z.string().optional().default('QR Code'),
+    })
+    .optional(),
 })
 
 export type InsertQRCodeInDOCXRequest = z.infer<typeof insertQRCodeInDOCXRequestSchema>
@@ -194,4 +205,3 @@ export const insertMultipleQRCodesRequestSchema = z.object({
 })
 
 export type InsertMultipleQRCodesRequest = z.infer<typeof insertMultipleQRCodesRequestSchema>
-

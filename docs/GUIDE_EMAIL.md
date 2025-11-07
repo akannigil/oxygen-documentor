@@ -58,11 +58,13 @@ EMAIL_REPLY_TO="contact@votredomaine.com"
 ### Configuration SMTP
 
 #### Gmail
+
 1. Activer l'authentification à deux facteurs
 2. Générer un [mot de passe d'application](https://myaccount.google.com/apppasswords)
 3. Utiliser ce mot de passe dans `SMTP_PASSWORD`
 
 #### Autres providers
+
 - **Outlook/Hotmail** : `smtp.office365.com:587`
 - **SendGrid** : `smtp.sendgrid.net:587` (utiliser `apikey` comme user et l'API key comme password)
 - **Mailgun** : `smtp.mailgun.org:587`
@@ -74,6 +76,7 @@ EMAIL_REPLY_TO="contact@votredomaine.com"
 #### Endpoint : `POST /api/documents/[id]/send`
 
 **Requête :**
+
 ```json
 {
   "recipientEmail": "destinataire@example.com",
@@ -91,6 +94,7 @@ EMAIL_REPLY_TO="contact@votredomaine.com"
 ```
 
 **Réponse :**
+
 ```json
 {
   "success": true,
@@ -168,21 +172,21 @@ results.forEach((result) => {
 
 Le système de templates supporte les variables suivantes :
 
-| Variable | Description | Exemple |
-|----------|-------------|---------|
-| `{{recipient_name}}` | Nom du destinataire | "Jean Dupont" |
-| `{{recipient_email}}` | Email du destinataire | "jean@example.com" |
-| `{{document_id}}` | ID du document | "doc_123" |
-| `{{template_name}}` | Nom du template | "Attestation" |
-| `{{project_name}}` | Nom du projet | "Projet 2024" |
-| `{{download_url}}` | URL de téléchargement (signée, valide 7 jours) | "https://..." |
-| `{{organization_name}}` | Nom de l'organisation | "Mon Entreprise" |
-| `{{app_name}}` | Nom de l'application | "Oxygen Document" |
-| `{{contact_email}}` | Email de contact | "contact@example.com" |
-| `{{created_at}}` | Date de création (format français) | "01/01/2024" |
-| `{{created_at_full}}` | Date complète de création | "01/01/2024, 10:30:00" |
-| `{{message}}` | Message personnalisé | "Votre document est prêt" |
-| `{{additional_info}}` | Informations supplémentaires | "..." |
+| Variable                | Description                                    | Exemple                   |
+| ----------------------- | ---------------------------------------------- | ------------------------- |
+| `{{recipient_name}}`    | Nom du destinataire                            | "Jean Dupont"             |
+| `{{recipient_email}}`   | Email du destinataire                          | "jean@example.com"        |
+| `{{document_id}}`       | ID du document                                 | "doc_123"                 |
+| `{{template_name}}`     | Nom du template                                | "Attestation"             |
+| `{{project_name}}`      | Nom du projet                                  | "Projet 2024"             |
+| `{{download_url}}`      | URL de téléchargement (signée, valide 7 jours) | "https://..."             |
+| `{{organization_name}}` | Nom de l'organisation                          | "Mon Entreprise"          |
+| `{{app_name}}`          | Nom de l'application                           | "Oxygen Document"         |
+| `{{contact_email}}`     | Email de contact                               | "contact@example.com"     |
+| `{{created_at}}`        | Date de création (format français)             | "01/01/2024"              |
+| `{{created_at_full}}`   | Date complète de création                      | "01/01/2024, 10:30:00"    |
+| `{{message}}`           | Message personnalisé                           | "Votre document est prêt" |
+| `{{additional_info}}`   | Informations supplémentaires                   | "..."                     |
 
 ### Variables personnalisées
 
@@ -211,16 +215,18 @@ Bonjour {{recipient.name}}, votre document {{document.title}} est prêt.
 #### Formats de date
 
 ```html
-Date de création : {{created_at|date:DD/MM/YYYY}}
-Date complète : {{created_at|date:DD MMMM YYYY}}
+Date de création : {{created_at|date:DD/MM/YYYY}} Date complète : {{created_at|date:DD MMMM YYYY}}
 ```
 
 #### Formats de texte
 
 ```html
-{{text|uppercase}}     <!-- MAJUSCULES -->
-{{text|lowercase}}     <!-- minuscules -->
-{{text|capitalize}}    <!-- Première lettre majuscule -->
+{{text|uppercase}}
+<!-- MAJUSCULES -->
+{{text|lowercase}}
+<!-- minuscules -->
+{{text|capitalize}}
+<!-- Première lettre majuscule -->
 ```
 
 ### Template HTML personnalisé
@@ -228,32 +234,34 @@ Date complète : {{created_at|date:DD MMMM YYYY}}
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <style>
-    body { font-family: Arial, sans-serif; }
-    .button {
-      display: inline-block;
-      padding: 12px 24px;
-      background-color: #4CAF50;
-      color: white;
-      text-decoration: none;
-      border-radius: 4px;
-    }
-  </style>
-</head>
-<body>
-  <h1>Bonjour {{recipient_name}}</h1>
-  <p>{{message}}</p>
-  
-  {{download_url}}
-  
-  <p>{{additional_info}}</p>
-  
-  <footer>
-    <p>{{app_name}} - {{contact_email}}</p>
-  </footer>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .button {
+        display: inline-block;
+        padding: 12px 24px;
+        background-color: #4caf50;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Bonjour {{recipient_name}}</h1>
+    <p>{{message}}</p>
+
+    {{download_url}}
+
+    <p>{{additional_info}}</p>
+
+    <footer>
+      <p>{{app_name}} - {{contact_email}}</p>
+    </footer>
+  </body>
 </html>
 ```
 
@@ -280,7 +288,7 @@ await sendDocumentEmail({
 await sendDocumentEmail({
   documentId: 'doc_123',
   recipientEmail: 'destinataire@example.com',
-  attachDocument: true,  // Attache le PDF généré
+  attachDocument: true, // Attache le PDF généré
 })
 ```
 
@@ -347,4 +355,3 @@ console.log('Résultat:', result)
 - [Documentation Resend](https://resend.com/docs)
 - [Documentation Nodemailer](https://nodemailer.com/about/)
 - [Guide API Documents](./README.md#api-documents)
-

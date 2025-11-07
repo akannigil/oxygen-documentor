@@ -9,6 +9,7 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 ### Je débute avec les QR Codes
 
 ➡️ **[Référence Rapide QR Code](./QRCODE_QUICK_REFERENCE.md)**
+
 - Guide visuel en 2 minutes
 - Schémas explicatifs
 - Comparaison PDF/Image vs DOCX
@@ -16,6 +17,7 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 ### Je veux intégrer des QR Codes dans mes documents
 
 ➡️ **[Guide d'Intégration par Type de Template](./GUIDE_INTEGRATION_QRCODE_PAR_TYPE.md)**
+
 - Processus étape par étape pour PDF/Image
 - Processus étape par étape pour DOCX
 - Exemples de code complets
@@ -24,6 +26,7 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 ### Je veux sécuriser mes certificats
 
 ➡️ **[Authentification des Certificats](./GUIDE_AUTHENTIFICATION_CERTIFICATS.md)**
+
 - QR Codes avec signature cryptographique
 - JWT et validation
 - Configuration de la vérification
@@ -32,6 +35,7 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 ### Je veux tout savoir sur les QR Codes
 
 ➡️ **[Guide Complet des QR Codes](./GUIDE_QR_CODES.md)**
+
 - Documentation technique complète
 - Toutes les options disponibles
 - API et fonctions
@@ -46,12 +50,14 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 **Fichier** : [README_QRCODE_EDITOR](../components/template-editor/README_QRCODE_EDITOR.md)
 
 **Contenu** :
+
 - Utilisation de l'éditeur visuel
 - Configuration des options QR Code
 - Types TypeScript
 - Dépannage
 
 **À lire si** :
+
 - Vous utilisez des templates PDF ou Image
 - Vous voulez une interface graphique pour configurer les QR Codes
 - Vous avez besoin de positionner précisément les QR Codes
@@ -63,12 +69,14 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 **Fichier** : [Guide d'Intégration - Section DOCX](./GUIDE_INTEGRATION_QRCODE_PAR_TYPE.md#templates-docx-placeholders)
 
 **Contenu** :
+
 - Syntaxe des placeholders `{{qrcode_xxx}}`
 - Configuration via l'API `generateDOCX()`
 - Exemples de templates Word
 - QR Codes multiples
 
 **À lire si** :
+
 - Vous utilisez des templates Word (.docx)
 - Vous avez déjà des documents Word avec variables
 - Vous préférez une approche programmatique
@@ -80,6 +88,7 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 **Fichier** : [Authentification des Certificats](./GUIDE_AUTHENTIFICATION_CERTIFICATS.md)
 
 **Contenu** :
+
 - Signature cryptographique (HMAC SHA-256)
 - JWT et tokens
 - Hash du document
@@ -87,6 +96,7 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 - Configuration de production
 
 **À lire si** :
+
 - Vous générez des certificats officiels
 - Vous devez prouver l'authenticité des documents
 - Vous voulez empêcher la falsification
@@ -97,16 +107,19 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 ### 🎨 Personnalisation Visuelle
 
 **Fichiers** :
+
 - [Guide Complet QR Codes - Section Personnalisation](./GUIDE_QR_CODES.md)
 - [Référence Rapide - Options](./QRCODE_QUICK_REFERENCE.md#-options-des-qr-codes)
 
 **Contenu** :
+
 - Couleurs personnalisées
 - Tailles et marges
 - Niveaux de correction d'erreur
 - Exemples visuels
 
 **À lire si** :
+
 - Vous voulez adapter les QR Codes à votre charte graphique
 - Vous avez besoin de QR Codes colorés
 - Vous optimisez la taille ou la résistance
@@ -118,12 +131,14 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 **Fichier** : [Configuration des Certificats](./CONFIGURATION_CERTIFICATS.md)
 
 **Contenu** :
+
 - Variables d'environnement
 - Secrets et clés
 - Configuration de production
 - Monitoring et logs
 
 **À lire si** :
+
 - Vous déployez en production
 - Vous configurez l'infrastructure
 - Vous gérez les secrets et la sécurité
@@ -134,16 +149,19 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 ### 📊 API et Développement
 
 **Fichiers** :
+
 - [Guide Complet QR Codes - API](./GUIDE_QR_CODES.md)
 - [Workflow d'intégration](./INTEGRATION_WORKFLOW_CERTIFICATS.md)
 
 **Contenu** :
+
 - Fonctions et méthodes disponibles
 - Paramètres et types TypeScript
 - Workflow de génération
 - Exemples d'intégration
 
 **À lire si** :
+
 - Vous développez sur Oxygen Document
 - Vous créez des intégrations personnalisées
 - Vous avez besoin de la référence technique complète
@@ -158,6 +176,7 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 **Besoin** : Badge avec QR Code contenant un ID unique
 
 **Documents à lire** :
+
 1. [Référence Rapide](./QRCODE_QUICK_REFERENCE.md) - 2 min
 2. [Guide d'intégration - PDF/Image](./GUIDE_INTEGRATION_QRCODE_PAR_TYPE.md#templates-pdfimage-éditeur-visuel)
 
@@ -170,6 +189,7 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 **Besoin** : Certificat PDF avec QR Code pointant vers une page de vérification
 
 **Documents à lire** :
+
 1. [Guide d'intégration - PDF/Image](./GUIDE_INTEGRATION_QRCODE_PAR_TYPE.md#templates-pdfimage-éditeur-visuel)
 2. [Options des QR Codes](./QRCODE_QUICK_REFERENCE.md#-options-des-qr-codes)
 
@@ -182,6 +202,7 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 **Besoin** : Certificat authentifié avec QR Code sécurisé et vérification en ligne
 
 **Documents à lire** :
+
 1. [Guide d'intégration](./GUIDE_INTEGRATION_QRCODE_PAR_TYPE.md)
 2. [Authentification des Certificats](./GUIDE_AUTHENTIFICATION_CERTIFICATS.md)
 3. [Configuration](./CONFIGURATION_CERTIFICATS.md)
@@ -195,6 +216,7 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 **Besoin** : Génération en masse de documents Word avec plusieurs QR Codes par document
 
 **Documents à lire** :
+
 1. [Guide d'intégration - DOCX](./GUIDE_INTEGRATION_QRCODE_PAR_TYPE.md#templates-docx-placeholders)
 2. [Guide Complet - Génération DOCX](./GUIDE_QR_CODES.md)
 
@@ -207,6 +229,7 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 **Besoin** : Infrastructure complète de génération, signature, vérification et monitoring
 
 **Documents à lire** :
+
 1. [Authentification des Certificats](./GUIDE_AUTHENTIFICATION_CERTIFICATS.md)
 2. [Configuration](./CONFIGURATION_CERTIFICATS.md)
 3. [Workflow d'intégration](./INTEGRATION_WORKFLOW_CERTIFICATS.md)
@@ -260,18 +283,21 @@ Bienvenue dans la documentation des QR Codes pour Oxygen Document.
 ### Tests en ligne
 
 **Lecteurs de QR Code** :
+
 - QR Code Reader (iOS/Android)
 - Google Lens
 - Application Appareil Photo (iPhone)
 - [ZXing Online Decoder](https://zxing.org/w/decode.jspx) - Test web
 
 **Générateurs de test** :
+
 - [QR Code Generator](https://www.qr-code-generator.com/)
 - [QRCode Monkey](https://www.qrcode-monkey.com/)
 
 ### Outils de développement
 
 **Dans le projet** :
+
 ```bash
 # Prisma Studio (base de données)
 npm run db:studio
@@ -284,6 +310,7 @@ npm test
 ```
 
 **Débogage QR Code** :
+
 - Activer les logs dans `lib/qrcode/`
 - Vérifier les données avant génération
 - Tester avec différents niveaux de correction
@@ -295,22 +322,24 @@ npm test
 
 ### Problèmes courants
 
-| Problème | Solution | Documentation |
-|----------|----------|---------------|
-| QR Code non scannable | Vérifier contraste et taille | [Référence Rapide](./QRCODE_QUICK_REFERENCE.md) |
-| Authentification échoue | Vérifier `CERTIFICATE_SECRET_KEY` | [Configuration](./CONFIGURATION_CERTIFICATS.md) |
-| Placeholder non remplacé | Vérifier syntaxe `{{xxx}}` | [Guide DOCX](./GUIDE_INTEGRATION_QRCODE_PAR_TYPE.md#templates-docx-placeholders) |
-| Token expiré | Ajuster `expiresIn` | [Authentification](./GUIDE_AUTHENTIFICATION_CERTIFICATS.md) |
+| Problème                 | Solution                          | Documentation                                                                    |
+| ------------------------ | --------------------------------- | -------------------------------------------------------------------------------- |
+| QR Code non scannable    | Vérifier contraste et taille      | [Référence Rapide](./QRCODE_QUICK_REFERENCE.md)                                  |
+| Authentification échoue  | Vérifier `CERTIFICATE_SECRET_KEY` | [Configuration](./CONFIGURATION_CERTIFICATS.md)                                  |
+| Placeholder non remplacé | Vérifier syntaxe `{{xxx}}`        | [Guide DOCX](./GUIDE_INTEGRATION_QRCODE_PAR_TYPE.md#templates-docx-placeholders) |
+| Token expiré             | Ajuster `expiresIn`               | [Authentification](./GUIDE_AUTHENTIFICATION_CERTIFICATS.md)                      |
 
 ### Ressources additionnelles
 
 **Dans le code** :
+
 - Types TypeScript : `shared/types/index.ts`
 - Schémas Zod : `shared/schemas/template.ts`
 - Générateur : `lib/qrcode/generator.ts`
 - Intégration : `lib/qrcode/workflow-integration.ts`
 
 **Documentation externe** :
+
 - [QR Code Specification](https://www.qrcode.com/en/about/standards.html)
 - [JWT.io](https://jwt.io/) - Décodeur JWT
 - [PDF-lib Documentation](https://pdf-lib.js.org/)
@@ -385,6 +414,7 @@ npm test
 ## 📬 Contribuer
 
 Pour améliorer cette documentation :
+
 1. Identifier les sections manquantes ou peu claires
 2. Proposer des exemples supplémentaires
 3. Partager vos cas d'usage
@@ -393,4 +423,3 @@ Pour améliorer cette documentation :
 ---
 
 **Navigation rapide** : [Haut de page](#-documentation-qr-code---index-complet)
-

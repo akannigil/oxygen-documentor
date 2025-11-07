@@ -81,19 +81,19 @@ Guide de référence rapide pour l'intégration des QR Codes dans Oxygen Documen
 ```
 1️⃣ TEMPLATE WORD
    Dans votre document Word :
-   
+
    Nom: {{nom}}
    Prénom: {{prenom}}
-   
+
    QR Code de vérification :
    {{qrcode_verification}}    ← Placeholder QR Code
-   
+
    Sauvegarder en .docx
 
 2️⃣ CODE DE GÉNÉRATION
-   
+
    import { generateDOCX } from '@/lib/generators/docx'
-   
+
    const buffer = await generateDOCX(templateBuffer, {
      variables: {
        nom: 'Dupont',
@@ -117,25 +117,25 @@ Guide de référence rapide pour l'intégration des QR Codes dans Oxygen Documen
 
 ### 🏁 Pour commencer
 
-| Document | Description | Durée |
-|----------|-------------|-------|
-| **[Référence Rapide](./docs/QRCODE_QUICK_REFERENCE.md)** | Guide visuel avec schémas | 2 min |
+| Document                                                               | Description                      | Durée  |
+| ---------------------------------------------------------------------- | -------------------------------- | ------ |
+| **[Référence Rapide](./docs/QRCODE_QUICK_REFERENCE.md)**               | Guide visuel avec schémas        | 2 min  |
 | **[Guide d'Intégration](./docs/GUIDE_INTEGRATION_QRCODE_PAR_TYPE.md)** | Tutoriel complet étape par étape | 20 min |
 
 ### 🎓 Pour approfondir
 
-| Document | Description | Public |
-|----------|-------------|--------|
-| **[Guide Complet QR Codes](./docs/GUIDE_QR_CODES.md)** | Documentation technique complète | Développeurs |
-| **[Authentification Certificats](./docs/GUIDE_AUTHENTIFICATION_CERTIFICATS.md)** | QR Codes sécurisés avec JWT | Avancé |
-| **[Configuration](./docs/CONFIGURATION_CERTIFICATS.md)** | Variables env, secrets, prod | DevOps |
+| Document                                                                         | Description                      | Public       |
+| -------------------------------------------------------------------------------- | -------------------------------- | ------------ |
+| **[Guide Complet QR Codes](./docs/GUIDE_QR_CODES.md)**                           | Documentation technique complète | Développeurs |
+| **[Authentification Certificats](./docs/GUIDE_AUTHENTIFICATION_CERTIFICATS.md)** | QR Codes sécurisés avec JWT      | Avancé       |
+| **[Configuration](./docs/CONFIGURATION_CERTIFICATS.md)**                         | Variables env, secrets, prod     | DevOps       |
 
 ### 📖 Documentation spécialisée
 
-| Document | Description | Cible |
-|----------|-------------|-------|
-| **[Éditeur Visuel](./components/template-editor/README_QRCODE_EDITOR.md)** | Utilisation de l'interface | Utilisateurs |
-| **[Index Complet](./docs/INDEX_QRCODE.md)** | Navigation dans toute la doc | Tous |
+| Document                                                                   | Description                  | Cible        |
+| -------------------------------------------------------------------------- | ---------------------------- | ------------ |
+| **[Éditeur Visuel](./components/template-editor/README_QRCODE_EDITOR.md)** | Utilisation de l'interface   | Utilisateurs |
+| **[Index Complet](./docs/INDEX_QRCODE.md)**                                | Navigation dans toute la doc | Tous         |
 
 ---
 
@@ -291,30 +291,33 @@ Monitoring
 
 ## 🐛 Dépannage Express
 
-| Symptôme | Cause Probable | Solution Rapide |
-|----------|----------------|-----------------|
-| QR Code illisible | Contraste insuffisant | Noir #000000 / Blanc #FFFFFF |
-| QR Code non scanné | Trop petit | Minimum 150×150 px |
-| Token invalide | Secret incorrect | Vérifier CERTIFICATE_SECRET_KEY |
-| Placeholder non remplacé | Syntaxe incorrecte | Utiliser `{{qrcode_xxx}}` |
-| Erreur génération | Données manquantes | Vérifier toutes les variables |
+| Symptôme                 | Cause Probable        | Solution Rapide                 |
+| ------------------------ | --------------------- | ------------------------------- |
+| QR Code illisible        | Contraste insuffisant | Noir #000000 / Blanc #FFFFFF    |
+| QR Code non scanné       | Trop petit            | Minimum 150×150 px              |
+| Token invalide           | Secret incorrect      | Vérifier CERTIFICATE_SECRET_KEY |
+| Placeholder non remplacé | Syntaxe incorrecte    | Utiliser `{{qrcode_xxx}}`       |
+| Erreur génération        | Données manquantes    | Vérifier toutes les variables   |
 
 ---
 
 ## 🔗 Liens Rapides
 
 ### Documentation
+
 - 📖 [Guide Complet d'Intégration](./docs/GUIDE_INTEGRATION_QRCODE_PAR_TYPE.md)
 - 🚀 [Référence Rapide Visuelle](./docs/QRCODE_QUICK_REFERENCE.md)
 - 📚 [Index de Toute la Documentation](./docs/INDEX_QRCODE.md)
 
 ### Code Source
+
 - Générateur : `lib/qrcode/generator.ts`
 - Intégration DOCX : `lib/qrcode/docx-integration.ts`
 - Workflow : `lib/qrcode/workflow-integration.ts`
 - Types : `shared/types/index.ts`
 
 ### Outils en Ligne
+
 - [ZXing Decoder](https://zxing.org/w/decode.jspx) - Tester QR Code
 - [JWT.io](https://jwt.io/) - Décoder JWT
 - [QR Code Generator](https://www.qr-code-generator.com/) - Tests
@@ -330,6 +333,7 @@ Monitoring
    - [FAQ dans le guide complet](./docs/GUIDE_QR_CODES.md)
 
 2. **Vérifier les logs**
+
    ```bash
    npm run dev
    # Regarder les logs dans la console
@@ -364,4 +368,3 @@ Avancé (2h)
 ---
 
 **🚀 Prêt à commencer ?** → [Référence Rapide](./docs/QRCODE_QUICK_REFERENCE.md)
-

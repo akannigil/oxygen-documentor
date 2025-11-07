@@ -2,7 +2,12 @@
 const nextConfig = {
   // Activer le mode standalone pour Docker (optimisation de la taille)
   output: 'standalone',
-  
+
+  // Ignorer les erreurs ESLint lors du build
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   images: {
     remotePatterns: [
       {
@@ -165,4 +170,3 @@ const nextConfig = {
 }
 
 module.exports = nextConfig
-

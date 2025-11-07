@@ -15,11 +15,13 @@ Ce guide explique comment créer des templates DOCX avec des images de fond et d
 ### 1. Préparer l'Image de Fond
 
 **Dimensions recommandées :**
+
 - A4 Portrait : 2480 × 3508 px (300 DPI) ou 794 × 1123 px (96 DPI)
 - A4 Paysage : 3508 × 2480 px (300 DPI) ou 1123 × 794 px (96 DPI)
 - Letter Portrait : 2550 × 3300 px (300 DPI) ou 816 × 1056 px (96 DPI)
 
 **Format recommandé :**
+
 - PNG avec transparence (si besoin)
 - JPEG pour photos
 - Éviter BMP (taille de fichier importante)
@@ -80,6 +82,7 @@ Date : {{date_emission}}
 ```
 
 **Variables courantes :**
+
 - `{{nom}}` - Nom de famille
 - `{{prenom}}` - Prénom
 - `{{email}}` - Adresse email
@@ -102,6 +105,7 @@ Recommandations :
 #### Couleurs
 
 Pour un bon contraste sur image de fond :
+
 - Texte sombre sur fond clair
 - Texte clair avec ombre portée sur fond sombre
 - Encadré blanc/coloré derrière le texte si nécessaire
@@ -118,6 +122,7 @@ Pour un bon contraste sur image de fond :
 Avant de télécharger le template dans l'application :
 
 **✅ Checklist :**
+
 - [ ] L'image de fond est correctement positionnée
 - [ ] Le texte est lisible sur l'image
 - [ ] Les variables utilisent la syntaxe `{{variable}}`
@@ -213,6 +218,7 @@ Avant de télécharger le template dans l'application :
 
 **Cause :** L'image n'est pas en arrière-plan  
 **Solution :**
+
 1. Clic droit sur l'image
 2. **Habillage du texte > Derrière le texte**
 
@@ -220,6 +226,7 @@ Avant de télécharger le template dans l'application :
 
 **Cause :** Syntaxe incorrecte  
 **Solution :**
+
 - ✅ `{{variable}}`
 - ❌ `{ {variable} }`
 - ❌ `{{ variable }}`
@@ -229,6 +236,7 @@ Avant de télécharger le template dans l'application :
 
 **Cause :** Proportions incorrectes  
 **Solution :**
+
 1. Utilisez une image aux proportions du format de page
 2. Dans Word : Clic droit > **Taille et position**
 3. Décochez **Verrouiller les proportions** si besoin
@@ -238,6 +246,7 @@ Avant de télécharger le template dans l'application :
 
 **Cause :** Zones de texte non ancrées  
 **Solution :**
+
 1. Clic droit sur la zone de texte
 2. **Taille et position > Position**
 3. Cochez **Ancrer** et choisissez **À la page**
@@ -246,6 +255,7 @@ Avant de télécharger le template dans l'application :
 
 **Cause :** Images trop volumineuses ou format non supporté  
 **Solution :**
+
 1. Compressez les images : **Fichier > Compresser les images**
 2. Utilisez PNG ou JPEG
 3. Limitez à 300 DPI maximum
@@ -254,6 +264,7 @@ Avant de télécharger le template dans l'application :
 
 **Cause :** Police non standard  
 **Solution :**
+
 1. Utilisez des polices standards : Arial, Times New Roman, Calibri
 2. Ou intégrez les polices : **Fichier > Options > Enregistrement > Incorporer les polices**
 
@@ -290,6 +301,7 @@ Avant de télécharger le template dans l'application :
 ### Variables Dynamiques Avancées
 
 Pour des transformations de texte :
+
 - `{{nom}}` → texte normal
 - Pour majuscules : convertir côté serveur avant génération
 - Pour dates formatées : utiliser des formats standards ISO
@@ -345,4 +357,3 @@ Si vous rencontrez des problèmes :
 
 **Dernière mise à jour :** 2 novembre 2025  
 **Version :** 1.0
-

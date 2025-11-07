@@ -7,7 +7,9 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url)
     const path = url.searchParams.get('path')
     const expiresParam = url.searchParams.get('expiresIn')
-    const expiresIn = expiresParam ? Math.max(60, Math.min(60 * 60 * 24, parseInt(expiresParam, 10) || 0)) : 3600
+    const expiresIn = expiresParam
+      ? Math.max(60, Math.min(60 * 60 * 24, parseInt(expiresParam, 10) || 0))
+      : 3600
 
     if (!path) {
       return NextResponse.json({ error: 'Missing path parameter' }, { status: 400 })
@@ -27,5 +29,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
-
-

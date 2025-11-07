@@ -5,6 +5,7 @@
 **Faisabilité : ✅ HAUTE pour DOCX, ⚠️ MOYENNE pour PPTX**
 
 ### Formats recommandés
+
 - ✅ **DOCX** : Format natif Office Open XML, excellente support bibliothèque
 - ✅ **PPTX** : Format natif Office Open XML, support correct mais plus limité
 - ❌ **DOC (ancien format)** : Format binaire propriétaire, complexe à manipuler
@@ -17,17 +18,20 @@
 ### Option 1 : Publipostage avec accolades (Recommandée) ✨
 
 **Principe** : L'utilisateur insère des variables dans le template natif avec des accolades :
+
 - `{{nom}}` ou `{{name}}`
 - `{{date}}` ou `{{birthdate}}`
 - `{{#if condition}}{{value}}{{/if}}` pour des conditions (optionnel)
 
 **Avantages** :
+
 - ✅ L'utilisateur travaille dans Word/PowerPoint natif
 - ✅ Conserve tous les formats (polices, couleurs, mise en page)
 - ✅ Pas besoin d'éditeur visuel complexe
 - ✅ Workflow familier pour les utilisateurs Office
 
 **Défis** :
+
 - ⚠️ Nécessite une bibliothèque de parsing de templates
 - ⚠️ Gestion des images/QR codes plus complexe
 
@@ -36,10 +40,12 @@
 **Principe** : Éditeur visuel similaire à l'éditeur PDF actuel
 
 **Avantages** :
+
 - ✅ Cohérence avec l'interface existante
 - ✅ Contrôle pixel-perfect des positions
 
 **Défis** :
+
 - ❌ Conversion DOCX → HTML/Canvas perte de formatage
 - ❌ Très complexe pour PowerPoint (slides multiples)
 - ❌ Nécessite de re-créer le document (pas de template natif)
@@ -51,11 +57,13 @@
 ### Pour DOCX
 
 #### 1. `docxtemplater` ⭐ **RECOMMANDÉ**
+
 ```bash
 npm install docxtemplater pizzip
 ```
 
 **Points forts** :
+
 - ✅ Support des accolades `{{variable}}`
 - ✅ Support des conditions `{{#if}}...{{/if}}`
 - ✅ Support des boucles `{{#each items}}...{{/each}}`
@@ -64,10 +72,12 @@ npm install docxtemplater pizzip
 - ✅ ~15k GitHub stars
 
 **Limitations** :
+
 - ⚠️ Pas de support direct pour images/QR codes (nécessite workaround)
 - ⚠️ Variables uniquement dans le texte (pas dans headers/footers par défaut)
 
 **Exemple d'utilisation** :
+
 ```typescript
 import Docxtemplater from 'docxtemplater'
 import PizZip from 'pizzip'
@@ -88,47 +98,57 @@ const buffer = doc.getZip().generate({ type: 'nodebuffer' })
 ```
 
 #### 2. `docx` (alternative)
+
 ```bash
 npm install docx
 ```
 
 **Points forts** :
+
 - ✅ Génération programmatique complète
 - ✅ Support des images, tableaux, etc.
 
 **Limitations** :
+
 - ❌ Nécessite de RECONSTRUIRE le document (pas de template)
 - ❌ Perte du formatage original si on lit un DOCX existant
 
 #### 3. `mammoth` (conversion HTML)
+
 ```bash
 npm install mammoth
 ```
 
 **Points forts** :
+
 - ✅ Conversion DOCX → HTML propre
 
 **Limitations** :
+
 - ❌ Format intermédiaire, complexité supplémentaire
 - ❌ Perte de certains formats lors de la conversion
 
 ### Pour PPTX
 
 #### 1. `pptxgenjs` ⭐ **RECOMMANDÉ**
+
 ```bash
 npm install pptxgenjs
 ```
 
 **Points forts** :
+
 - ✅ Génération de présentations PowerPoint
 - ✅ Support des templates (lecture de fichiers PPTX existants)
 - ✅ Support des images, tableaux, formes
 
 **Limitations** :
+
 - ⚠️ Principalement orienté GÉNÉRATION (pas édition de templates existants)
 - ⚠️ Pas de support natif des accolades (nécessite parsing manuel)
 
 **Alternatives** :
+
 - `officegen` : Plus ancien, moins maintenu
 - `jszip` + parsing XML manuel : Très complexe mais contrôle total
 
@@ -182,6 +202,7 @@ shared/
 #### Étapes
 
 1. **Installation et setup**
+
 ```bash
 npm install docxtemplater pizzip
 npm install --save-dev @types/pizzip
@@ -198,6 +219,7 @@ npm install --save-dev @types/pizzip
    - Gérer les images/QR codes (si nécessaire)
 
 4. **Extension du schéma Prisma**
+
 ```prisma
 model Template {
   // ...
@@ -224,6 +246,7 @@ model Template {
 **Durée estimée** : 2-3 jours
 
 Interface simple pour éditer directement les accolades dans le template :
+
 - Upload DOCX → Conversion HTML → Éditeur WYSIWYG
 - Ou : Afficher le contenu textuel et permettre l'ajout de `{{variable}}`
 
@@ -274,7 +297,7 @@ export async function generateDOCX(
     doc.render(formattedData)
 
     // Générer le buffer
-    const buffer = doc.getZip().generate({ 
+    const buffer = doc.getZip().generate({
       type: 'nodebuffer',
       compression: 'DEFLATE',
     })
@@ -309,24 +332,24 @@ export interface ParsedVariable {
 export async function parseDOCXVariables(templateBuffer: Buffer): Promise<ParsedVariable[]> {
   const zip = new PizZip(templateBuffer)
   const xmlContent = zip.files['word/document.xml']?.asText() || ''
-  
+
   // Regex pour trouver {{variable}}
   const variableRegex = /\{\{([^}]+)\}\}/g
   const variables = new Map<string, { occurrences: number; context: string }>()
-  
+
   let match
   while ((match = variableRegex.exec(xmlContent)) !== null) {
     const varName = match[1].trim()
     const context = match[0]
-    
+
     if (!variables.has(varName)) {
       variables.set(varName, { occurrences: 0, context })
     }
-    
+
     const entry = variables.get(varName)!
     entry.occurrences++
   }
-  
+
   return Array.from(variables.entries()).map(([name, data]) => ({
     name,
     occurrences: data.occurrences,
@@ -448,13 +471,13 @@ export async function parseDOCXVariables(templateBuffer: Buffer): Promise<Parsed
 
 ## 📊 Comparaison avec l'existant
 
-| Aspect | PDF/Image actuel | DOCX proposé |
-|--------|------------------|--------------|
-| **Workflow** | Upload → Éditeur visuel → Zones | Upload → Variables auto-détectées |
-| **Complexité** | Moyenne (éditeur Konva) | Basse (accollades simples) |
-| **Flexibilité** | Contrôle pixel-perfect | Contrôle via format Word |
-| **Performance** | Moyenne (rendering) | Rapide (substitution) |
-| **Prise en main** | Courbe d'apprentissage | Immédiat pour utilisateurs Word |
+| Aspect            | PDF/Image actuel                | DOCX proposé                      |
+| ----------------- | ------------------------------- | --------------------------------- |
+| **Workflow**      | Upload → Éditeur visuel → Zones | Upload → Variables auto-détectées |
+| **Complexité**    | Moyenne (éditeur Konva)         | Basse (accollades simples)        |
+| **Flexibilité**   | Contrôle pixel-perfect          | Contrôle via format Word          |
+| **Performance**   | Moyenne (rendering)             | Rapide (substitution)             |
+| **Prise en main** | Courbe d'apprentissage          | Immédiat pour utilisateurs Word   |
 
 ---
 
@@ -470,4 +493,3 @@ export async function parseDOCXVariables(templateBuffer: Buffer): Promise<Parsed
 **PPTX** peut venir après, selon les besoins spécifiques.
 
 **Anciens formats DOC/PPT** : ❌ **Ne pas supporter** (trop complexe, formats obsolètes)
-

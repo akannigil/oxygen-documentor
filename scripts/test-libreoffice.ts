@@ -1,7 +1,7 @@
 /**
  * Script de test pour LibreOffice
  * Vérifie que LibreOffice est installé et fonctionnel
- * 
+ *
  * Usage: tsx scripts/test-libreoffice.ts
  */
 
@@ -19,11 +19,11 @@ async function main(): Promise<void> {
     console.log('   • Conversion PPTX → PDF')
     console.log('   • Conversion XLSX → PDF')
     console.log('   • Conversion ODT → PDF')
-    console.log('   • Et bien d\'autres formats...')
+    console.log("   • Et bien d'autres formats...")
     console.log('\n💡 Utilisez lib/libreoffice.ts pour convertir vos documents')
     process.exit(0)
   } else {
-    console.error('\n❌ LibreOffice n\'est pas disponible!')
+    console.error("\n❌ LibreOffice n'est pas disponible!")
     console.error('\n📦 Installation requise:')
     console.error('   Alpine Linux: apk add libreoffice openjdk11-jre')
     console.error('   Ubuntu/Debian: apt-get install libreoffice')
@@ -36,4 +36,3 @@ main().catch((error: unknown) => {
   console.error('❌ Erreur:', error)
   process.exit(1)
 })
-

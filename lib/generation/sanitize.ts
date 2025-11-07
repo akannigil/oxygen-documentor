@@ -1,4 +1,6 @@
-export function sanitizeVariables(input: Record<string, unknown>): Record<string, string | number | Date> {
+export function sanitizeVariables(
+  input: Record<string, unknown>
+): Record<string, string | number | Date> {
   const out: Record<string, string | number | Date> = {}
   for (const [key, value] of Object.entries(input)) {
     if (value instanceof Date) {
@@ -17,5 +19,3 @@ export function sanitizeVariables(input: Record<string, unknown>): Record<string
   }
   return out
 }
-
-

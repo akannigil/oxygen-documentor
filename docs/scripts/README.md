@@ -78,4 +78,3 @@ Pour ajouter de nouveaux scripts :
 2. Ajoutez un script npm dans `package.json`
 3. Documentez-le dans ce README
 4. Utilisez TypeScript pour la sécurité des types
-

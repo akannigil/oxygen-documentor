@@ -1,6 +1,6 @@
 /**
  * Module de génération de QR codes
- * 
+ *
  * Fournit des utilitaires pour générer des QR codes dans différents formats
  * et pour différents types de contenu (URL, email, vCard, WiFi, etc.)
  */
@@ -39,4 +39,3 @@ export {
   generateQRCodeWithOptions,
   type QRCodeWorkflowOptions,
 } from './workflow-integration'
-

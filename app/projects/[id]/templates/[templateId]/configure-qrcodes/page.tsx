@@ -77,4 +77,3 @@ export default async function ConfigureQRCodesPage({ params }: PageProps) {
     </div>
   )
 }
-

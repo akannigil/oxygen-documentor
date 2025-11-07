@@ -1,7 +1,11 @@
 import { PDFDocument, rgb, StandardFonts, PDFPage, PDFFont } from 'pdf-lib'
 import QRCode from 'qrcode'
 import type { TemplateField } from '@/shared/types'
-import { generateQRCodeContent, generateQRCodeWithOptions, type QRCodeWorkflowOptions } from '@/lib/qrcode/workflow-integration'
+import {
+  generateQRCodeContent,
+  generateQRCodeWithOptions,
+  type QRCodeWorkflowOptions,
+} from '@/lib/qrcode/workflow-integration'
 
 /**
  * Génère un PDF à partir d'un template et de données
@@ -29,10 +33,10 @@ export async function generatePDF(
         data,
         ...qrcodeOptions,
       })
-      
+
       // Générer le QR code avec les options de personnalisation
       const qrBuffer = await generateQRCodeWithOptions(qrContent, field, field.w)
-      
+
       // Convertir le buffer en image pour PDF
       const pngImage = await pdfDoc.embedPng(qrBuffer)
 
@@ -116,13 +120,13 @@ export async function generateDocumentFromTemplate(
         data,
         ...qrcodeOptions,
       })
-      
+
       // Générer le QR code avec les options de personnalisation
       const qrBuffer = await generateQRCodeWithOptions(qrContent, field, field.w)
-      
+
       // Convertir le buffer en image pour PDF
       const pngImage = await pdfDoc.embedPng(qrBuffer)
-      
+
       // Convertir les coordonnées Y (origine en haut dans l'éditeur, en bas dans PDF)
       const pdfY = img.height - field.y - field.h
       page.drawImage(pngImage, {
@@ -135,10 +139,10 @@ export async function generateDocumentFromTemplate(
       const fontSize = field.fontSize ?? 12
       const font = getFieldFont(fonts, field)
       const text = String(value)
-      
+
       // Convertir les coordonnées Y (origine en haut dans l'éditeur, en bas dans PDF)
       const pdfYBase = img.height - field.y - field.h
-      
+
       // Dessiner le fond si spécifié
       if (field.backgroundColor) {
         const bgColor = hexToRgb(field.backgroundColor)
@@ -163,16 +167,16 @@ export async function generateDocumentFromTemplate(
           borderWidth: field.borderWidth,
         })
       }
-      
+
       // Calcul du centrage vertical (baseline du texte)
       // Le texte PDF est positionné par sa baseline, on ajoute le centrage vertical
       const textHeight = fontSize
       const verticalCenter = (field.h - textHeight) / 2
       const pdfY = pdfYBase + verticalCenter
-      
+
       // Calcul de la position horizontale avec un petit padding
       let textX = field.x + 2 // Padding de 2px à gauche par défaut
-      
+
       if (field.align === 'center') {
         const textWidth = font.widthOfTextAtSize(text, fontSize)
         textX = field.x + (field.w - textWidth) / 2
@@ -183,7 +187,7 @@ export async function generateDocumentFromTemplate(
 
       // Couleur du texte
       const textColor = field.textColor ? hexToRgb(field.textColor) : { r: 0, g: 0, b: 0 }
-      
+
       page.drawText(text, {
         x: textX,
         y: pdfY,
@@ -225,13 +229,13 @@ async function generatePDFWithCoordinateConversion(
         data,
         ...qrcodeOptions,
       })
-      
+
       // Générer le QR code avec les options de personnalisation
       const qrBuffer = await generateQRCodeWithOptions(qrContent, field, field.w)
-      
+
       // Convertir le buffer en image pour PDF
       const pngImage = await pdfDoc.embedPng(qrBuffer)
-      
+
       // Convertir les coordonnées Y (origine en haut dans l'éditeur, en bas dans PDF)
       const pdfY = pageHeight - field.y - field.h
       page.drawImage(pngImage, {
@@ -244,10 +248,10 @@ async function generatePDFWithCoordinateConversion(
       const fontSize = field.fontSize ?? 12
       const font = getFieldFont(fonts, field)
       const text = String(value)
-      
+
       // Convertir les coordonnées Y (origine en haut dans l'éditeur, en bas dans PDF)
       const pdfYBase = pageHeight - field.y - field.h
-      
+
       // Dessiner le fond si spécifié
       if (field.backgroundColor) {
         const bgColor = hexToRgb(field.backgroundColor)
@@ -278,10 +282,10 @@ async function generatePDFWithCoordinateConversion(
       const textHeight = fontSize
       const verticalCenter = (field.h - textHeight) / 2
       const pdfY = pdfYBase + verticalCenter
-      
+
       // Calcul de la position horizontale avec un petit padding
       let textX = field.x + 2 // Padding de 2px à gauche par défaut
-      
+
       if (field.align === 'center') {
         const textWidth = font.widthOfTextAtSize(text, fontSize)
         textX = field.x + (field.w - textWidth) / 2
@@ -415,11 +419,11 @@ function formatText(text: string, format?: string): string {
  */
 async function loadFonts(pdfDoc: PDFDocument): Promise<Record<string, PDFFont>> {
   return {
-    'Helvetica': await pdfDoc.embedFont(StandardFonts.Helvetica),
+    Helvetica: await pdfDoc.embedFont(StandardFonts.Helvetica),
     'Helvetica-Bold': await pdfDoc.embedFont(StandardFonts.HelveticaBold),
     'Times-Roman': await pdfDoc.embedFont(StandardFonts.TimesRoman),
     'Times-Bold': await pdfDoc.embedFont(StandardFonts.TimesRomanBold),
-    'Courier': await pdfDoc.embedFont(StandardFonts.Courier),
+    Courier: await pdfDoc.embedFont(StandardFonts.Courier),
     'Courier-Bold': await pdfDoc.embedFont(StandardFonts.CourierBold),
   }
 }
@@ -437,10 +441,11 @@ function getFieldFont(fonts: Record<string, PDFFont>, field: TemplateField): PDF
  */
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  return result ? {
-    r: parseInt(result[1]!, 16),
-    g: parseInt(result[2]!, 16),
-    b: parseInt(result[3]!, 16)
-  } : { r: 0, g: 0, b: 0 }
+  return result
+    ? {
+        r: parseInt(result[1]!, 16),
+        g: parseInt(result[2]!, 16),
+        b: parseInt(result[3]!, 16),
+      }
+    : { r: 0, g: 0, b: 0 }
 }
-

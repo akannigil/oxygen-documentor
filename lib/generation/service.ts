@@ -7,7 +7,9 @@ export interface GenerateDocumentParams extends GenerationContext {
   outputFormat: OutputFormat
 }
 
-export async function generateDocumentBuffer(params: GenerateDocumentParams): Promise<GenerationResult> {
+export async function generateDocumentBuffer(
+  params: GenerateDocumentParams
+): Promise<GenerationResult> {
   const adapter = getAdapter(params.templateType)
   const result = await adapter.generate(params.outputFormat, {
     templateBuffer: params.templateBuffer,
@@ -23,5 +25,3 @@ export async function generateDocumentBuffer(params: GenerateDocumentParams): Pr
   })
   return result
 }
-
-

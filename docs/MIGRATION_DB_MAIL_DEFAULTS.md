@@ -26,6 +26,7 @@ npx prisma migrate dev --name add_mail_defaults
 ```
 
 Cette commande va :
+
 - ✅ Créer un fichier de migration SQL
 - ✅ Ajouter la colonne `mailDefaults` à la table `templates`
 - ✅ Appliquer la migration à votre base de données
@@ -76,6 +77,7 @@ Ouvrez un template et vérifiez que le champ `mailDefaults` est présent.
 ### Erreur : "Prisma Client is already generating"
 
 Solution :
+
 ```bash
 # Supprimer le dossier généré
 rm -rf node_modules/.prisma
@@ -86,6 +88,7 @@ npx prisma generate
 ### Erreur : "Database connection failed"
 
 Solution :
+
 1. Vérifiez votre fichier `.env`
 2. Vérifiez que `DATABASE_URL` est défini
 3. Vérifiez que la base de données est accessible
@@ -93,6 +96,7 @@ Solution :
 ### Erreur de migration
 
 Solution :
+
 ```bash
 # Push le schéma sans migration (dev uniquement)
 npx prisma db push
@@ -105,4 +109,3 @@ Le code a été modifié pour utiliser un cast `as any` temporaire sur le champ 
 ## ✅ C'est fait !
 
 Une fois la migration appliquée, le champ `mailDefaults` sera disponible et vous pourrez sauvegarder les configurations email par défaut pour vos templates.
-

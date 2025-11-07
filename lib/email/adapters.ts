@@ -68,7 +68,9 @@ export class SMTPEmailAdapter implements EmailAdapter {
         text: options.text,
         replyTo: options.replyTo,
         ...(options.cc && { cc: Array.isArray(options.cc) ? options.cc.join(', ') : options.cc }),
-        ...(options.bcc && { bcc: Array.isArray(options.bcc) ? options.bcc.join(', ') : options.bcc }),
+        ...(options.bcc && {
+          bcc: Array.isArray(options.bcc) ? options.bcc.join(', ') : options.bcc,
+        }),
         attachments: options.attachments?.map((att) => ({
           filename: att.filename,
           content: att.content,
@@ -119,7 +121,7 @@ export class ResendEmailAdapter implements EmailAdapter {
   }): Promise<{ messageId?: string; success: boolean; error?: string }> {
     try {
       const recipients = Array.isArray(options.to) ? options.to : [options.to]
-      
+
       const emailOptions: {
         from: string
         to: string[]
@@ -190,49 +192,46 @@ export function createEmailAdapter(): EmailAdapter | null {
   const emailProvider = process.env['EMAIL_PROVIDER'] || 'smtp'
 
   switch (emailProvider) {
-    case 'resend':
-      {
-        const apiKey = process.env['RESEND_API_KEY']
-        const from = process.env['RESEND_FROM_EMAIL'] || process.env['EMAIL_FROM']
-        
-        if (!apiKey) {
-          console.warn('RESEND_API_KEY non configuré, emails désactivés')
-          return null
-        }
-        
-        if (!from) {
-          console.warn('RESEND_FROM_EMAIL ou EMAIL_FROM non configuré')
-          return null
-        }
+    case 'resend': {
+      const apiKey = process.env['RESEND_API_KEY']
+      const from = process.env['RESEND_FROM_EMAIL'] || process.env['EMAIL_FROM']
 
-        return new ResendEmailAdapter(apiKey, from)
+      if (!apiKey) {
+        console.warn('RESEND_API_KEY non configuré, emails désactivés')
+        return null
       }
+
+      if (!from) {
+        console.warn('RESEND_FROM_EMAIL ou EMAIL_FROM non configuré')
+        return null
+      }
+
+      return new ResendEmailAdapter(apiKey, from)
+    }
 
     case 'smtp':
-    default:
-      {
-        const host = process.env['SMTP_HOST']
-        const port = process.env['SMTP_PORT']
-        const user = process.env['SMTP_USER']
-        const password = process.env['SMTP_PASSWORD']
-        const from = process.env['EMAIL_FROM']
+    default: {
+      const host = process.env['SMTP_HOST']
+      const port = process.env['SMTP_PORT']
+      const user = process.env['SMTP_USER']
+      const password = process.env['SMTP_PASSWORD']
+      const from = process.env['EMAIL_FROM']
 
-        if (!host || !port || !user || !password) {
-          console.warn('Configuration SMTP incomplète, emails désactivés')
-          return null
-        }
-
-        return new SMTPEmailAdapter({
-          host,
-          port: parseInt(port, 10),
-          secure: process.env['SMTP_SECURE'] === 'true' || parseInt(port, 10) === 465,
-          user,
-          password,
-          ...(from ? { from } : {}),
-        })
+      if (!host || !port || !user || !password) {
+        console.warn('Configuration SMTP incomplète, emails désactivés')
+        return null
       }
+
+      return new SMTPEmailAdapter({
+        host,
+        port: parseInt(port, 10),
+        secure: process.env['SMTP_SECURE'] === 'true' || parseInt(port, 10) === 465,
+        user,
+        password,
+        ...(from ? { from } : {}),
+      })
+    }
   }
 }
 
 export const emailAdapter = createEmailAdapter()
-

@@ -5,4 +5,3 @@ export async function POST() {
   await signOut()
   return NextResponse.json({ message: 'Déconnexion réussie' })
 }
-

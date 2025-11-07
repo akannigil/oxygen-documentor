@@ -60,10 +60,6 @@ export async function PUT(request: Request, { params }: RouteParams) {
     }
 
     console.error('Error updating template fields:', error)
-    return NextResponse.json(
-      { error: 'Une erreur est survenue' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
-

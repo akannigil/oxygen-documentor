@@ -79,7 +79,7 @@ export function TemplateEditor({
     // Si on clique sur un élément existant (zone de champ), ne pas créer de nouvelle zone
     const targetType = e.target.getType()
     const clickedOnField = targetType === 'Rect' && e.target.name()?.startsWith('field-')
-    
+
     // Permettre le dessin si on clique sur le Stage ou sur l'Image, mais pas sur une zone existante
     if (!clickedOnField) {
       setSelectedFieldId(null)
@@ -140,19 +140,25 @@ export function TemplateEditor({
     setSelectedFieldId(`field-${index}`)
   }
 
-  const handleFieldDragEnd = (field: TemplateField, index: number, e: KonvaEventObject<DragEvent>) => {
+  const handleFieldDragEnd = (
+    field: TemplateField,
+    index: number,
+    e: KonvaEventObject<DragEvent>
+  ) => {
     const node = e.target
     const newX = node.x() / scale
     const newY = node.y() / scale
 
-    const updatedFields = fields.map((f, i) =>
-      i === index ? { ...f, x: newX, y: newY } : f
-    )
+    const updatedFields = fields.map((f, i) => (i === index ? { ...f, x: newX, y: newY } : f))
     setFields(updatedFields)
     onFieldsChange(updatedFields)
   }
 
-  const handleFieldTransformEnd = (field: TemplateField, index: number, e: KonvaEventObject<Event>) => {
+  const handleFieldTransformEnd = (
+    field: TemplateField,
+    index: number,
+    e: KonvaEventObject<Event>
+  ) => {
     const node = e.target
     const scaleX = node.scaleX()
     const scaleY = node.scaleY()
@@ -257,7 +263,8 @@ export function TemplateEditor({
           </button>
         </div>
         <div className="text-sm text-gray-600">
-          {fields.length} zone{fields.length !== 1 ? 's' : ''} définie{fields.length !== 1 ? 's' : ''}
+          {fields.length} zone{fields.length !== 1 ? 's' : ''} définie
+          {fields.length !== 1 ? 's' : ''}
         </div>
       </div>
 
@@ -279,15 +286,7 @@ export function TemplateEditor({
         >
           <Layer>
             {/* Image de fond */}
-            {image && (
-              <KonvaImage
-                image={image}
-                width={imgWidth}
-                height={imgHeight}
-                x={0}
-                y={0}
-              />
-            )}
+            {image && <KonvaImage image={image} width={imgWidth} height={imgHeight} x={0} y={0} />}
 
             {/* Rectangles de dessin en cours */}
             {isDrawing && currentRect && (
@@ -405,7 +404,9 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
             <option value="number">Nombre</option>
           </select>
         </div>
-        {(localField.type === 'text' || localField.type === 'number' || localField.type === 'date') && (
+        {(localField.type === 'text' ||
+          localField.type === 'number' ||
+          localField.type === 'date') && (
           <>
             <div>
               <label className="block text-xs font-medium text-gray-700">Taille de police</label>
@@ -566,4 +567,3 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
     </div>
   )
 }
-

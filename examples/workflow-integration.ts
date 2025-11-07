@@ -1,6 +1,6 @@
 /**
  * Exemples d'intégration de l'authentification dans le workflow de génération
- * 
+ *
  * Ce fichier démontre comment utiliser l'authentification automatique
  * des certificats directement via generateDOCX()
  */
@@ -14,10 +14,10 @@ import { readFile } from 'fs/promises'
 
 export async function exempleDetectionAutomatique() {
   console.log('=== Exemple 1 : Détection automatique ===')
-  
+
   // Charger le template
   const templateBuffer = await readFile('./templates/certificat.docx')
-  
+
   // Générer le certificat avec authentification automatique
   const docxBuffer = await generateDOCX(templateBuffer, {
     variables: {
@@ -37,10 +37,10 @@ export async function exempleDetectionAutomatique() {
       enabled: true, // C'est tout ! Les données sont détectées automatiquement
     },
   })
-  
+
   console.log(`✓ Certificat authentifié généré : ${docxBuffer.length} bytes`)
   console.log(`  Le QR code a été automatiquement inséré dans {{qrcode_verification}}`)
-  
+
   return docxBuffer
 }
 
@@ -50,9 +50,9 @@ export async function exempleDetectionAutomatique() {
 
 export async function exempleConfigurationManuelle() {
   console.log('=== Exemple 2 : Configuration manuelle ===')
-  
+
   const templateBuffer = await readFile('./templates/diplome.docx')
-  
+
   const docxBuffer = await generateDOCX(templateBuffer, {
     variables: {
       // Variables normales du template
@@ -64,7 +64,7 @@ export async function exempleConfigurationManuelle() {
     },
     certificate: {
       enabled: true,
-      
+
       // Données manuelles du certificat (remplace la détection automatique)
       data: {
         certificateId: 'DIPLOME-2024-M2-042',
@@ -86,9 +86,9 @@ export async function exempleConfigurationManuelle() {
       errorCorrectionLevel: 'H', // Haute correction pour document officiel
     },
   })
-  
+
   console.log(`✓ Diplôme authentifié généré : ${docxBuffer.length} bytes`)
-  
+
   return docxBuffer
 }
 
@@ -98,9 +98,9 @@ export async function exempleConfigurationManuelle() {
 
 export async function exempleAvecHashDocument() {
   console.log('=== Exemple 3 : Avec hash du document ===')
-  
+
   const templateBuffer = await readFile('./templates/attestation.docx')
-  
+
   const docxBuffer = await generateDOCX(templateBuffer, {
     variables: {
       certificate_id: 'HAB-ELEC-2024-078',
@@ -112,10 +112,10 @@ export async function exempleAvecHashDocument() {
     },
     certificate: {
       enabled: true,
-      
+
       // ✅ Activer la vérification d'intégrité du document
       includeDocumentHash: true,
-      
+
       data: {
         expiryDate: new Date(Date.now() + 3 * 365 * 24 * 60 * 60 * 1000).toISOString(),
         metadata: {
@@ -126,11 +126,11 @@ export async function exempleAvecHashDocument() {
       },
     },
   })
-  
+
   console.log(`✓ Attestation avec hash du document généré`)
   console.log(`  Le QR code contient le hash SHA-256 du document`)
   console.log(`  Toute modification du document invalidera la vérification`)
-  
+
   return docxBuffer
 }
 
@@ -140,9 +140,9 @@ export async function exempleAvecHashDocument() {
 
 export async function exempleConfigurationPersonnalisee() {
   console.log('=== Exemple 4 : Configuration personnalisée ===')
-  
+
   const templateBuffer = await readFile('./templates/certificat_medical.docx')
-  
+
   const docxBuffer = await generateDOCX(templateBuffer, {
     variables: {
       certificate_id: 'MED-2024-001',
@@ -153,7 +153,7 @@ export async function exempleConfigurationPersonnalisee() {
     },
     certificate: {
       enabled: true,
-      
+
       // Configuration d'authentification personnalisée
       authConfig: {
         secretKey: process.env['CERTIFICATE_SECRET_KEY']!,
@@ -161,7 +161,7 @@ export async function exempleConfigurationPersonnalisee() {
         algorithm: 'sha512', // Algorithme plus fort
         expiresIn: 365 * 24 * 60 * 60, // 1 an
       },
-      
+
       data: {
         expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
         metadata: {
@@ -176,9 +176,9 @@ export async function exempleConfigurationPersonnalisee() {
       errorCorrectionLevel: 'H',
     },
   })
-  
+
   console.log(`✓ Certificat médical généré avec SHA-512`)
-  
+
   return docxBuffer
 }
 
@@ -188,9 +188,9 @@ export async function exempleConfigurationPersonnalisee() {
 
 export async function exempleGenerationEnLot() {
   console.log('=== Exemple 5 : Génération en lot ===')
-  
+
   const templateBuffer = await readFile('./templates/certificat.docx')
-  
+
   // Données de plusieurs étudiants
   const students = [
     {
@@ -212,9 +212,9 @@ export async function exempleGenerationEnLot() {
       grade: 'Très Bien',
     },
   ]
-  
+
   const documents: Buffer[] = []
-  
+
   for (const student of students) {
     const docxBuffer = await generateDOCX(templateBuffer, {
       variables: {
@@ -229,13 +229,13 @@ export async function exempleGenerationEnLot() {
         enabled: true, // Chaque certificat est authentifié individuellement
       },
     })
-    
+
     documents.push(docxBuffer)
     console.log(`✓ Certificat ${student.id} généré pour ${student.name}`)
   }
-  
+
   console.log(`✓ ${documents.length} certificats authentifiés générés`)
-  
+
   return documents
 }
 
@@ -245,7 +245,7 @@ export async function exempleGenerationEnLot() {
 
 export async function exempleWorkflowAPI() {
   console.log('=== Exemple 6 : Simulation workflow API ===')
-  
+
   // Simuler une requête API
   const requestData = {
     templateId: 'template_certificat',
@@ -261,26 +261,30 @@ export async function exempleWorkflowAPI() {
     ],
     enableCertificateAuth: true, // Paramètre utilisateur
   }
-  
+
   // Charger le template
   const templateBuffer = await readFile('./templates/certificat.docx')
-  
+
   // Générer le document
   for (const data of requestData.rows) {
     const docxBuffer = await generateDOCX(templateBuffer, {
       variables: data,
-      
+
       // Activer selon le paramètre utilisateur
-      ...(requestData.enableCertificateAuth ? {
-        certificate: {
-          enabled: true,
-        },
-      } : {}),
+      ...(requestData.enableCertificateAuth
+        ? {
+            certificate: {
+              enabled: true,
+            },
+          }
+        : {}),
     })
-    
+
     console.log(`✓ Document généré : ${docxBuffer.length} bytes`)
-    console.log(`  Authentification : ${requestData.enableCertificateAuth ? 'Activée ✅' : 'Désactivée ❌'}`)
-    
+    console.log(
+      `  Authentification : ${requestData.enableCertificateAuth ? 'Activée ✅' : 'Désactivée ❌'}`
+    )
+
     // Sauvegarder, envoyer par email, etc.
     return docxBuffer
   }
@@ -292,7 +296,7 @@ export async function exempleWorkflowAPI() {
 
 export async function exempleDetectionConditionnelle() {
   console.log('=== Exemple 7 : Détection conditionnelle ===')
-  
+
   // Simuler des templates différents
   const templates = [
     { name: 'certificat_formation', isCertificate: true },
@@ -300,16 +304,17 @@ export async function exempleDetectionConditionnelle() {
     { name: 'diplome_universitaire', isCertificate: true },
     { name: 'devis_projet', isCertificate: false },
   ]
-  
+
   for (const template of templates) {
     // Détecter si c'est un certificat
-    const shouldAuthenticate = template.name.includes('certificat') ||
-                               template.name.includes('diplome') ||
-                               template.name.includes('attestation')
-    
+    const shouldAuthenticate =
+      template.name.includes('certificat') ||
+      template.name.includes('diplome') ||
+      template.name.includes('attestation')
+
     console.log(`Template: ${template.name}`)
     console.log(`  Authentification: ${shouldAuthenticate ? 'OUI ✅' : 'NON ❌'}`)
-    
+
     // Dans votre code réel :
     /*
     const docxBuffer = await generateDOCX(templateBuffer, {
@@ -329,10 +334,10 @@ export async function exempleDetectionConditionnelle() {
 // ============================================================================
 
 export async function exempleGestionErreurs() {
-  console.log('=== Exemple 8 : Gestion d\'erreurs ===')
-  
+  console.log("=== Exemple 8 : Gestion d'erreurs ===")
+
   const templateBuffer = await readFile('./templates/certificat.docx')
-  
+
   try {
     // Tenter de générer sans CERTIFICATE_SECRET_KEY
     await generateDOCX(templateBuffer, {
@@ -352,7 +357,7 @@ export async function exempleGestionErreurs() {
         },
       },
     })
-    
+
     console.log('Document généré')
   } catch (error) {
     if (error instanceof Error) {
@@ -373,9 +378,9 @@ export async function exempleGestionErreurs() {
 
 export async function exempleQRCodesCombines() {
   console.log('=== Exemple 9 : QR codes combinés ===')
-  
+
   const templateBuffer = await readFile('./templates/certificat_complet.docx')
-  
+
   const docxBuffer = await generateDOCX(templateBuffer, {
     variables: {
       certificate_id: 'CERT-2024-100',
@@ -385,30 +390,30 @@ export async function exempleQRCodesCombines() {
       issuer: 'Code Academy',
       grade: 'Excellent',
     },
-    
+
     // QR codes manuels supplémentaires
     qrcodes: {
       '{{qrcode_website}}': 'https://www.codeacademy.com',
       '{{qrcode_contact}}': 'mailto:contact@codeacademy.com',
     },
-    
+
     // + QR code authentifié automatique
     certificate: {
       enabled: true,
       // Sera inséré dans {{qrcode_verification}}
     },
-    
+
     qrcodeOptions: {
       width: 180,
       errorCorrectionLevel: 'Q',
     },
   })
-  
+
   console.log(`✓ Document généré avec 3 QR codes :`)
   console.log(`  1. QR code authentifié ({{qrcode_verification}})`)
   console.log(`  2. QR code site web ({{qrcode_website}})`)
   console.log(`  3. QR code contact ({{qrcode_contact}})`)
-  
+
   return docxBuffer
 }
 
@@ -418,36 +423,36 @@ export async function exempleQRCodesCombines() {
 
 export async function runWorkflowIntegrationExamples() {
   try {
-    console.log('\n🔄 Démarrage des exemples d\'intégration workflow\n')
-    
+    console.log("\n🔄 Démarrage des exemples d'intégration workflow\n")
+
     // Note : Ces exemples nécessitent des templates DOCX
     // Décommentez pour exécuter avec vos templates
-    
+
     // await exempleDetectionAutomatique()
     // console.log('')
-    
+
     // await exempleConfigurationManuelle()
     // console.log('')
-    
+
     // await exempleAvecHashDocument()
     // console.log('')
-    
+
     // await exempleConfigurationPersonnalisee()
     // console.log('')
-    
+
     // await exempleGenerationEnLot()
     // console.log('')
-    
+
     // await exempleWorkflowAPI()
     // console.log('')
-    
+
     await exempleDetectionConditionnelle()
     console.log('')
-    
+
     await exempleGestionErreurs()
     console.log('')
-    
-    console.log('✅ Exemples d\'intégration terminés !\n')
+
+    console.log("✅ Exemples d'intégration terminés !\n")
     console.log('💡 Pour utiliser ces exemples avec vos propres templates :')
     console.log('   1. Décommentez les exemples ci-dessus')
     console.log('   2. Placez vos templates DOCX dans ./templates/')
@@ -457,13 +462,11 @@ export async function runWorkflowIntegrationExamples() {
     console.log('📖 Documentation complète :')
     console.log('   - docs/INTEGRATION_WORKFLOW_CERTIFICATS.md')
     console.log('   - docs/GUIDE_AUTHENTIFICATION_CERTIFICATS.md')
-    
   } catch (error) {
-    console.error('❌ Erreur lors de l\'exécution des exemples :', error)
+    console.error("❌ Erreur lors de l'exécution des exemples :", error)
     throw error
   }
 }
 
 // Pour exécuter
 // runWorkflowIntegrationExamples().catch(console.error)
-

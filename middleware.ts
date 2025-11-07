@@ -1,6 +1,9 @@
-import { auth } from '@/lib/auth'
+import { auth } from '@/lib/auth/middleware'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+
+// Le middleware utilise une configuration minimale qui n'importe pas bcryptjs/prisma
+// Cela permet d'utiliser Edge Runtime sans problèmes de compatibilité
 
 export async function middleware(request: NextRequest) {
   const session = await auth()
@@ -17,7 +20,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // Si session existe et accès à login/signup, rediriger vers dashboard
-  if (session && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
+  if (
+    session &&
+    (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')
+  ) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
@@ -36,4 +42,3 @@ export const config = {
     '/((?!api/|_next/static|_next/image|favicon.ico).*)',
   ],
 }
-

@@ -38,7 +38,7 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
     })
   }
 
-  const updateAuth = (updates: Partial<TemplateField['qrcodeAuth']>) => {
+  const updateAuth = (updates: Partial<NonNullable<TemplateField['qrcodeAuth']>>) => {
     onUpdate(index, {
       qrcodeAuth: {
         ...field.qrcodeAuth,
@@ -72,10 +72,10 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
   }
 
   return (
-    <div className="space-y-4 pt-3 border-t border-gray-200">
+    <div className="space-y-4 border-t border-gray-200 pt-3">
       {/* Options de personnalisation */}
       <div>
-        <div className="flex items-center justify-between mb-2">
+        <div className="mb-2 flex items-center justify-between">
           <label className="block text-xs font-medium text-gray-700">Personnalisation</label>
           <button
             type="button"
@@ -85,14 +85,20 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
             {showOptions ? 'Masquer' : 'Afficher'}
           </button>
         </div>
-        
+
         {showOptions && (
-          <div className="space-y-3 pl-2 border-l-2 border-gray-200">
+          <div className="space-y-3 border-l-2 border-gray-200 pl-2">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Niveau de correction d'erreur</label>
+              <label className="mb-1 block text-xs text-gray-600">
+                Niveau de correction d&apos;erreur
+              </label>
               <select
                 value={field.qrcodeOptions?.errorCorrectionLevel || 'M'}
-                onChange={(e) => updateQRCodeOptions({ errorCorrectionLevel: e.target.value as 'L' | 'M' | 'Q' | 'H' })}
+                onChange={(e) =>
+                  updateQRCodeOptions({
+                    errorCorrectionLevel: e.target.value as 'L' | 'M' | 'Q' | 'H',
+                  })
+                }
                 className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-xs"
               >
                 <option value="L">L (7%)</option>
@@ -103,7 +109,7 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Marge (modules)</label>
+              <label className="mb-1 block text-xs text-gray-600">Marge (modules)</label>
               <input
                 type="number"
                 value={field.qrcodeOptions?.margin ?? 1}
@@ -115,7 +121,7 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Couleur foncée</label>
+              <label className="mb-1 block text-xs text-gray-600">Couleur foncée</label>
               <div className="flex gap-2">
                 <input
                   type="color"
@@ -134,7 +140,7 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Couleur claire</label>
+              <label className="mb-1 block text-xs text-gray-600">Couleur claire</label>
               <div className="flex gap-2">
                 <input
                   type="color"
@@ -157,7 +163,7 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
 
       {/* Authentification de certificat */}
       <div>
-        <div className="flex items-center justify-between mb-2">
+        <div className="mb-2 flex items-center justify-between">
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -168,14 +174,18 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
               }}
               className="rounded border-gray-300 text-blue-600"
             />
-            <span className="text-xs font-medium text-gray-700">Authentification de certificat</span>
+            <span className="text-xs font-medium text-gray-700">
+              Authentification de certificat
+            </span>
           </label>
         </div>
-        
+
         {showAuth && (
-          <div className="space-y-3 pl-2 border-l-2 border-blue-200 bg-blue-50 p-3 rounded">
+          <div className="space-y-3 rounded border-l-2 border-blue-200 bg-blue-50 p-3 pl-2">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">URL de vérification de base</label>
+              <label className="mb-1 block text-xs text-gray-600">
+                URL de vérification de base
+              </label>
               <input
                 type="text"
                 value={field.qrcodeAuth?.verificationBaseUrl || ''}
@@ -189,33 +199,54 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Durée de validité (secondes)</label>
+              <label className="mb-1 block text-xs text-gray-600">
+                Durée de validité (secondes)
+              </label>
               <input
                 type="number"
                 value={field.qrcodeAuth?.expiresIn || ''}
-                onChange={(e) => updateAuth({ expiresIn: e.target.value ? parseInt(e.target.value) : undefined })}
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (value) {
+                    updateAuth({ expiresIn: parseInt(value) })
+                  } else {
+                    // Supprimer expiresIn en reconstruisant l'objet sans cette propriété
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    const { expiresIn, ...rest } = field.qrcodeAuth || {}
+                    onUpdate(index, {
+                      qrcodeAuth: {
+                        ...rest,
+                        enabled: true,
+                      },
+                    })
+                  }
+                }}
                 className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-xs"
                 placeholder="Optionnel (ex: 31536000 pour 1 an)"
               />
             </div>
 
             <div>
-              <label className="flex items-center gap-2 mb-1">
+              <label className="mb-1 flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={field.qrcodeAuth?.includeDocumentHash ?? false}
                   onChange={(e) => updateAuth({ includeDocumentHash: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600"
                 />
-                <span className="text-xs text-gray-600">Inclure le hash du document pour vérifier l'intégrité</span>
+                <span className="text-xs text-gray-600">
+                  Inclure le hash du document pour vérifier l&apos;intégrité
+                </span>
               </label>
             </div>
 
-            <div className="pt-2 border-t border-blue-200">
-              <p className="text-xs font-medium text-gray-700 mb-2">Mapping des champs de certificat</p>
+            <div className="border-t border-blue-200 pt-2">
+              <p className="mb-2 text-xs font-medium text-gray-700">
+                Mapping des champs de certificat
+              </p>
               <div className="space-y-2">
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">ID du certificat (clé)</label>
+                  <label className="mb-1 block text-xs text-gray-600">ID du certificat (clé)</label>
                   <input
                     type="text"
                     value={field.qrcodeAuth?.certificateFields?.certificateId || ''}
@@ -225,7 +256,7 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Nom du titulaire (clé)</label>
+                  <label className="mb-1 block text-xs text-gray-600">Nom du titulaire (clé)</label>
                   <input
                     type="text"
                     value={field.qrcodeAuth?.certificateFields?.holderName || ''}
@@ -235,7 +266,7 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Titre/Formation (clé)</label>
+                  <label className="mb-1 block text-xs text-gray-600">Titre/Formation (clé)</label>
                   <input
                     type="text"
                     value={field.qrcodeAuth?.certificateFields?.title || ''}
@@ -245,7 +276,9 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Date d'émission (clé)</label>
+                  <label className="mb-1 block text-xs text-gray-600">
+                    Date d&apos;émission (clé)
+                  </label>
                   <input
                     type="text"
                     value={field.qrcodeAuth?.certificateFields?.issueDate || ''}
@@ -255,7 +288,9 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Organisation émettrice (clé)</label>
+                  <label className="mb-1 block text-xs text-gray-600">
+                    Organisation émettrice (clé)
+                  </label>
                   <input
                     type="text"
                     value={field.qrcodeAuth?.certificateFields?.issuer || ''}
@@ -272,7 +307,7 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
 
       {/* URL de stockage */}
       <div>
-        <div className="flex items-center justify-between mb-2">
+        <div className="mb-2 flex items-center justify-between">
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -283,17 +318,21 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
               }}
               className="rounded border-gray-300 text-blue-600"
             />
-            <span className="text-xs font-medium text-gray-700">Intégrer l'URL de stockage</span>
+            <span className="text-xs font-medium text-gray-700">
+              Intégrer l&apos;URL de stockage
+            </span>
           </label>
         </div>
-        
+
         {showStorageUrl && (
-          <div className="space-y-3 pl-2 border-l-2 border-green-200 bg-green-50 p-3 rounded">
+          <div className="space-y-3 rounded border-l-2 border-green-200 bg-green-50 p-3 pl-2">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Type d'URL</label>
+              <label className="mb-1 block text-xs text-gray-600">Type d&apos;URL</label>
               <select
                 value={field.qrcodeStorageUrl?.urlType || 'signed'}
-                onChange={(e) => updateStorageUrl({ urlType: e.target.value as 'signed' | 'public' })}
+                onChange={(e) =>
+                  updateStorageUrl({ urlType: e.target.value as 'signed' | 'public' })
+                }
                 className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-xs"
               >
                 <option value="signed">URL signée (temporaire, sécurisée)</option>
@@ -303,7 +342,9 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
 
             {field.qrcodeStorageUrl?.urlType === 'signed' && (
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Durée de validité (secondes)</label>
+                <label className="mb-1 block text-xs text-gray-600">
+                  Durée de validité (secondes)
+                </label>
                 <input
                   type="number"
                   value={field.qrcodeStorageUrl?.expiresIn || 3600}
@@ -312,9 +353,7 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
                   min={60}
                   placeholder="3600 (1 heure)"
                 />
-                <p className="mt-1 text-xs text-gray-500">
-                  Durée de validité de l'URL signée
-                </p>
+                <p className="mt-1 text-xs text-gray-500">Durée de validité de l&apos;URL signée</p>
               </div>
             )}
           </div>
@@ -323,4 +362,3 @@ export function QRCodeConfiguration({ field, index, onUpdate }: QRCodeConfigurat
     </div>
   )
 }
-

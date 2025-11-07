@@ -15,6 +15,7 @@ Ce document décrit les améliorations apportées au projet Oxygen Document, not
 **Solutions Appliquées :**
 
 #### A. Configuration Webpack (`next.config.js`)
+
 ```javascript
 webpack: (config, { isServer }) => {
   if (!isServer) {
@@ -24,7 +25,7 @@ webpack: (config, { isServer }) => {
       canvas: false,
       fs: false,
     }
-    
+
     config.resolve.alias = {
       ...config.resolve.alias,
       konva: 'konva/lib/index.js', // Force la version browser
@@ -33,15 +34,17 @@ webpack: (config, { isServer }) => {
     // Côté serveur : externaliser canvas et konva
     config.externals = [...(config.externals || []), 'canvas', 'konva']
   }
-  
+
   return config
 }
 ```
 
 #### B. Dynamic Import avec SSR Désactivé
+
 Création d'un wrapper pour charger `TemplateEditor` uniquement côté client :
 
 **Fichier :** `components/template-editor/index.tsx`
+
 ```typescript
 const TemplateEditorDynamic = dynamic(
   () => import('./TemplateEditor').then((mod) => ({ default: mod.TemplateEditor })),
@@ -57,6 +60,7 @@ const TemplateEditorDynamic = dynamic(
 ### 1. Configuration Stricte Maintenue
 
 Le `tsconfig.json` utilise déjà une configuration stricte conforme aux meilleures pratiques :
+
 - ✅ `strict: true`
 - ✅ `noUncheckedIndexedAccess: true`
 - ✅ `exactOptionalPropertyTypes: true`
@@ -67,6 +71,7 @@ Le `tsconfig.json` utilise déjà une configuration stricte conforme aux meilleu
 ### 2. Typage Amélioré des Composants
 
 #### TemplateEditor
+
 - Export du type `TemplateEditorProps` pour réutilisation
 - Ajout de types internes (`Position`, `RectSize`)
 - Utilisation de constantes typées pour les valeurs magiques
@@ -97,6 +102,7 @@ const MAX_SCALE = 3
 ```
 
 #### Pages
+
 - Remplacement de `any` par des types stricts
 - Création d'interfaces locales pour les données de template
 - Utilisation correcte des types importés depuis `@/shared/types`
@@ -183,6 +189,7 @@ oxygen-document/
 ## 🔧 Bonnes Pratiques Implémentées
 
 ### 1. Validation avec Zod
+
 Les schémas Zod utilisent `satisfies` pour garantir la cohérence avec les types TypeScript :
 
 ```typescript
@@ -194,16 +201,19 @@ export const templateFieldSchema = z.object({
 ```
 
 ### 2. Gestion des Erreurs
+
 - Utilisation de `useUnknownInCatchVariables: true`
 - Gestion typée des erreurs Zod
 - Messages d'erreur appropriés pour l'utilisateur
 
 ### 3. Performance
+
 - Dynamic import pour les composants lourds (Konva)
 - Chargement lazy avec fallback UI
 - Optimisation du bundle client
 
 ### 4. Accessibilité
+
 - Ajout d'attributs `aria-label` sur les boutons
 - Clés React correctes dans les boucles
 - Messages d'erreur clairs
@@ -211,31 +221,40 @@ export const templateFieldSchema = z.object({
 ## 📋 Recommandations Futures
 
 ### 1. Tests
+
 Ajouter des tests pour :
+
 - Composants React (Jest + React Testing Library)
 - Routes API (tests d'intégration)
 - Schémas de validation
 
 ### 2. Gestion d'État
+
 Pour une application plus complexe, considérer :
+
 - Zustand pour l'état global léger
 - React Query pour le cache des données serveur
 - Context API pour l'état partagé simple
 
 ### 3. CI/CD
+
 Mettre en place :
+
 - Vérification TypeScript (`tsc --noEmit`)
 - Linting (`npm run lint`)
 - Tests automatiques
 - Build de production
 
 ### 4. Monitoring
+
 Intégrer :
+
 - Sentry ou similaire pour le tracking d'erreurs
 - Analytics pour l'usage
 - Logs structurés
 
 ### 5. Documentation
+
 - Documenter les composants complexes avec JSDoc
 - README détaillé pour chaque module
 - Guide de contribution
@@ -243,6 +262,7 @@ Intégrer :
 ## 🔐 Sécurité
 
 Points à vérifier :
+
 - ✅ Validation des données avec Zod
 - ✅ Authentification avec NextAuth
 - ✅ Vérification des permissions (ownerId)
@@ -253,6 +273,7 @@ Points à vérifier :
 ## 📦 Dépendances
 
 ### Versions Actuelles
+
 - Next.js: ^15.0.0
 - React: ^19.0.0
 - TypeScript: ^5.5.0
@@ -260,6 +281,7 @@ Points à vérifier :
 - React-Konva: ^18.2.10
 
 ### Notes sur les Versions
+
 - Next.js 15 est une version récente (App Router stable)
 - React 19 est une version RC/stable récente
 - Configuration optimale pour ces versions
@@ -267,6 +289,7 @@ Points à vérifier :
 ## 🎨 Améliorations UX
 
 ### Éditeur de Template
+
 - ✅ Zoom avec molette de souris
 - ✅ Déplacement et redimensionnement des zones
 - ✅ Panneau de propriétés interactif
@@ -274,6 +297,7 @@ Points à vérifier :
 - ✅ Messages de succès/erreur
 
 ### Suggestions
+
 - Ajouter des raccourcis clavier (Ctrl+Z pour annuler, etc.)
 - Implémenter un historique des modifications
 - Ajouter un mode grille pour l'alignement
@@ -282,6 +306,7 @@ Points à vérifier :
 ## 📊 Métriques de Qualité
 
 ### Code Quality
+
 - ✅ TypeScript strict activé
 - ✅ Aucune utilisation de `any` (sauf legacy)
 - ✅ Validation des données
@@ -289,12 +314,14 @@ Points à vérifier :
 - ✅ Pas d'erreurs de linter
 
 ### Performance
+
 - ✅ Bundle optimisé avec dynamic imports
 - ✅ Images optimisées avec Next.js Image
 - ✅ SSR désactivé pour les composants canvas
 - ⚠️ Considérer le code splitting pour les grandes pages
 
 ### Accessibilité
+
 - ✅ Labels sur les boutons
 - ✅ Messages d'erreur clairs
 - ⚠️ Ajouter navigation au clavier complète
@@ -302,14 +329,14 @@ Points à vérifier :
 
 ## 🚦 Statut Actuel
 
-| Aspect | Statut | Note |
-|--------|--------|------|
-| Build | ✅ | Pas d'erreurs |
-| Types | ✅ | Strict mode OK |
-| Linting | ✅ | Aucune erreur |
-| Konva Integration | ✅ | Corrigé |
-| API Routes | ✅ | Fonctionnelles |
-| Structure | ✅ | Bien organisée |
+| Aspect            | Statut | Note           |
+| ----------------- | ------ | -------------- |
+| Build             | ✅     | Pas d'erreurs  |
+| Types             | ✅     | Strict mode OK |
+| Linting           | ✅     | Aucune erreur  |
+| Konva Integration | ✅     | Corrigé        |
+| API Routes        | ✅     | Fonctionnelles |
+| Structure         | ✅     | Bien organisée |
 
 ## 🔄 Prochaines Étapes
 
@@ -324,4 +351,3 @@ Points à vérifier :
 **Auteur :** Assistant IA  
 **Date :** 2 novembre 2025  
 **Version :** 1.0
-

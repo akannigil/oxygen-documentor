@@ -15,6 +15,7 @@ Ce guide explique comment intégrer et générer des QR codes dans vos documents
 ## Vue d'ensemble
 
 Le système supporte la génération de QR codes pour différents types de contenu :
+
 - Texte brut
 - URLs
 - Emails
@@ -224,8 +225,8 @@ const qrBuffer = await generateQRCodeBuffer('https://example.com', {
   errorCorrectionLevel: 'H',
   color: {
     dark: '#000000',
-    light: '#FFFFFF'
-  }
+    light: '#FFFFFF',
+  },
 })
 ```
 
@@ -239,8 +240,8 @@ const content: QRCodeContent = {
     firstName: 'Jean',
     lastName: 'Dupont',
     email: 'jean.dupont@example.com',
-    phone: '+33123456789'
-  }
+    phone: '+33123456789',
+  },
 }
 
 // Valider le contenu
@@ -249,7 +250,7 @@ validateQRCodeContent(content) // Lance une erreur si invalide
 // Générer le QR code
 const qrBuffer = await generateQRCodeFromContent(content, {
   width: 250,
-  errorCorrectionLevel: 'M'
+  errorCorrectionLevel: 'M',
 })
 ```
 
@@ -278,7 +279,7 @@ const field: TemplateField = {
   x: 450,
   y: 50,
   w: 100,
-  h: 100
+  h: 100,
 }
 ```
 
@@ -292,7 +293,7 @@ const pdfBuffer = await generateDocumentFromTemplate(
   'application/pdf',
   fields, // Inclut les champs de type 'qrcode'
   {
-    tracking_url: 'https://tracking.example.com/order/12345'
+    tracking_url: 'https://tracking.example.com/order/12345',
   }
 )
 ```
@@ -319,17 +320,17 @@ const docxBuffer = await generateDOCX(templateBuffer, {
   variables: {
     nom: 'Dupont',
     prenom: 'Jean',
-    email: 'jean.dupont@example.com'
+    email: 'jean.dupont@example.com',
   },
   qrcodes: {
     '{{qrcode_portal}}': 'https://portal.example.com/client/12345',
-    '{{qrcode_contact}}': 'mailto:support@example.com'
+    '{{qrcode_contact}}': 'mailto:support@example.com',
   },
   qrcodeOptions: {
     width: 200,
     margin: 1,
-    errorCorrectionLevel: 'M'
-  }
+    errorCorrectionLevel: 'M',
+  },
 })
 ```
 
@@ -346,8 +347,8 @@ const vcardContent: QRCodeContent = {
     lastName: 'Dupont',
     email: 'jean.dupont@example.com',
     phone: '+33123456789',
-    organization: 'Entreprise SA'
-  }
+    organization: 'Entreprise SA',
+  },
 }
 
 // Formater le contenu
@@ -356,11 +357,11 @@ const vcardData = formatQRCodeContent(vcardContent)
 // Générer le document
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: {
-    nom: 'Dupont'
+    nom: 'Dupont',
   },
   qrcodes: {
-    '{{qrcode_vcard}}': vcardData
-  }
+    '{{qrcode_vcard}}': vcardData,
+  },
 })
 ```
 
@@ -372,30 +373,25 @@ Pour plus de contrôle, utilisez l'insertion directe :
 import { insertQRCodeInDOCX, insertMultipleQRCodesInDOCX } from '@/lib/qrcode'
 
 // Insertion unique
-const updatedBuffer = await insertQRCodeInDOCX(
-  docxBuffer,
-  '{{qrcode}}',
-  'https://example.com',
-  {
-    width: 200,
-    docxWidth: 914400,  // 1 pouce en EMUs
-    docxHeight: 914400,
-    altText: 'QR Code - Accès client'
-  }
-)
+const updatedBuffer = await insertQRCodeInDOCX(docxBuffer, '{{qrcode}}', 'https://example.com', {
+  width: 200,
+  docxWidth: 914400, // 1 pouce en EMUs
+  docxHeight: 914400,
+  altText: 'QR Code - Accès client',
+})
 
 // Insertions multiples
 const updatedBuffer = await insertMultipleQRCodesInDOCX(docxBuffer, [
   {
     placeholder: '{{qrcode_url}}',
     data: 'https://example.com',
-    options: { width: 150 }
+    options: { width: 150 },
   },
   {
     placeholder: '{{qrcode_email}}',
     data: 'mailto:contact@example.com',
-    options: { width: 150 }
-  }
+    options: { width: 150 },
+  },
 ])
 ```
 
@@ -406,48 +402,48 @@ const updatedBuffer = await insertMultipleQRCodesInDOCX(docxBuffer, [
 ```typescript
 interface QRCodeOptions {
   // Largeur du QR code en pixels (50-2000)
-  width?: number              // Défaut: 200
-  
+  width?: number // Défaut: 200
+
   // Marge autour du QR code en modules (0-10)
-  margin?: number             // Défaut: 1
-  
+  margin?: number // Défaut: 1
+
   // Niveau de correction d'erreur
   // L: ~7%, M: ~15%, Q: ~25%, H: ~30%
-  errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H'  // Défaut: 'M'
-  
+  errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H' // Défaut: 'M'
+
   // Type d'image
-  type?: 'image/png' | 'image/jpeg'  // Défaut: 'image/png'
-  
+  type?: 'image/png' | 'image/jpeg' // Défaut: 'image/png'
+
   // Qualité JPEG (0-1)
-  quality?: number            // Défaut: 0.92
-  
+  quality?: number // Défaut: 0.92
+
   // Couleurs personnalisées
   color?: {
-    dark?: string             // Défaut: '#000000'
-    light?: string            // Défaut: '#FFFFFF'
+    dark?: string // Défaut: '#000000'
+    light?: string // Défaut: '#FFFFFF'
   }
 }
 ```
 
 ### Choix du niveau de correction d'erreur
 
-| Niveau | Correction | Recommandation |
-|--------|------------|----------------|
-| L | ~7% | Documents propres, pas de risque de dégradation |
-| M | ~15% | **Recommandé** - Usage général |
-| Q | ~25% | Environnements difficiles (impression, usure) |
-| H | ~30% | Conditions extrêmes, logo sur le QR code |
+| Niveau | Correction | Recommandation                                  |
+| ------ | ---------- | ----------------------------------------------- |
+| L      | ~7%        | Documents propres, pas de risque de dégradation |
+| M      | ~15%       | **Recommandé** - Usage général                  |
+| Q      | ~25%       | Environnements difficiles (impression, usure)   |
+| H      | ~30%       | Conditions extrêmes, logo sur le QR code        |
 
 **Note :** Plus le niveau est élevé, plus le QR code est dense.
 
 ### Tailles recommandées
 
-| Usage | Taille (pixels) | Taille (cm) |
-|-------|----------------|-------------|
-| Badge événement | 150-200 | 2-3 cm |
-| Document A4 | 200-300 | 3-5 cm |
-| Affiche | 400-600 | 7-10 cm |
-| Panneau publicitaire | 800-1200 | 15-20 cm |
+| Usage                | Taille (pixels) | Taille (cm) |
+| -------------------- | --------------- | ----------- |
+| Badge événement      | 150-200         | 2-3 cm      |
+| Document A4          | 200-300         | 3-5 cm      |
+| Affiche              | 400-600         | 7-10 cm     |
+| Panneau publicitaire | 800-1200        | 15-20 cm    |
 
 **Règle générale :** Le QR code doit être scannable à une distance de 10× sa taille.
 
@@ -462,7 +458,7 @@ function pixelsToEMUs(pixels: number): number {
 // 1 pouce = 914400 EMUs
 // 1 cm ≈ 360000 EMUs
 const tailleCm = 3
-const tailleEMUs = tailleCm * 360000  // 1080000 EMUs
+const tailleEMUs = tailleCm * 360000 // 1080000 EMUs
 ```
 
 ## Exemples pratiques
@@ -475,7 +471,7 @@ import { generateDOCX } from '@/lib/generators/docx'
 const orderData = {
   orderId: 'CMD-2024-001',
   customerName: 'Jean Dupont',
-  totalAmount: 149.99
+  totalAmount: 149.99,
 }
 
 const trackingUrl = `https://tracking.example.com/order/${orderData.orderId}`
@@ -484,15 +480,15 @@ const docxBuffer = await generateDOCX(templateBuffer, {
   variables: {
     order_id: orderData.orderId,
     customer_name: orderData.customerName,
-    total_amount: orderData.totalAmount
+    total_amount: orderData.totalAmount,
   },
   qrcodes: {
-    '{{qrcode_tracking}}': trackingUrl
+    '{{qrcode_tracking}}': trackingUrl,
   },
   qrcodeOptions: {
     width: 250,
-    errorCorrectionLevel: 'H'  // Haute correction pour impression
-  }
+    errorCorrectionLevel: 'H', // Haute correction pour impression
+  },
 })
 ```
 
@@ -507,21 +503,21 @@ const participantData = {
   email: 'marie.martin@example.com',
   phone: '+33987654321',
   organization: 'TechCorp',
-  title: 'CTO'
+  title: 'CTO',
 }
 
 const vcardContent = {
   type: 'vcard' as const,
-  data: participantData
+  data: participantData,
 }
 
 const qrBuffer = await generateQRCodeFromContent(vcardContent, {
   width: 200,
   errorCorrectionLevel: 'H',
   color: {
-    dark: '#1a73e8',  // QR code en bleu
-    light: '#ffffff'
-  }
+    dark: '#1a73e8', // QR code en bleu
+    light: '#ffffff',
+  },
 })
 
 // Utiliser ce buffer dans votre système de badges
@@ -537,7 +533,7 @@ const certificateData = {
   studentName: 'Pierre Durand',
   courseName: 'Formation TypeScript Avancé',
   date: '2024-11-02',
-  certificateId: 'CERT-2024-TS-456'
+  certificateId: 'CERT-2024-TS-456',
 }
 
 // URL de vérification
@@ -552,8 +548,8 @@ const verificationData = formatQRCodeContent({
     studentName: certificateData.studentName,
     courseName: certificateData.courseName,
     issueDate: certificateData.date,
-    verificationUrl: verificationUrl
-  }
+    verificationUrl: verificationUrl,
+  },
 })
 
 const docxBuffer = await generateDOCX(templateBuffer, {
@@ -561,15 +557,15 @@ const docxBuffer = await generateDOCX(templateBuffer, {
     student_name: certificateData.studentName,
     course_name: certificateData.courseName,
     date: certificateData.date,
-    certificate_id: certificateData.certificateId
+    certificate_id: certificateData.certificateId,
   },
   qrcodes: {
-    '{{qrcode_verification}}': verificationData
+    '{{qrcode_verification}}': verificationData,
   },
   qrcodeOptions: {
     width: 180,
-    errorCorrectionLevel: 'Q'
-  }
+    errorCorrectionLevel: 'Q',
+  },
 })
 ```
 
@@ -583,22 +579,22 @@ const eventData = {
   location: 'Centre des Congrès, Paris',
   description: 'Conférence annuelle sur les technologies web',
   start: '2024-12-10T09:00:00Z',
-  end: '2024-12-10T18:00:00Z'
+  end: '2024-12-10T18:00:00Z',
 }
 
 const eventQRData = formatQRCodeContent({
   type: 'event',
-  data: eventData
+  data: eventData,
 })
 
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: {
     event_title: eventData.title,
-    event_location: eventData.location
+    event_location: eventData.location,
   },
   qrcodes: {
-    '{{qrcode_event}}': eventQRData
-  }
+    '{{qrcode_event}}': eventQRData,
+  },
 })
 ```
 
@@ -612,22 +608,22 @@ const wifiData = formatQRCodeContent({
   data: {
     ssid: 'Reseau_Invites',
     password: 'MotDePasse2024',
-    security: 'WPA'
-  }
+    security: 'WPA',
+  },
 })
 
 // Générer un document avec le QR code WiFi
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: {
-    wifi_name: 'Reseau_Invites'
+    wifi_name: 'Reseau_Invites',
   },
   qrcodes: {
-    '{{qrcode_wifi}}': wifiData
+    '{{qrcode_wifi}}': wifiData,
   },
   qrcodeOptions: {
     width: 250,
-    errorCorrectionLevel: 'L'  // WiFi n'a pas besoin de haute correction
-  }
+    errorCorrectionLevel: 'L', // WiFi n'a pas besoin de haute correction
+  },
 })
 ```
 
@@ -640,6 +636,7 @@ const docxBuffer = await generateDOCX(templateBuffer, {
 Génère un QR code au format Buffer PNG.
 
 **Paramètres :**
+
 - `data: string` - Données à encoder
 - `options?: QRCodeOptions` - Options de génération
 
@@ -652,6 +649,7 @@ Génère un QR code au format Buffer PNG.
 Génère un QR code au format DataURL (base64).
 
 **Paramètres :**
+
 - `data: string` - Données à encoder
 - `options?: QRCodeOptions` - Options de génération
 
@@ -664,6 +662,7 @@ Génère un QR code au format DataURL (base64).
 Génère un QR code à partir d'un contenu structuré.
 
 **Paramètres :**
+
 - `content: QRCodeContent` - Contenu structuré (vCard, URL, etc.)
 - `options?: QRCodeOptions` - Options de génération
 
@@ -676,6 +675,7 @@ Génère un QR code à partir d'un contenu structuré.
 Formate un contenu structuré en chaîne pour QR code.
 
 **Paramètres :**
+
 - `content: QRCodeContent` - Contenu structuré
 
 **Retourne :** `string`
@@ -687,6 +687,7 @@ Formate un contenu structuré en chaîne pour QR code.
 Valide un contenu de QR code.
 
 **Paramètres :**
+
 - `content: QRCodeContent` - Contenu à valider
 
 **Retourne :** `boolean` (lance une erreur si invalide)
@@ -698,6 +699,7 @@ Valide un contenu de QR code.
 Insère un QR code dans un document DOCX.
 
 **Paramètres :**
+
 - `docxBuffer: Buffer` - Buffer du document DOCX
 - `placeholder: string` - Placeholder à remplacer (ex: '{{qrcode}}')
 - `qrData: string` - Données du QR code
@@ -712,6 +714,7 @@ Insère un QR code dans un document DOCX.
 Insère plusieurs QR codes dans un document DOCX.
 
 **Paramètres :**
+
 - `docxBuffer: Buffer` - Buffer du document DOCX
 - `qrCodes: Array<{placeholder, data, options?}>` - Tableau de QR codes
 
@@ -722,11 +725,13 @@ Insère plusieurs QR codes dans un document DOCX.
 ### 1. Choix du contenu
 
 ✅ **Bon :**
+
 - URLs courtes et propres
 - Données structurées cohérentes
 - Information pertinente et actuelle
 
 ❌ **Mauvais :**
+
 - URLs trop longues (>200 caractères)
 - Données sensibles non chiffrées
 - Information obsolète
@@ -734,11 +739,13 @@ Insère plusieurs QR codes dans un document DOCX.
 ### 2. Taille et qualité
 
 ✅ **Bon :**
+
 - Adapter la taille au support
 - Utiliser une marge suffisante
 - Choisir le bon niveau de correction
 
 ❌ **Mauvais :**
+
 - QR code trop petit pour la distance de scan
 - Pas de marge (difficile à scanner)
 - Niveau de correction inadapté
@@ -746,11 +753,13 @@ Insère plusieurs QR codes dans un document DOCX.
 ### 3. Test et validation
 
 ✅ **Bon :**
+
 - Tester avec plusieurs appareils
 - Vérifier la lisibilité après impression
 - Valider le contenu avant génération
 
 ❌ **Mauvais :**
+
 - Ne pas tester avant production
 - Ignorer les erreurs de validation
 - Oublier de vérifier le rendu final
@@ -758,11 +767,13 @@ Insère plusieurs QR codes dans un document DOCX.
 ### 4. Accessibilité
 
 ✅ **Bon :**
+
 - Ajouter un texte explicatif
 - Fournir une alternative (URL écrite)
 - Utiliser un texte alt descriptif
 
 ❌ **Mauvais :**
+
 - QR code seul sans contexte
 - Pas d'alternative pour non-mobiles
 - Manque d'instructions
@@ -772,6 +783,7 @@ Insère plusieurs QR codes dans un document DOCX.
 ### Problème : QR code illisible
 
 **Solutions :**
+
 1. Augmenter la taille (width)
 2. Augmenter le niveau de correction (Q ou H)
 3. Vérifier les marges
@@ -780,6 +792,7 @@ Insère plusieurs QR codes dans un document DOCX.
 ### Problème : Erreur d'insertion dans DOCX
 
 **Solutions :**
+
 1. Vérifier que le placeholder existe dans le document
 2. S'assurer que le placeholder n'est pas fragmenté dans le XML
 3. Utiliser un placeholder simple ({{qrcode}} plutôt que {{qr_code_très_long}})
@@ -787,6 +800,7 @@ Insère plusieurs QR codes dans un document DOCX.
 ### Problème : Données trop longues
 
 **Solutions :**
+
 1. Utiliser une URL courte (service de raccourcissement)
 2. Réduire les informations dans le vCard
 3. Diviser en plusieurs QR codes
@@ -794,6 +808,7 @@ Insère plusieurs QR codes dans un document DOCX.
 ### Problème : QR code pixelisé
 
 **Solutions :**
+
 1. Augmenter la largeur (width)
 2. Utiliser PNG plutôt que JPEG
 3. Pour JPEG, augmenter la qualité (0.95+)
@@ -804,4 +819,3 @@ Insère plusieurs QR codes dans un document DOCX.
 - [Spécification QR Code ISO/IEC 18004](https://www.iso.org/standard/62021.html)
 - [vCard 3.0 Specification](https://www.rfc-editor.org/rfc/rfc2426)
 - [Guide des niveaux de correction](https://www.qrcode.com/en/about/error_correction.html)
-

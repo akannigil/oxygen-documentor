@@ -9,12 +9,14 @@
 LibreOffice est maintenant inclus dans l'image Docker pour permettre la conversion native de documents Office en PDF ou autres formats.
 
 **Formats supportés :**
+
 - Documents : DOCX, DOC, ODT, RTF
 - Présentations : PPTX, PPT, ODP
 - Tableurs : XLSX, XLS, ODS, CSV
 - Web : HTML, HTM
 
 **Formats de sortie :**
+
 - PDF (principal)
 - HTML, ODT, DOC/DOCX, RTF, TXT
 
@@ -45,6 +47,7 @@ LibreOffice est maintenant inclus dans l'image Docker pour permettre la conversi
 #### Dockerfile
 
 **Stage 1 - Dependencies :**
+
 ```dockerfile
 RUN apk add --no-cache \
     libreoffice \
@@ -54,6 +57,7 @@ RUN apk add --no-cache \
 ```
 
 **Stage 2 - Builder :**
+
 ```dockerfile
 RUN apk add --no-cache \
     libreoffice \
@@ -63,6 +67,7 @@ RUN apk add --no-cache \
 ```
 
 **Stage 3 - Runner :**
+
 ```dockerfile
 RUN apk add --no-cache \
     libreoffice \
@@ -125,6 +130,7 @@ test-libreoffice: ## Tester LibreOffice dans le conteneur
 - **Augmentation** : ~300 MB
 
 **Détail de l'augmentation :**
+
 - LibreOffice : ~200 MB
 - OpenJDK 11 JRE : ~80 MB
 - Polices : ~20 MB
@@ -133,12 +139,12 @@ test-libreoffice: ## Tester LibreOffice dans le conteneur
 
 Temps de conversion moyens sur Alpine Linux :
 
-| Type | Taille | Temps |
-|------|--------|-------|
-| DOCX simple | 50 KB | ~2s |
-| DOCX complexe | 500 KB | ~5s |
-| PPTX | 2 MB | ~8s |
-| XLSX | 100 KB | ~3s |
+| Type          | Taille | Temps |
+| ------------- | ------ | ----- |
+| DOCX simple   | 50 KB  | ~2s   |
+| DOCX complexe | 500 KB | ~5s   |
+| PPTX          | 2 MB   | ~8s   |
+| XLSX          | 100 KB | ~3s   |
 
 ### 🎯 Cas d'usage
 
@@ -238,4 +244,3 @@ Pour toute question ou problème :
 ---
 
 **Configuration créée le 6 novembre 2025 pour Oxygen Document**
-

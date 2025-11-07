@@ -7,21 +7,25 @@
 Clé secrète utilisée pour signer et vérifier les certificats.
 
 **Génération :**
+
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 **Exemple de sortie :**
+
 ```
 8f3a2c1b9e7d6f5a4c3b2a1f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9
 ```
 
 **Configuration dans `.env` :**
+
 ```bash
 CERTIFICATE_SECRET_KEY=8f3a2c1b9e7d6f5a4c3b2a1f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9
 ```
 
 ⚠️ **IMPORTANT** :
+
 - Utiliser une clé de **minimum 256 bits** (32 bytes en hex = 64 caractères)
 - **NE JAMAIS** committer cette clé dans Git
 - Ajouter `.env` dans `.gitignore`
@@ -32,11 +36,13 @@ CERTIFICATE_SECRET_KEY=8f3a2c1b9e7d6f5a4c3b2a1f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2
 URL de base pour la vérification des certificats.
 
 **Exemple :**
+
 ```bash
 VERIFICATION_BASE_URL=https://certificates.example.com/verify
 ```
 
 **Utilisation dans le code :**
+
 ```typescript
 const authConfig: CertificateAuthConfig = {
   secretKey: process.env['CERTIFICATE_SECRET_KEY']!,
@@ -53,12 +59,14 @@ Il est recommandé de changer la clé secrète périodiquement (tous les 1-2 ans
 **Procédure de rotation :**
 
 1. **Générer une nouvelle clé**
+
 ```bash
 NEW_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
 echo "Nouvelle clé: $NEW_KEY"
 ```
 
 2. **Supporter les deux clés temporairement**
+
 ```typescript
 const SECRET_KEYS = [
   process.env['CERTIFICATE_SECRET_KEY']!, // Ancienne clé
@@ -137,27 +145,27 @@ import crypto from 'crypto'
 
 function verifyConfiguration() {
   const secretKey = process.env['CERTIFICATE_SECRET_KEY']
-  
+
   if (!secretKey) {
     console.error('❌ CERTIFICATE_SECRET_KEY non définie')
     process.exit(1)
   }
-  
+
   if (secretKey.length < 64) {
     console.error('❌ CERTIFICATE_SECRET_KEY trop courte (minimum 64 caractères)')
     console.error(`   Longueur actuelle: ${secretKey.length}`)
     process.exit(1)
   }
-  
+
   if (secretKey.includes('demo') || secretKey.includes('test')) {
     console.warn('⚠️  CERTIFICATE_SECRET_KEY semble être une clé de test')
   }
-  
+
   // Vérifier que la clé est en hexadécimal
   if (!/^[0-9a-f]+$/i.test(secretKey)) {
-    console.warn('⚠️  CERTIFICATE_SECRET_KEY n\'est pas en hexadécimal')
+    console.warn("⚠️  CERTIFICATE_SECRET_KEY n'est pas en hexadécimal")
   }
-  
+
   console.log('✅ Configuration valide')
   console.log(`   Longueur de la clé: ${secretKey.length} caractères`)
   console.log(`   Entropie: ${secretKey.length * 4} bits`)
@@ -179,7 +187,7 @@ async function getSecretKey(): Promise<string> {
   const command = new GetSecretValueCommand({
     SecretId: 'certificate-secret-key',
   })
-  
+
   const response = await client.send(command)
   return response.SecretString!
 }
@@ -236,7 +244,7 @@ async function logSecretKeyAccess(audit: SecretKeyAudit) {
     ...audit,
     type: 'secret_key_access',
   })
-  
+
   // Alerter en cas d'échec
   if (!audit.success) {
     await alerting.sendAlert({
@@ -255,6 +263,7 @@ async function logSecretKeyAccess(audit: SecretKeyAudit) {
 **Cause** : Variable d'environnement non définie
 
 **Solution** :
+
 ```bash
 # Vérifier la variable
 echo $CERTIFICATE_SECRET_KEY
@@ -266,11 +275,13 @@ export CERTIFICATE_SECRET_KEY=$(node -e "console.log(require('crypto').randomByt
 ### Erreur : "Signature invalide"
 
 **Causes possibles** :
+
 1. Mauvaise clé utilisée
 2. Clé modifiée entre génération et vérification
 3. Données du certificat modifiées
 
 **Solution** :
+
 ```typescript
 // Vérifier quelle clé a été utilisée
 console.log('Clé génération:', process.env['CERTIFICATE_SECRET_KEY']?.substring(0, 8) + '...')
@@ -282,6 +293,7 @@ console.log('Clé vérification:', secretKey.substring(0, 8) + '...')
 **Cause** : `expiresIn` trop court ou horloge système désynchronisée
 
 **Solution** :
+
 1. Vérifier l'horloge système
 2. Augmenter `expiresIn`
 3. Utiliser NTP pour synchroniser les horloges
@@ -291,4 +303,3 @@ console.log('Clé vérification:', secretKey.substring(0, 8) + '...')
 - [OWASP Secret Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)
 - [NIST Key Management Guidelines](https://csrc.nist.gov/publications/detail/sp/800-57-part-1/rev-5/final)
 - [Guide complet d'authentification](./GUIDE_AUTHENTIFICATION_CERTIFICATS.md)
-

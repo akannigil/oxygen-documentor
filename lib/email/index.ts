@@ -13,8 +13,4 @@ export {
 export type { EmailTemplateVariables } from './templates'
 
 export { sendDocumentEmail, sendDocumentEmailsBatch } from './service'
-export type {
-  SendDocumentEmailOptions,
-  SendDocumentEmailResult,
-} from './service'
-
+export type { SendDocumentEmailOptions, SendDocumentEmailResult } from './service'

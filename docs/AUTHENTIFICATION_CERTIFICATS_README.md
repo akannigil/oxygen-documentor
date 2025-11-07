@@ -33,10 +33,7 @@ const certificateData = {
   grade: 'Excellent',
 }
 
-const authenticated = generateAuthenticatedCertificate(
-  certificateData,
-  authConfig
-)
+const authenticated = generateAuthenticatedCertificate(certificateData, authConfig)
 
 // authenticated.qrCodeData contient le JSON signé à encoder dans le QR code
 ```
@@ -49,10 +46,7 @@ import { verifyCertificateSignature } from '@/lib/qrcode'
 // Données scannées depuis le QR code
 const scannedData = '{"type":"certificate_verification",...}'
 
-const isValid = verifyCertificateSignature(
-  scannedData,
-  process.env.CERTIFICATE_SECRET_KEY!
-)
+const isValid = verifyCertificateSignature(scannedData, process.env.CERTIFICATE_SECRET_KEY!)
 
 if (isValid) {
   console.log('✓ Certificat authentique')
@@ -68,7 +62,7 @@ if (isValid) {
 ✅ **Expiration configurable** : Certificats temporaires possibles  
 ✅ **Hash du document** : Vérifier que le PDF/DOCX n'a pas été modifié  
 ✅ **Métadonnées extensibles** : Ajouter des données personnalisées  
-✅ **URL simple** : Option pour QR codes plus légers  
+✅ **URL simple** : Option pour QR codes plus légers
 
 ## Cas d'usage
 
@@ -107,13 +101,13 @@ if (isValid) {
 
 ## Protection contre les attaques
 
-| Attaque | Protection |
-|---------|------------|
-| Modification données | Signature invalide |
-| Faux certificat | Impossible sans la clé |
-| Rejeu | Timestamp + DB check |
-| Timing attack | `crypto.timingSafeEqual()` |
-| Expiration | `expiresIn` + vérification |
+| Attaque              | Protection                 |
+| -------------------- | -------------------------- |
+| Modification données | Signature invalide         |
+| Faux certificat      | Impossible sans la clé     |
+| Rejeu                | Timestamp + DB check       |
+| Timing attack        | `crypto.timingSafeEqual()` |
+| Expiration           | `expiresIn` + vérification |
 
 ## Fichiers importants
 
@@ -127,59 +121,60 @@ if (isValid) {
 ```typescript
 app.post('/api/certificates/verify', async (req, res) => {
   const { qrCodeData } = req.body
-  
+
   // 1. Vérifier la signature
-  const isValid = verifyCertificateSignature(
-    qrCodeData,
-    process.env.CERTIFICATE_SECRET_KEY!
-  )
-  
+  const isValid = verifyCertificateSignature(qrCodeData, process.env.CERTIFICATE_SECRET_KEY!)
+
   if (!isValid) {
     return res.status(401).json({ valid: false, error: 'Invalide' })
   }
-  
+
   // 2. Parser les données
   const payload = JSON.parse(qrCodeData)
-  
+
   // 3. Vérifier en base de données (révocation, etc.)
   const dbCert = await db.certificates.findOne({ id: payload.certificate.id })
-  
+
   if (!dbCert || dbCert.revoked) {
     return res.status(403).json({ valid: false, error: 'Révoqué' })
   }
-  
+
   return res.json({ valid: true, certificate: payload.certificate })
 })
 ```
 
 ## Avantages vs autres solutions
 
-| Solution | Avantages | Inconvénients |
-|----------|-----------|---------------|
-| **QR Code simple** | Facile | Falsifiable, pas de sécurité |
-| **Blockchain** | Immuable | Complexe, coûteux, lent |
-| **PKI (certificats X.509)** | Très sécurisé | Infrastructure lourde |
-| **HMAC (cette solution)** | ✅ Sécurisé<br>✅ Simple<br>✅ Rapide<br>✅ Pas cher | Nécessite API backend |
+| Solution                    | Avantages                                            | Inconvénients                |
+| --------------------------- | ---------------------------------------------------- | ---------------------------- |
+| **QR Code simple**          | Facile                                               | Falsifiable, pas de sécurité |
+| **Blockchain**              | Immuable                                             | Complexe, coûteux, lent      |
+| **PKI (certificats X.509)** | Très sécurisé                                        | Infrastructure lourde        |
+| **HMAC (cette solution)**   | ✅ Sécurisé<br>✅ Simple<br>✅ Rapide<br>✅ Pas cher | Nécessite API backend        |
 
 ## Démarrage rapide
 
 1. **Générer une clé secrète** :
+
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 2. **Ajouter dans `.env`** :
+
 ```bash
 CERTIFICATE_SECRET_KEY=votre_cle_generee
 ```
 
 3. **Utiliser dans votre code** :
+
 ```typescript
 import { generateAuthenticatedCertificate } from '@/lib/qrcode'
 // Voir exemples ci-dessus
 ```
 
 4. **Créer l'API de vérification** :
+
 - Voir `docs/GUIDE_AUTHENTIFICATION_CERTIFICATS.md` section "Backend"
 
 ## ⚠️ IMPORTANT - Sécurité
@@ -188,11 +183,12 @@ import { generateAuthenticatedCertificate } from '@/lib/qrcode'
 🔴 **NE JAMAIS** exposer la clé dans le code client  
 🔴 **TOUJOURS** utiliser HTTPS pour l'API  
 🟢 **TOUJOURS** logger les vérifications  
-🟢 **TOUJOURS** implémenter la révocation  
+🟢 **TOUJOURS** implémenter la révocation
 
 ## Exemples de code
 
 Voir les exemples complets dans :
+
 - `examples/certificate-auth-usage.ts` (8 exemples détaillés)
 - `examples/qrcode-usage.ts` (exemple 5B)
 
@@ -201,6 +197,7 @@ Voir les exemples complets dans :
 📖 **[Guide complet d'authentification](./GUIDE_AUTHENTIFICATION_CERTIFICATS.md)**
 
 Contient :
+
 - Explications détaillées du fonctionnement
 - Configuration avancée
 - Intégration backend complète
@@ -211,6 +208,7 @@ Contient :
 ## Support
 
 Pour toute question ou problème, consulter :
+
 1. Le guide complet (lien ci-dessus)
 2. Les exemples de code
 3. Les tests de sécurité dans `certificate-auth-usage.ts`
@@ -219,4 +217,3 @@ Pour toute question ou problème, consulter :
 
 **Version** : 1.0  
 **Dernière mise à jour** : 2 novembre 2024
-

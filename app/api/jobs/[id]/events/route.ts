@@ -20,7 +20,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     start(controller) {
       const encoder = new TextEncoder()
       let isClosed = false
-      
+
       const send = (data: unknown) => {
         if (isClosed) return
         try {
@@ -48,7 +48,13 @@ export async function GET(_request: Request, { params }: RouteParams) {
           send({ state: 'active' })
         }
       }
-      const onCompleted = ({ jobId: eid, returnvalue }: { jobId: string; returnvalue: unknown }) => {
+      const onCompleted = ({
+        jobId: eid,
+        returnvalue,
+      }: {
+        jobId: string
+        returnvalue: unknown
+      }) => {
         if (eid === jobId && !isClosed) {
           send({ state: 'completed', progress: 100, returnValue: returnvalue })
           isClosed = true
@@ -108,8 +114,12 @@ export async function GET(_request: Request, { params }: RouteParams) {
         isClosed = true
         if (ping) clearInterval(ping)
         removeListeners()
-        try { await queueEvents.close() } catch {}
-        try { await connection.quit() } catch {}
+        try {
+          await queueEvents.close()
+        } catch {}
+        try {
+          await connection.quit()
+        } catch {}
       }
 
       // In case of client disconnect, the controller will error/close automatically
@@ -132,5 +142,3 @@ export async function GET(_request: Request, { params }: RouteParams) {
     },
   })
 }
-
-

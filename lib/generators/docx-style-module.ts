@@ -9,31 +9,31 @@ export interface VariableStyleConfig {
    * @default hérite du style du template
    */
   fontFamily?: string
-  
+
   /**
    * Taille de la police en points (pt)
    * @default hérite du style du template
    */
   fontSize?: number
-  
+
   /**
    * Couleur du texte (format hex: "#000000" ou nom: "black")
    * @default hérite du style du template
    */
   color?: string
-  
+
   /**
    * Police en gras
    * @default false
    */
   bold?: boolean
-  
+
   /**
    * Police en italique
    * @default false
    */
   italic?: boolean
-  
+
   /**
    * Police soulignée
    * @default false
@@ -49,7 +49,7 @@ export interface DOCXStyleOptions {
    * Style par défaut pour toutes les variables
    */
   defaultStyle?: VariableStyleConfig
-  
+
   /**
    * Styles spécifiques par variable
    * Clé: nom de la variable (sans les {{ }})
@@ -61,7 +61,7 @@ export interface DOCXStyleOptions {
 /**
  * Applique les styles aux variables dans le XML DOCX
  * Cette fonction doit être appelée après doc.render() mais avant getZip().generate()
- * 
+ *
  * @param zip Instance PizZip du document DOCX
  * @param variables Mapping des variables remplacées (nom -> valeur formatée)
  * @param styleOptions Configuration des styles à appliquer
@@ -75,34 +75,34 @@ export function applyVariableStyles(
   if (!documentFile) {
     return
   }
-  
+
   const xmlContent = documentFile.asText() || ''
-  
+
   try {
     // Parser le XML avec xmldom
     const parser = new DOMParser()
     const doc = parser.parseFromString(xmlContent, 'text/xml')
-    
+
     // Namespace pour Word
     const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
-    
+
     // Trouver tous les éléments <w:t> (texte)
     const textElements = doc.getElementsByTagNameNS(ns, 't')
-    
+
     // Pour chaque variable remplacée, appliquer le style
     for (const [variableName, variableValue] of Object.entries(variables)) {
       // Déterminer le style à appliquer (spécifique ou par défaut)
       const style = styleOptions.variableStyles?.[variableName] || styleOptions.defaultStyle
-      
+
       if (!style) continue
-      
+
       // Parcourir tous les éléments texte pour trouver ceux qui contiennent la valeur
       for (let i = 0; i < textElements.length; i++) {
         const textElement = textElements[i]
         if (!textElement) continue
-        
+
         const textContent = textElement.textContent || ''
-        
+
         // Vérifier si cet élément contient la valeur de la variable
         if (textContent.includes(variableValue)) {
           // Trouver le <w:r> parent (run)
@@ -110,20 +110,20 @@ export function applyVariableStyles(
           while (runElement && runElement.nodeName !== 'w:r') {
             runElement = runElement.parentNode
           }
-          
+
           if (!runElement) continue
-          
+
           // Trouver ou créer le <w:rPr> (propriétés du run)
           let rPrElement: Element | null = null
           const children = Array.from(runElement.childNodes || [])
-          
+
           for (const child of children) {
             if (child.nodeType === 1 && (child as Element).nodeName === 'w:rPr') {
               rPrElement = child as Element
               break
             }
           }
-          
+
           // Créer <w:rPr> s'il n'existe pas
           if (!rPrElement) {
             rPrElement = doc.createElementNS(ns, 'rPr')
@@ -134,22 +134,22 @@ export function applyVariableStyles(
               runElement.appendChild(rPrElement)
             }
           }
-          
+
           // Appliquer les styles
           applyStyleToRPr(rPrElement, style, doc, ns)
         }
       }
     }
-    
+
     // Sérialiser le XML modifié
     const serializer = new XMLSerializer()
     const updatedXml = serializer.serializeToString(doc)
-    
+
     // Mettre à jour le fichier XML dans le ZIP
     zip.file('word/document.xml', updatedXml)
   } catch (error) {
     // En cas d'erreur de parsing, on continue sans appliquer les styles
-    console.warn('Erreur lors de l\'application des styles DOCX:', error)
+    console.warn("Erreur lors de l'application des styles DOCX:", error)
   }
 }
 
@@ -170,19 +170,19 @@ function applyStyleToRPr(
     rFonts.setAttribute('w:cs', style.fontFamily)
     rPrElement.appendChild(rFonts)
   }
-  
+
   // Taille
   if (style.fontSize) {
     const halfPoints = style.fontSize * 2
     const sz = doc.createElementNS(ns, 'sz')
     sz.setAttribute('w:val', String(halfPoints))
     rPrElement.appendChild(sz)
-    
+
     const szCs = doc.createElementNS(ns, 'szCs')
     szCs.setAttribute('w:val', String(halfPoints))
     rPrElement.appendChild(szCs)
   }
-  
+
   // Couleur
   if (style.color) {
     const colorHex = style.color.startsWith('#') ? style.color.slice(1) : style.color
@@ -190,7 +190,7 @@ function applyStyleToRPr(
     color.setAttribute('w:val', colorHex.toUpperCase())
     rPrElement.appendChild(color)
   }
-  
+
   // Gras
   if (style.bold) {
     const b = doc.createElementNS(ns, 'b')
@@ -198,7 +198,7 @@ function applyStyleToRPr(
     const bCs = doc.createElementNS(ns, 'bCs')
     rPrElement.appendChild(bCs)
   }
-  
+
   // Italique
   if (style.italic) {
     const i = doc.createElementNS(ns, 'i')
@@ -206,7 +206,7 @@ function applyStyleToRPr(
     const iCs = doc.createElementNS(ns, 'iCs')
     rPrElement.appendChild(iCs)
   }
-  
+
   // Souligné
   if (style.underline) {
     const u = doc.createElementNS(ns, 'u')
@@ -214,4 +214,3 @@ function applyStyleToRPr(
     rPrElement.appendChild(u)
   }
 }
-

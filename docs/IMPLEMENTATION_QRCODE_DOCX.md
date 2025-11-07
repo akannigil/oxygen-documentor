@@ -13,18 +13,20 @@
 ### 1. Types et Schémas
 
 #### `shared/types/index.ts`
+
 ```typescript
 export interface DOCXQRCodeConfig {
-  placeholder: string          // Ex: "{{qrcode_verification}}"
-  contentPattern: string        // Ex: "https://verify.com/{{id}}"
-  contentType?: string         // "url" | "text" | "vcard" | etc.
-  options?: QRCodeOptions      // Taille, couleurs, etc.
+  placeholder: string // Ex: "{{qrcode_verification}}"
+  contentPattern: string // Ex: "https://verify.com/{{id}}"
+  contentType?: string // "url" | "text" | "vcard" | etc.
+  options?: QRCodeOptions // Taille, couleurs, etc.
   auth?: QRCodeCertificateAuth // Authentification (optionnel)
   storageUrl?: QRCodeStorageUrl // URL de stockage (optionnel)
 }
 ```
 
 #### `shared/schemas/template.ts`
+
 ```typescript
 export const docxQRCodeConfigSchema = z.object({...})
 export const updateDOCXQRCodeConfigsSchema = z.object({
@@ -35,6 +37,7 @@ export const updateDOCXQRCodeConfigsSchema = z.object({
 ### 2. Base de données
 
 #### `prisma/schema.prisma`
+
 ```prisma
 model Template {
   // ... autres champs
@@ -50,6 +53,7 @@ model Template {
 #### Composant : `components/template-editor/DOCXQRCodeConfiguration.tsx`
 
 **Fonctionnalités** :
+
 - ✅ Liste des variables disponibles du template
 - ✅ Ajout/suppression de configurations QR Code
 - ✅ Édition du placeholder
@@ -59,6 +63,7 @@ model Template {
 - ✅ Interface expand/collapse pour chaque configuration
 
 **Aperçu** :
+
 ```
 ┌─────────────────────────────────────────┐
 │ Configuration des QR Codes              │
@@ -84,6 +89,7 @@ model Template {
 **Route** : `/projects/[id]/templates/[templateId]/configure-qrcodes`
 
 **Fonctionnalités** :
+
 - ✅ Affichage des variables du template
 - ✅ Intégration du composant de configuration
 - ✅ Sauvegarde des configurations
@@ -93,6 +99,7 @@ model Template {
 #### Client component : `DOCXQRCodeConfigurationClient.tsx`
 
 **Responsabilités** :
+
 - ✅ Gestion de l'état des configurations
 - ✅ Appel API pour sauvegarder
 - ✅ Gestion des messages (succès/erreur)
@@ -105,11 +112,13 @@ model Template {
 **Endpoints** :
 
 ##### `PUT /api/projects/[id]/templates/[templateId]/qrcode-configs`
+
 - Sauvegarde les configurations QR Code
 - Validation avec Zod
 - Mise à jour du template dans la BDD
 
 ##### `GET /api/projects/[id]/templates/[templateId]/qrcode-configs`
+
 - Récupère les configurations actuelles
 - Vérification des permissions
 
@@ -120,12 +129,14 @@ model Template {
 **Changements** :
 
 **Avant** :
+
 ```
 1. Upload template DOCX
 2. Génération directe
 ```
 
 **Après** :
+
 ```
 1. Upload template DOCX
 2. Configurer QR Codes (nouvelle étape) ← NOUVEAU
@@ -133,6 +144,7 @@ model Template {
 ```
 
 **Affichage** :
+
 - ✅ Section "QR Codes configurés" avec la liste
 - ✅ Lien "Modifier" vers la page de configuration
 - ✅ Icône QR Code pour chaque configuration
@@ -158,26 +170,23 @@ export interface GenerateDOCXOptions {
 if (options.qrcodeConfigs && options.qrcodeConfigs.length > 0) {
   options.qrcodeConfigs.forEach((config) => {
     let content = config.contentPattern
-    
+
     // Remplacer {{variable}} par la valeur réelle
     Object.entries(options.variables).forEach(([key, value]) => {
       content = content.replace(`{{${key}}}`, String(value))
     })
-    
+
     // Ajouter à la liste des QR Codes à insérer
     qrCodeInsertions.push({
       placeholder: config.placeholder,
       data: content, // Contenu avec variables remplacées
-      options: config.options
+      options: config.options,
     })
   })
 }
 
 // 2. Insertion des QR Codes dans le DOCX
-const updatedBuffer = await insertMultipleQRCodesInDOCX(
-  finalBuffer,
-  qrCodeInsertions
-)
+const updatedBuffer = await insertMultipleQRCodesInDOCX(finalBuffer, qrCodeInsertions)
 ```
 
 **Rétrocompatibilité** : L'ancien système `qrcodes: {...}` continue de fonctionner !
@@ -192,7 +201,7 @@ const qrcodeConfigs = template.qrcodeConfigs || []
 
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: data,
-  qrcodeConfigs: qrcodeConfigs // ← Passer les configs
+  qrcodeConfigs: qrcodeConfigs, // ← Passer les configs
 })
 ```
 
@@ -277,14 +286,17 @@ Bernard,Paul,Angular,CERT-2025-003
 ### Résultat
 
 **Document 1** :
+
 - Nom: Dupont Jean
 - QR Code → `https://verify-training.com/cert/CERT-2025-001?name=Dupont`
 
 **Document 2** :
+
 - Nom: Martin Marie
 - QR Code → `https://verify-training.com/cert/CERT-2025-002?name=Martin`
 
 **Document 3** :
+
 - Nom: Bernard Paul
 - QR Code → `https://verify-training.com/cert/CERT-2025-003?name=Bernard`
 
@@ -386,6 +398,7 @@ Bernard,Paul,Angular,CERT-2025-003
 Aucune nouvelle variable requise pour cette fonctionnalité.
 
 Les variables d'authentification de certificat restent optionnelles :
+
 - `CERTIFICATE_SECRET_KEY`
 - `CERTIFICATE_VERIFICATION_BASE_URL`
 
@@ -410,6 +423,5 @@ Les variables d'authentification de certificat restent optionnelles :
 
 ---
 
-*Implémenté le* : 3 novembre 2025  
-*Version* : 1.0.0
-
+_Implémenté le_ : 3 novembre 2025  
+_Version_ : 1.0.0

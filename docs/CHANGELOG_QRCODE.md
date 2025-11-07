@@ -65,6 +65,7 @@
 #### Exemples pratiques (`examples/qrcode-usage.ts`)
 
 10 exemples complets et prêts à l'emploi :
+
 1. QR Code URL simple
 2. Carte de visite (vCard)
 3. Document de commande avec suivi
@@ -87,23 +88,25 @@
 - ✅ Export depuis le module `@/lib/qrcode` pour compatibilité
 
 **Avant :**
+
 ```typescript
 const docxBuffer = await generateDOCX(templateBuffer, {
-  variables: { nom: 'Dupont' }
+  variables: { nom: 'Dupont' },
 })
 ```
 
 **Après :**
+
 ```typescript
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: { nom: 'Dupont' },
   qrcodes: {
-    '{{qrcode_url}}': 'https://example.com'
+    '{{qrcode_url}}': 'https://example.com',
   },
   qrcodeOptions: {
     width: 200,
-    errorCorrectionLevel: 'M'
-  }
+    errorCorrectionLevel: 'M',
+  },
 })
 ```
 
@@ -114,9 +117,11 @@ const docxBuffer = await generateDOCX(templateBuffer, {
 ### 📦 Dépendances
 
 #### Ajoutées
+
 - `@xmldom/xmldom@^0.8.10` - Manipulation XML pour DOCX
 
 #### Existantes utilisées
+
 - `qrcode@^1.5.3` - Génération de QR codes
 - `@types/qrcode@^1.5.5` - Types TypeScript
 
@@ -137,8 +142,8 @@ const qrBuffer = await generateQRCodeBuffer('https://example.com', {
   errorCorrectionLevel: 'H',
   color: {
     dark: '#1a73e8',
-    light: '#ffffff'
-  }
+    light: '#ffffff',
+  },
 })
 ```
 
@@ -147,18 +152,21 @@ const qrBuffer = await generateQRCodeBuffer('https://example.com', {
 ```typescript
 import { generateQRCodeFromContent } from '@/lib/qrcode'
 
-const qrBuffer = await generateQRCodeFromContent({
-  type: 'vcard',
-  data: {
-    firstName: 'Jean',
-    lastName: 'Dupont',
-    email: 'jean.dupont@example.com',
-    phone: '+33123456789'
+const qrBuffer = await generateQRCodeFromContent(
+  {
+    type: 'vcard',
+    data: {
+      firstName: 'Jean',
+      lastName: 'Dupont',
+      email: 'jean.dupont@example.com',
+      phone: '+33123456789',
+    },
+  },
+  {
+    width: 250,
+    errorCorrectionLevel: 'M',
   }
-}, {
-  width: 250,
-  errorCorrectionLevel: 'M'
-})
+)
 ```
 
 #### Intégration DOCX
@@ -169,12 +177,12 @@ import { generateDOCX } from '@/lib/generators/docx'
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: {
     nom: 'Dupont',
-    prenom: 'Jean'
+    prenom: 'Jean',
   },
   qrcodes: {
     '{{qrcode_portal}}': 'https://portal.example.com',
-    '{{qrcode_email}}': 'mailto:contact@example.com'
-  }
+    '{{qrcode_email}}': 'mailto:contact@example.com',
+  },
 })
 ```
 
@@ -193,11 +201,11 @@ const pdfBuffer = await generateDocumentFromTemplate(
       x: 450,
       y: 50,
       w: 100,
-      h: 100
-    }
+      h: 100,
+    },
   ],
   {
-    tracking_url: 'https://tracking.example.com/order/12345'
+    tracking_url: 'https://tracking.example.com/order/12345',
   }
 )
 ```
@@ -206,24 +214,24 @@ const pdfBuffer = await generateDocumentFromTemplate(
 
 #### QRCodeOptions
 
-| Option | Type | Défaut | Description |
-|--------|------|--------|-------------|
-| `width` | `number` | `200` | Largeur en pixels (50-2000) |
-| `margin` | `number` | `1` | Marge en modules (0-10) |
-| `errorCorrectionLevel` | `'L'|'M'|'Q'|'H'` | `'M'` | Niveau de correction |
-| `type` | `'image/png'|'image/jpeg'` | `'image/png'` | Format d'image |
-| `quality` | `number` | `0.92` | Qualité JPEG (0-1) |
-| `color.dark` | `string` | `'#000000'` | Couleur du QR code |
-| `color.light` | `string` | `'#FFFFFF'` | Couleur de fond |
+| Option                 | Type         | Défaut        | Description                 |
+| ---------------------- | ------------ | ------------- | --------------------------- | -------------- | ----- | -------------------- |
+| `width`                | `number`     | `200`         | Largeur en pixels (50-2000) |
+| `margin`               | `number`     | `1`           | Marge en modules (0-10)     |
+| `errorCorrectionLevel` | `'L'         | 'M'           | 'Q'                         | 'H'`           | `'M'` | Niveau de correction |
+| `type`                 | `'image/png' | 'image/jpeg'` | `'image/png'`               | Format d'image |
+| `quality`              | `number`     | `0.92`        | Qualité JPEG (0-1)          |
+| `color.dark`           | `string`     | `'#000000'`   | Couleur du QR code          |
+| `color.light`          | `string`     | `'#FFFFFF'`   | Couleur de fond             |
 
 #### Niveaux de correction d'erreur
 
-| Niveau | Correction | Usage recommandé |
-|--------|------------|------------------|
-| `L` | ~7% | Documents numériques propres |
-| `M` | ~15% | **Usage général** (recommandé) |
-| `Q` | ~25% | Impression, étiquettes |
-| `H` | ~30% | Conditions difficiles, logo |
+| Niveau | Correction | Usage recommandé               |
+| ------ | ---------- | ------------------------------ |
+| `L`    | ~7%        | Documents numériques propres   |
+| `M`    | ~15%       | **Usage général** (recommandé) |
+| `Q`    | ~25%       | Impression, étiquettes         |
+| `H`    | ~30%       | Conditions difficiles, logo    |
 
 ### 📊 Performances
 
@@ -246,27 +254,30 @@ const pdfBuffer = await generateDocumentFromTemplate(
 
 ### 📚 Documentation
 
-| Fichier | Description | Lignes |
-|---------|-------------|--------|
-| `docs/GUIDE_QR_CODES.md` | Guide complet | ~800 |
-| `docs/QRCODE_QUICKSTART.md` | Démarrage rapide | ~250 |
-| `README_QRCODE_IMPLEMENTATION.md` | Vue d'ensemble | ~600 |
-| `examples/qrcode-usage.ts` | Exemples pratiques | ~600 |
-| `CHANGELOG_QRCODE.md` | Ce fichier | ~400 |
+| Fichier                           | Description        | Lignes |
+| --------------------------------- | ------------------ | ------ |
+| `docs/GUIDE_QR_CODES.md`          | Guide complet      | ~800   |
+| `docs/QRCODE_QUICKSTART.md`       | Démarrage rapide   | ~250   |
+| `README_QRCODE_IMPLEMENTATION.md` | Vue d'ensemble     | ~600   |
+| `examples/qrcode-usage.ts`        | Exemples pratiques | ~600   |
+| `CHANGELOG_QRCODE.md`             | Ce fichier         | ~400   |
 
 ### 🎓 Ressources d'apprentissage
 
 #### Débutant
+
 1. Lire `QRCODE_QUICKSTART.md`
 2. Tester les exemples 1-3
 3. Générer un QR code simple
 
 #### Intermédiaire
+
 1. Lire `GUIDE_QR_CODES.md` (sections 1-4)
 2. Tester les exemples 4-7
 3. Intégrer dans templates DOCX
 
 #### Avancé
+
 1. Lire `GUIDE_QR_CODES.md` (complet)
 2. Tester les exemples 8-10
 3. Créer des QR codes personnalisés
@@ -300,12 +311,14 @@ const pdfBuffer = await generateDocumentFromTemplate(
 Si vous utilisiez `generateQRCodeBuffer` de `lib/generators/docx.ts` :
 
 **Avant :**
+
 ```typescript
 import { generateQRCodeBuffer } from '@/lib/generators/docx'
 const qrBuffer = await generateQRCodeBuffer('data')
 ```
 
 **Après :**
+
 ```typescript
 import { generateQRCodeBuffer } from '@/lib/qrcode'
 const qrBuffer = await generateQRCodeBuffer('data')
@@ -322,6 +335,7 @@ L'ancienne fonction est dépréciée mais toujours disponible pour compatibilit�
 ### 🎯 Impact
 
 Cette implémentation permet de :
+
 - ✅ Générer 10 types de QR codes différents
 - ✅ Intégrer facilement dans PDF, DOCX et images
 - ✅ Personnaliser apparence et contenu
@@ -331,6 +345,7 @@ Cette implémentation permet de :
 ### 📞 Support
 
 Pour toute question :
+
 1. Consulter la documentation (`docs/GUIDE_QR_CODES.md`)
 2. Vérifier les exemples (`examples/qrcode-usage.ts`)
 3. Consulter le dépannage (section dédiée dans le guide)
@@ -340,4 +355,3 @@ Pour toute question :
 **Version :** 1.0.0  
 **Date :** 2024-11-02  
 **Auteur :** Implémentation complète du système de génération de QR codes
-

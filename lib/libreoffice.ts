@@ -8,8 +8,7 @@ const execAsync = promisify(exec)
 /**
  * Chemin vers LibreOffice (configuré via variable d'environnement)
  */
-const LIBREOFFICE_PATH =
-  process.env['LIBREOFFICE_PATH'] || '/usr/bin/soffice'
+const LIBREOFFICE_PATH = process.env['LIBREOFFICE_PATH'] || '/usr/bin/soffice'
 
 /**
  * Options de conversion LibreOffice
@@ -44,11 +43,11 @@ export async function checkLibreOfficeAvailable(): Promise<boolean> {
 
 /**
  * Convertit un document Office (DOCX, PPTX, XLSX, etc.) en PDF ou autre format
- * 
+ *
  * @param inputPath Chemin vers le fichier source
  * @param options Options de conversion
  * @returns Chemin vers le fichier converti
- * 
+ *
  * @example
  * ```typescript
  * const pdfPath = await convertDocument('/path/to/document.docx', {
@@ -74,14 +73,7 @@ export async function convertDocument(
   const targetDir = outputDir || path.dirname(inputPath)
 
   // Construire la commande LibreOffice
-  const commands = [
-    LIBREOFFICE_PATH,
-    '--headless',
-    '--convert-to',
-    format,
-    '--outdir',
-    targetDir,
-  ]
+  const commands = [LIBREOFFICE_PATH, '--headless', '--convert-to', format, '--outdir', targetDir]
 
   // Ajouter les filtres si spécifiés
   if (filters) {
@@ -115,9 +107,7 @@ export async function convertDocument(
       console.log('[LibreOffice] Conversion réussie:', outputPath)
       return outputPath
     } catch {
-      throw new Error(
-        `Fichier de sortie non créé: ${outputPath}. Vérifiez les logs LibreOffice.`
-      )
+      throw new Error(`Fichier de sortie non créé: ${outputPath}. Vérifiez les logs LibreOffice.`)
     }
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -128,15 +118,12 @@ export async function convertDocument(
 
 /**
  * Convertit un document DOCX en PDF
- * 
+ *
  * @param docxPath Chemin vers le fichier DOCX
  * @param outputDir Dossier de sortie (optionnel)
  * @returns Chemin vers le PDF généré
  */
-export async function docxToPdf(
-  docxPath: string,
-  outputDir?: string
-): Promise<string> {
+export async function docxToPdf(docxPath: string, outputDir?: string): Promise<string> {
   return convertDocument(docxPath, {
     format: 'pdf',
     ...(outputDir !== undefined && { outputDir }),
@@ -145,15 +132,12 @@ export async function docxToPdf(
 
 /**
  * Convertit un document PPTX en PDF
- * 
+ *
  * @param pptxPath Chemin vers le fichier PPTX
  * @param outputDir Dossier de sortie (optionnel)
  * @returns Chemin vers le PDF généré
  */
-export async function pptxToPdf(
-  pptxPath: string,
-  outputDir?: string
-): Promise<string> {
+export async function pptxToPdf(pptxPath: string, outputDir?: string): Promise<string> {
   return convertDocument(pptxPath, {
     format: 'pdf',
     ...(outputDir !== undefined && { outputDir }),
@@ -162,15 +146,12 @@ export async function pptxToPdf(
 
 /**
  * Convertit un document XLSX en PDF
- * 
+ *
  * @param xlsxPath Chemin vers le fichier XLSX
  * @param outputDir Dossier de sortie (optionnel)
  * @returns Chemin vers le PDF généré
  */
-export async function xlsxToPdf(
-  xlsxPath: string,
-  outputDir?: string
-): Promise<string> {
+export async function xlsxToPdf(xlsxPath: string, outputDir?: string): Promise<string> {
   return convertDocument(xlsxPath, {
     format: 'pdf',
     ...(outputDir !== undefined && { outputDir }),
@@ -179,15 +160,12 @@ export async function xlsxToPdf(
 
 /**
  * Convertit un document ODT (OpenDocument Text) en PDF
- * 
+ *
  * @param odtPath Chemin vers le fichier ODT
  * @param outputDir Dossier de sortie (optionnel)
  * @returns Chemin vers le PDF généré
  */
-export async function odtToPdf(
-  odtPath: string,
-  outputDir?: string
-): Promise<string> {
+export async function odtToPdf(odtPath: string, outputDir?: string): Promise<string> {
   return convertDocument(odtPath, {
     format: 'pdf',
     ...(outputDir !== undefined && { outputDir }),
@@ -224,13 +202,4 @@ export const SUPPORTED_FORMATS = {
 /**
  * Formats de sortie supportés
  */
-export const OUTPUT_FORMATS = [
-  'pdf',
-  'html',
-  'odt',
-  'doc',
-  'docx',
-  'rtf',
-  'txt',
-] as const
-
+export const OUTPUT_FORMATS = ['pdf', 'html', 'odt', 'doc', 'docx', 'rtf', 'txt'] as const

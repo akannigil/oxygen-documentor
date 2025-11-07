@@ -26,6 +26,7 @@ npx prisma migrate dev --name add_qrcode_configs
 ```
 
 Cette commande va :
+
 - ✅ Créer un fichier de migration SQL
 - ✅ Ajouter la colonne `qrcodeConfigs` à la table `templates`
 - ✅ Appliquer la migration à votre base de données
@@ -78,6 +79,7 @@ Ouvrez un template de type DOCX et vérifiez que le champ `qrcodeConfigs` est pr
 ### Erreur : "Prisma Client is already generating"
 
 Solution :
+
 ```bash
 # Supprimer le dossier généré
 rm -rf node_modules/.prisma
@@ -88,6 +90,7 @@ npx prisma generate
 ### Erreur : "Database connection failed"
 
 Solution :
+
 1. Vérifiez votre fichier `.env`
 2. Vérifiez que `DATABASE_URL` est défini
 3. Vérifiez que la base de données est accessible
@@ -95,6 +98,7 @@ Solution :
 ### Erreur de migration
 
 Solution :
+
 ```bash
 # Reset la base de données (ATTENTION : perte de données)
 npx prisma migrate reset
@@ -108,4 +112,3 @@ npx prisma db push
 Une fois la migration effectuée, vous pouvez utiliser la nouvelle fonctionnalité de configuration des QR Codes DOCX.
 
 Voir [GUIDE_QRCODE_DOCX_WORKFLOW.md](./GUIDE_QRCODE_DOCX_WORKFLOW.md) pour plus d'informations.
-

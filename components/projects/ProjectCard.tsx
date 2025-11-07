@@ -14,15 +14,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <Link
       href={`/projects/${project.id}`}
-      className="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:border-blue-500 hover:shadow-md transition-all"
+      className="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-blue-500 hover:shadow-md"
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
           {project.description && (
-            <p className="mt-2 text-sm text-gray-600 line-clamp-2">
-              {project.description}
-            </p>
+            <p className="mt-2 line-clamp-2 text-sm text-gray-600">{project.description}</p>
           )}
         </div>
       </div>
@@ -37,4 +35,3 @@ export function ProjectCard({ project }: ProjectCardProps) {
     </Link>
   )
 }
-

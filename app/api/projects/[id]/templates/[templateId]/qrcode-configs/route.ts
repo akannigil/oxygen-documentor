@@ -78,10 +78,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     })
   } catch (error) {
     console.error('Erreur lors de la mise à jour des configurations QR Code:', error)
-    return NextResponse.json(
-      { error: 'Erreur serveur lors de la mise à jour' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erreur serveur lors de la mise à jour' }, { status: 500 })
   }
 }
 
@@ -122,10 +119,6 @@ export async function GET(request: Request, { params }: RouteParams) {
     })
   } catch (error) {
     console.error('Erreur lors de la récupération des configurations QR Code:', error)
-    return NextResponse.json(
-      { error: 'Erreur serveur lors de la récupération' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erreur serveur lors de la récupération' }, { status: 500 })
   }
 }
-

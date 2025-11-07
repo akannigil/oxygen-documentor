@@ -218,4 +218,3 @@ En cas de problème :
 1. Vérifiez les logs : `make logs`
 2. Consultez [DEPLOIEMENT.md](./DEPLOIEMENT.md)
 3. Vérifiez la configuration dans `.env.production`
-

@@ -157,10 +157,12 @@ L'authentification utilise NextAuth.js (email/password ou OAuth).
 ## 📦 Génération de Documents
 
 ### Formats supportés
+
 - **PDF/Images** : Templates visuels avec éditeur graphique
 - **DOCX** : Templates Word avec placeholders `{{variable}}`
 
 ### Fonctionnalités
+
 - Upload de templates (PDF, PNG, JPG, DOCX)
 - Éditeur visuel pour définir les zones (PDF/Images)
 - Génération PDF avec pdf-lib
@@ -222,4 +224,3 @@ Voir `docker-compose.yml` pour la configuration de production avec PostgreSQL et
 ## 📄 License
 
 Propriétaire
-

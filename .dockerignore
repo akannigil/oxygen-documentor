@@ -6,7 +6,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-package-lock.json
+# package-lock.json est nécessaire pour npm ci en production
 yarn.lock
 pnpm-lock.yaml
 
@@ -92,8 +92,10 @@ PLAN_DE_MISE_EN_OEUVRE.md
 # ============================================================================
 examples/
 scripts/
+!scripts/docker-entrypoint.sh
 *.ps1
 *.sh
+!scripts/*.sh
 
 # ============================================================================
 # Uploads & Storage Local (montés via volumes)

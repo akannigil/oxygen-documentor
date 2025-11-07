@@ -67,7 +67,10 @@ export default function DocumentPage() {
           <div className="rounded-xl border border-red-200 bg-red-50 p-6 shadow-sm">
             <p className="text-sm font-medium text-red-800">{error || 'Document non trouvé'}</p>
           </div>
-          <Link href="/dashboard" className="mt-6 inline-block text-sm font-medium text-blue-600 hover:text-blue-500">
+          <Link
+            href="/dashboard"
+            className="mt-6 inline-block text-sm font-medium text-blue-600 hover:text-blue-500"
+          >
             ← Retour au dashboard
           </Link>
         </div>
@@ -79,7 +82,10 @@ export default function DocumentPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <Link href={`/projects/${doc.projectId}/documents`} className="text-sm font-medium text-blue-600 hover:text-blue-500">
+          <Link
+            href={`/projects/${doc.projectId}/documents`}
+            className="text-sm font-medium text-blue-600 hover:text-blue-500"
+          >
             ← Retour aux documents
           </Link>
           <h1 className="mt-4 text-3xl font-bold text-gray-900">Document</h1>
@@ -121,12 +127,8 @@ export default function DocumentPage() {
         {/* Aperçu PDF */}
         <div className="mt-6 rounded-lg bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Aperçu</h2>
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <iframe
-              src={doc.downloadUrl}
-              className="w-full h-[600px]"
-              title="Aperçu du document"
-            />
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <iframe src={doc.downloadUrl} className="h-[600px] w-full" title="Aperçu du document" />
           </div>
           <p className="mt-2 text-xs text-gray-500">
             Si l'aperçu ne s'affiche pas, utilisez le bouton "Télécharger le PDF" ci-dessus.

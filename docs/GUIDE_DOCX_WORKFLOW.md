@@ -5,6 +5,7 @@
 ### 1. Upload du template DOCX
 
 1. **Créer un document Word** avec des variables entre accolades :
+
    ```
    Nom : {{nom}}
    Prénom : {{prenom}}
@@ -90,6 +91,7 @@ Avant de générer des documents DOCX :
 ## 📝 Exemple complet
 
 **Template Word** (`attestation.docx`) :
+
 ```
 ATTESTATION
 
@@ -100,6 +102,7 @@ Lieu : {{lieu}}
 ```
 
 **Fichier CSV** (`data.csv`) :
+
 ```csv
 nom,prenom,date,lieu
 Dupont,Jean,2024-01-15,Paris
@@ -107,10 +110,10 @@ Martin,Marie,2024-02-20,Lyon
 ```
 
 **Mapping** :
+
 - `nom` → `{{nom}}`
 - `prenom` → `{{prenom}}`
 - `date` → `{{date}}`
 - `lieu` → `{{lieu}}`
 
 **Résultat** : 2 documents Word générés avec les variables remplacées.
-

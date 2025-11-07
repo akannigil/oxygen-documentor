@@ -23,7 +23,8 @@ export async function GET(request: Request, { params }: RouteParams) {
     })
 
     if (!doc) return NextResponse.json({ error: 'Document non trouvé' }, { status: 404 })
-    if (doc.project.ownerId !== session.user.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
+    if (doc.project.ownerId !== session.user.id)
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
 
     let url = ''
     try {
@@ -36,7 +37,10 @@ export async function GET(request: Request, { params }: RouteParams) {
         url = await storage.getUrl(doc.filePath)
       } catch (fallbackError) {
         console.error('Error getting fallback URL:', fallbackError)
-        return NextResponse.json({ error: 'Impossible de générer l\'URL du document' }, { status: 500 })
+        return NextResponse.json(
+          { error: "Impossible de générer l'URL du document" },
+          { status: 500 }
+        )
       }
     }
 
@@ -110,9 +114,6 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     return NextResponse.json({ message: 'Document supprimé' }, { status: 200 })
   } catch (error) {
     console.error('Error deleting document:', error)
-    return NextResponse.json(
-      { error: 'Une erreur est survenue' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }

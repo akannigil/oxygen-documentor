@@ -13,10 +13,7 @@ export interface EmailTemplateVariables {
  * Supporte les variables imbriquées : {{recipient.name}}, {{document.title}}
  * Supporte les formats de date : {{date|format:DD/MM/YYYY}}
  */
-export function renderEmailTemplate(
-  template: string,
-  variables: EmailTemplateVariables
-): string {
+export function renderEmailTemplate(template: string, variables: EmailTemplateVariables): string {
   let result = template
 
   // Fonction récursive pour obtenir une valeur depuis un objet imbriqué
@@ -25,12 +22,7 @@ export function renderEmailTemplate(
     let current: unknown = obj
 
     for (const part of parts) {
-      if (
-        current &&
-        typeof current === 'object' &&
-        part in current &&
-        current !== null
-      ) {
+      if (current && typeof current === 'object' && part in current && current !== null) {
         current = (current as EmailTemplateVariables)[part]
       } else {
         return ''
@@ -99,7 +91,7 @@ export function renderEmailTemplate(
   const variableRegex = /\{\{([^}]+)\}\}/g
   result = result.replace(variableRegex, (match, expression) => {
     const trimmed = expression.trim()
-    
+
     // Vérifier s'il y a un format
     const parts = trimmed.split('|')
     const variablePath = parts[0]?.trim() ?? ''
@@ -248,4 +240,3 @@ Bonjour {{recipient_name}},
 Cet email a été envoyé automatiquement par {{app_name}}.
 Pour toute question, contactez : {{contact_email}}
 `.trim()
-

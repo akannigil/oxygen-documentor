@@ -9,6 +9,7 @@ LibreOffice a été intégré dans votre configuration Docker pour permettre la 
 ### 1. Configuration Docker
 
 **Dockerfile modifié** pour inclure dans les 3 stages :
+
 - ✅ LibreOffice
 - ✅ OpenJDK 11 JRE (requis par LibreOffice)
 - ✅ Polices complètes (DejaVu, Noto, MS Core Fonts)
@@ -19,6 +20,7 @@ LibreOffice a été intégré dans votre configuration Docker pour permettre la 
 ### 2. API TypeScript
 
 **Nouveau fichier `lib/libreoffice.ts`** avec :
+
 - `checkLibreOfficeAvailable()` - Vérifier l'installation
 - `convertDocument()` - Conversion générique
 - `docxToPdf()` - Convertir DOCX en PDF
@@ -29,6 +31,7 @@ LibreOffice a été intégré dans votre configuration Docker pour permettre la 
 ### 3. Script de test
 
 **`scripts/test-libreoffice.ts`**
+
 - Vérifie que LibreOffice est installé
 - Affiche les fonctionnalités disponibles
 - Commande : `npm run test:libreoffice`
@@ -36,6 +39,7 @@ LibreOffice a été intégré dans votre configuration Docker pour permettre la 
 ### 4. Documentation
 
 **3 nouveaux fichiers de documentation :**
+
 - `LIBREOFFICE.md` - Guide complet d'utilisation
 - `CHANGELOG-LIBREOFFICE.md` - Détails des modifications
 - `AJOUT-LIBREOFFICE.md` - Ce fichier récapitulatif
@@ -43,6 +47,7 @@ LibreOffice a été intégré dans votre configuration Docker pour permettre la 
 ### 5. Makefile
 
 **Nouvelle commande :**
+
 ```bash
 make test-libreoffice  # Tester LibreOffice dans le conteneur
 ```
@@ -50,12 +55,14 @@ make test-libreoffice  # Tester LibreOffice dans le conteneur
 ## 🚀 Formats supportés
 
 ### En entrée
+
 - 📄 **Documents** : DOCX, DOC, ODT, RTF, TXT
 - 📊 **Tableurs** : XLSX, XLS, ODS, CSV
 - 📽️ **Présentations** : PPTX, PPT, ODP
 - 🌐 **Web** : HTML, HTM
 
 ### En sortie
+
 - 📕 **PDF** (principal)
 - 🌐 HTML
 - 📄 ODT, DOC, DOCX, RTF, TXT
@@ -80,7 +87,7 @@ import { convertDocument } from '@/lib/libreoffice'
 const outputPath = await convertDocument('/path/to/document.docx', {
   format: 'pdf',
   outputDir: '/tmp/output',
-  timeout: 60000 // 60 secondes
+  timeout: 60000, // 60 secondes
 })
 ```
 
@@ -95,28 +102,28 @@ import { writeFile, readFile, unlink } from 'fs/promises'
 export async function POST(request: NextRequest) {
   const formData = await request.formData()
   const file = formData.get('file') as File
-  
+
   // Sauvegarder temporairement
   const tempPath = `/tmp/${Date.now()}-${file.name}`
   const buffer = Buffer.from(await file.arrayBuffer())
   await writeFile(tempPath, buffer)
-  
+
   // Convertir en PDF
   const pdfPath = await docxToPdf(tempPath)
-  
+
   // Lire le PDF
   const pdfBuffer = await readFile(pdfPath)
-  
+
   // Nettoyer
   await unlink(tempPath)
   await unlink(pdfPath)
-  
+
   // Retourner le PDF
   return new NextResponse(pdfBuffer, {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${file.name}.pdf"`
-    }
+      'Content-Disposition': `attachment; filename="${file.name}.pdf"`,
+    },
   })
 }
 ```
@@ -180,18 +187,18 @@ git pull
 
 ### Taille de l'image
 
-| Avant | Après | Augmentation |
-|-------|-------|--------------|
-| ~800 MB | ~1.1 GB | ~300 MB |
+| Avant   | Après   | Augmentation |
+| ------- | ------- | ------------ |
+| ~800 MB | ~1.1 GB | ~300 MB      |
 
 ### Temps de conversion
 
-| Type | Taille | Temps moyen |
-|------|--------|-------------|
-| DOCX simple | 50 KB | ~2 secondes |
+| Type          | Taille | Temps moyen |
+| ------------- | ------ | ----------- |
+| DOCX simple   | 50 KB  | ~2 secondes |
 | DOCX complexe | 500 KB | ~5 secondes |
-| PPTX | 2 MB | ~8 secondes |
-| XLSX | 100 KB | ~3 secondes |
+| PPTX          | 2 MB   | ~8 secondes |
+| XLSX          | 100 KB | ~3 secondes |
 
 ### Mémoire
 
@@ -228,11 +235,11 @@ git pull
 
 ## 📚 Documentation
 
-| Fichier | Contenu |
-|---------|---------|
-| `LIBREOFFICE.md` | Guide complet avec exemples de code |
-| `CHANGELOG-LIBREOFFICE.md` | Détails des modifications |
-| `lib/libreoffice.ts` | API TypeScript (commentée) |
+| Fichier                    | Contenu                             |
+| -------------------------- | ----------------------------------- |
+| `LIBREOFFICE.md`           | Guide complet avec exemples de code |
+| `CHANGELOG-LIBREOFFICE.md` | Détails des modifications           |
+| `lib/libreoffice.ts`       | API TypeScript (commentée)          |
 
 ## 🔒 Sécurité
 
@@ -297,7 +304,7 @@ fc-list | grep -i arial  # Vérifier Arial
 // Augmenter le timeout pour les gros fichiers
 const pdfPath = await convertDocument(docxPath, {
   format: 'pdf',
-  timeout: 120000 // 2 minutes au lieu de 60s
+  timeout: 120000, // 2 minutes au lieu de 60s
 })
 ```
 
@@ -350,16 +357,16 @@ import { docxToPdf } from '@/lib/libreoffice'
 
 documentWorker.process(async (job) => {
   const { templatePath, data } = job.data
-  
+
   // Générer le DOCX
   const docxPath = await generateDocx(templatePath, data)
-  
+
   // NOUVEAU : Convertir en PDF
   const pdfPath = await docxToPdf(docxPath)
-  
+
   // Uploader vers S3
   const url = await uploadToS3(pdfPath)
-  
+
   return { success: true, url }
 })
 ```
@@ -369,6 +376,7 @@ documentWorker.process(async (job) => {
 LibreOffice est maintenant **intégré et prêt à l'emploi** dans votre application Docker !
 
 **Avantages :**
+
 - ✅ Conversion native et fiable
 - ✅ Pas de dépendance externe
 - ✅ Gratuit et open-source
@@ -377,6 +385,7 @@ LibreOffice est maintenant **intégré et prêt à l'emploi** dans votre applica
 - ✅ Production-ready
 
 **Actions recommandées :**
+
 1. Redéployez avec `./deploy.sh --no-cache --migrate`
 2. Testez avec `make test-libreoffice`
 3. Lisez `LIBREOFFICE.md` pour les exemples
@@ -386,5 +395,4 @@ LibreOffice est maintenant **intégré et prêt à l'emploi** dans votre applica
 
 ---
 
-*Ajout effectué le 6 novembre 2025 pour Oxygen Document*
-
+_Ajout effectué le 6 novembre 2025 pour Oxygen Document_

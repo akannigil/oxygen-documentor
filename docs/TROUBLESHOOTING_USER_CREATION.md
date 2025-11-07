@@ -35,12 +35,14 @@ npm run user:create
 ```
 
 Le script vous demandera :
+
 - **Email** : L'adresse email de l'utilisateur
 - **Mot de passe** : Au moins 6 caractères
 - **Nom** (optionnel) : Le nom complet de l'utilisateur
 - **Rôle** (optionnel) : `user` (par défaut) ou `owner`
 
 Exemple d'exécution :
+
 ```
 🚀 Création d'un nouvel utilisateur
 
@@ -94,6 +96,7 @@ Le code a été amélioré pour mieux gérer ce type d'erreur :
 3. **Validation de l'ID de session** pour s'assurer qu'il n'est pas vide
 
 Ces changements dans `app/api/projects/route.ts` permettent de :
+
 - Détecter plus tôt les problèmes d'utilisateur manquant
 - Fournir des messages d'erreur clairs à l'utilisateur
 - Faciliter le débogage avec des logs détaillés
@@ -101,6 +104,7 @@ Ces changements dans `app/api/projects/route.ts` permettent de :
 ## Script de création d'utilisateur
 
 Le script `scripts/create-user.ts` permet de :
+
 - Créer un nouvel utilisateur avec un mot de passe hashé
 - Mettre à jour le mot de passe d'un utilisateur existant
 - Vérifier l'unicité de l'email
@@ -116,4 +120,3 @@ Si le problème persiste après avoir créé un utilisateur :
 4. **Vérifiez la configuration de NextAuth** dans `lib/auth/config.ts`
 
 Si vous avez besoin d'aide supplémentaire, vérifiez les logs détaillés dans la console du serveur.
-

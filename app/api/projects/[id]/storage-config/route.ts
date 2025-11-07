@@ -77,10 +77,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     // Valider la configuration si elle est fournie
     if (config !== null && config !== undefined) {
       if (!validateStorageConfig(config)) {
-        return NextResponse.json(
-          { error: 'Configuration de stockage invalide' },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: 'Configuration de stockage invalide' }, { status: 400 })
       }
     }
 
@@ -107,4 +104,3 @@ export async function PUT(request: Request, { params }: RouteParams) {
     )
   }
 }
-

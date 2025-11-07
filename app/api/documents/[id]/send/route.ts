@@ -8,11 +8,7 @@ import type { EmailTemplateVariables } from '@/lib/email/templates'
 import type { EmailSendingJobData } from '@/lib/queue/workers'
 
 export const sendEmailSchema = z.object({
-  recipientEmail: z
-    .string()
-    .trim()
-    .email('Email invalide')
-    .optional(), // Optionnel car on peut le récupérer du document
+  recipientEmail: z.string().trim().email('Email invalide').optional(), // Optionnel car on peut le récupérer du document
   subject: z.string().optional(),
   htmlTemplate: z.string().optional(),
   textTemplate: z.string().optional(),
@@ -21,18 +17,8 @@ export const sendEmailSchema = z.object({
   from: z.string().trim().email().optional(),
   fromName: z.string().optional(),
   replyTo: z.string().trim().email().optional(),
-  cc: z
-    .union([
-      z.string().trim().email(),
-      z.array(z.string().trim().email()),
-    ])
-    .optional(),
-  bcc: z
-    .union([
-      z.string().trim().email(),
-      z.array(z.string().trim().email()),
-    ])
-    .optional(),
+  cc: z.union([z.string().trim().email(), z.array(z.string().trim().email())]).optional(),
+  bcc: z.union([z.string().trim().email(), z.array(z.string().trim().email())]).optional(),
 })
 
 interface RouteParams {
@@ -81,10 +67,12 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     // Parser et valider le body
     const rawBody = await request.json()
-    
+
     // Récupérer l'email du destinataire : depuis le body OU depuis le document
-    let recipientEmail: string | undefined = rawBody.recipientEmail?.trim() || undefined
-    
+    let recipientEmail: string | undefined =
+      (typeof rawBody['recipientEmail'] === 'string' && rawBody['recipientEmail'].trim()) ||
+      undefined
+
     // Si pas fourni dans le body, essayer de le récupérer depuis le document
     if (!recipientEmail) {
       // 1. Essayer depuis document.recipientEmail
@@ -100,85 +88,83 @@ export async function POST(request: Request, { params }: RouteParams) {
         }
       }
     }
-    
+
     // Valider que l'email est présent
     if (!recipientEmail) {
       return NextResponse.json(
-        { error: 'Email du destinataire manquant. Veuillez fournir un email ou configurer le mapping dans le template.' },
+        {
+          error:
+            'Email du destinataire manquant. Veuillez fournir un email ou configurer le mapping dans le template.',
+        },
         { status: 400 }
       )
     }
-    
+
     // Valider le format de l'email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(recipientEmail)) {
-      return NextResponse.json(
-        { error: 'Format d\'email invalide' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Format d'email invalide" }, { status: 400 })
     }
-    
+
     // Préprocesser les données : convertir les chaînes vides en undefined
     const preprocessedBody: Record<string, unknown> = {
       ...rawBody,
       recipientEmail, // Utiliser l'email récupéré
     }
-    
+
     // Ajouter les champs optionnels seulement s'ils ont une valeur
-    if (rawBody.from?.trim()) {
-      preprocessedBody.from = rawBody.from.trim()
+    if (rawBody['from'] && typeof rawBody['from'] === 'string' && rawBody['from'].trim()) {
+      preprocessedBody['from'] = rawBody['from'].trim()
     }
-    if (rawBody.replyTo?.trim()) {
-      preprocessedBody.replyTo = rawBody.replyTo.trim()
+    if (rawBody['replyTo'] && typeof rawBody['replyTo'] === 'string' && rawBody['replyTo'].trim()) {
+      preprocessedBody['replyTo'] = rawBody['replyTo'].trim()
     }
-    if (rawBody.cc) {
-      if (typeof rawBody.cc === 'string' && rawBody.cc.trim()) {
-        preprocessedBody.cc = rawBody.cc.trim()
-      } else if (Array.isArray(rawBody.cc) && rawBody.cc.length > 0) {
-        preprocessedBody.cc = rawBody.cc
+    if (rawBody['cc']) {
+      if (typeof rawBody['cc'] === 'string' && rawBody['cc'].trim()) {
+        preprocessedBody['cc'] = rawBody['cc'].trim()
+      } else if (Array.isArray(rawBody['cc']) && rawBody['cc'].length > 0) {
+        preprocessedBody['cc'] = rawBody['cc']
       }
     }
-    if (rawBody.bcc) {
-      if (typeof rawBody.bcc === 'string' && rawBody.bcc.trim()) {
-        preprocessedBody.bcc = rawBody.bcc.trim()
-      } else if (Array.isArray(rawBody.bcc) && rawBody.bcc.length > 0) {
-        preprocessedBody.bcc = rawBody.bcc
+    if (rawBody['bcc']) {
+      if (typeof rawBody['bcc'] === 'string' && rawBody['bcc'].trim()) {
+        preprocessedBody['bcc'] = rawBody['bcc'].trim()
+      } else if (Array.isArray(rawBody['bcc']) && rawBody['bcc'].length > 0) {
+        preprocessedBody['bcc'] = rawBody['bcc']
       }
     }
-    
+
     const validatedData = sendEmailSchema.parse(preprocessedBody)
-    
+
     // S'assurer que recipientEmail est défini dans validatedData
     validatedData.recipientEmail = recipientEmail
 
     // Utiliser BullMQ si disponible (pour envois en batch futurs)
-    const useQueue = areQueuesAvailable() && emailSendingQueue !== null && rawBody.useQueue === true
+    const useQueue =
+      areQueuesAvailable() && emailSendingQueue !== null && rawBody['useQueue'] === true
 
     if (useQueue && emailSendingQueue) {
       // Créer un job BullMQ pour l'envoi asynchrone
-      const job = await emailSendingQueue.add(
-        'send-email',
-        {
-          documentId: id,
-          recipientEmail: validatedData.recipientEmail,
-          ...(validatedData.subject && { subject: validatedData.subject }),
-          ...(validatedData.htmlTemplate && { htmlTemplate: validatedData.htmlTemplate }),
-          ...(validatedData.textTemplate && { textTemplate: validatedData.textTemplate }),
-          ...(validatedData.variables && { variables: validatedData.variables }),
-          attachDocument: validatedData.attachDocument,
-          ...(validatedData.from && { from: validatedData.from }),
-          ...(validatedData.fromName && { fromName: validatedData.fromName }),
-          ...(validatedData.replyTo && { replyTo: validatedData.replyTo }),
-          ...(validatedData.cc && { cc: validatedData.cc }),
-          ...(validatedData.bcc && { bcc: validatedData.bcc }),
-        } satisfies EmailSendingJobData
-      )
+      const job = await emailSendingQueue.add('send-email', {
+        documentId: id,
+        recipientEmail: validatedData.recipientEmail,
+        ...(validatedData.subject && { subject: validatedData.subject }),
+        ...(validatedData.htmlTemplate && { htmlTemplate: validatedData.htmlTemplate }),
+        ...(validatedData.textTemplate && { textTemplate: validatedData.textTemplate }),
+        ...(validatedData.variables && { variables: validatedData.variables }),
+        attachDocument: validatedData.attachDocument,
+        ...(validatedData.from && { from: validatedData.from }),
+        ...(validatedData.fromName && { fromName: validatedData.fromName }),
+        ...(validatedData.replyTo && { replyTo: validatedData.replyTo }),
+        ...(validatedData.cc && { cc: validatedData.cc }),
+        ...(validatedData.bcc && { bcc: validatedData.bcc }),
+      } satisfies EmailSendingJobData)
 
       return NextResponse.json({
         success: true,
         jobId: job.id,
         queue: 'email-sending',
-        message: 'Email en cours d\'envoi. Utilisez GET /api/jobs/[id] pour suivre le statut.',
+        message: "Email en cours d'envoi. Utilisez GET /api/jobs/[id] pour suivre le statut.",
         status: 'queued',
       })
     }
@@ -190,7 +176,9 @@ export async function POST(request: Request, { params }: RouteParams) {
       ...(validatedData.subject && { subject: validatedData.subject }),
       ...(validatedData.htmlTemplate && { htmlTemplate: validatedData.htmlTemplate }),
       ...(validatedData.textTemplate && { textTemplate: validatedData.textTemplate }),
-      ...(validatedData.variables && { variables: validatedData.variables as EmailTemplateVariables }),
+      ...(validatedData.variables && {
+        variables: validatedData.variables as EmailTemplateVariables,
+      }),
       attachDocument: validatedData.attachDocument,
       ...(validatedData.from && { from: validatedData.from }),
       ...(validatedData.fromName && { fromName: validatedData.fromName }),
@@ -201,7 +189,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     if (!result.success) {
       return NextResponse.json(
-        { error: result.error || 'Erreur lors de l\'envoi de l\'email' },
+        { error: result.error || "Erreur lors de l'envoi de l'email" },
         { status: 500 }
       )
     }
@@ -212,24 +200,20 @@ export async function POST(request: Request, { params }: RouteParams) {
       message: 'Email envoyé avec succès',
     })
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email:', error)
+    console.error("Erreur lors de l'envoi de l'email:", error)
 
     if (error instanceof z.ZodError) {
       const firstError = error.errors[0]
       const errorMessage = firstError?.message || 'Données invalides'
       return NextResponse.json(
-        { 
+        {
           error: errorMessage,
-          details: error.errors 
+          details: error.errors,
         },
         { status: 400 }
       )
     }
 
-    return NextResponse.json(
-      { error: 'Une erreur est survenue' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
-

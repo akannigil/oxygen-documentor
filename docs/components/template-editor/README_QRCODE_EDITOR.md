@@ -27,12 +27,15 @@ Le champ est automatiquement créé avec le type "Texte" par défaut.
 ### 3. Modifier un champ
 
 #### Déplacement
+
 - **Cliquez et glissez** le champ pour le déplacer
 
 #### Redimensionnement
+
 - Utilisez les **poignées d'angle** pour redimensionner
 
 #### Suppression
+
 - Sélectionnez le champ
 - Cliquez sur **"Supprimer le champ"** dans le panneau de propriétés
 
@@ -43,6 +46,7 @@ Le champ est automatiquement créé avec le type "Texte" par défaut.
 ### Étape par étape
 
 #### 1. Créer la zone du QR Code
+
 Dessinez un rectangle à l'endroit désiré (voir "Créer une zone de champ")
 
 #### 2. Changer le type en "QR Code"
@@ -119,20 +123,21 @@ Les options de configuration QR Code apparaissent automatiquement :
 errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H'
 ```
 
-| Niveau | Capacité | Utilisation recommandée |
-|--------|----------|------------------------|
-| L | 7% | QR Codes simples, pas de risque d'endommagement |
-| M | 15% | Usage général (défaut) |
-| Q | 25% | Certificats, documents importants |
-| H | 30% | Environnement à risque, impression de mauvaise qualité |
+| Niveau | Capacité | Utilisation recommandée                                |
+| ------ | -------- | ------------------------------------------------------ |
+| L      | 7%       | QR Codes simples, pas de risque d'endommagement        |
+| M      | 15%      | Usage général (défaut)                                 |
+| Q      | 25%      | Certificats, documents importants                      |
+| H      | 30%      | Environnement à risque, impression de mauvaise qualité |
 
 #### 📏 Marge (en modules)
 
 ```typescript
-margin: number  // Défaut: 1
+margin: number // Défaut: 1
 ```
 
 Recommandations :
+
 - Minimum : `1`
 - Optimal : `2-4`
 - Maximum pratique : `10`
@@ -149,6 +154,7 @@ color: {
 ⚠️ **Important** : Assurez un contraste suffisant pour la lisibilité !
 
 Exemples :
+
 ```typescript
 // Bleu corporatif
 color: {
@@ -191,7 +197,8 @@ qrcodeAuth: {
 
 **Résultat** : Le QR Code contiendra un JWT signé avec les données du certificat.
 
-**URL générée** : 
+**URL générée** :
+
 ```
 https://verify.example.com?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -209,6 +216,7 @@ qrcodeStorageUrl: {
 ```
 
 **Types d'URL** :
+
 - `signed` : URL temporaire sécurisée (AWS S3 presigned URL)
 - `public` : URL permanente publique
 
@@ -232,12 +240,14 @@ qrcodeStorageUrl: {
 Position : **Droite de l'écran**
 
 États possibles :
+
 1. **Aucune sélection** : Affiche un message d'aide
 2. **Champ sélectionné** : Affiche les propriétés éditables
 
 ### Informations affichées
 
 Pour chaque champ :
+
 ```
 field_123456789
 x: 450, y: 850
@@ -320,14 +330,14 @@ import { generateDocumentFromTemplate } from '@/lib/pdf/generator'
 const pdfBuffer = await generateDocumentFromTemplate(
   templateBuffer,
   'application/pdf',
-  fields,  // Les champs configurés dans l'éditeur
+  fields, // Les champs configurés dans l'éditeur
   {
     nom: 'Jean Dupont',
     certificate_id: 'CERT-2025-001',
     holder_name: 'Jean Dupont',
     title: 'Formation React Avancé',
     issue_date: '2025-01-15',
-    issuer: 'Formation Pro'
+    issuer: 'Formation Pro',
   },
   {
     // Options pour le workflow QR Code
@@ -335,8 +345,8 @@ const pdfBuffer = await generateDocumentFromTemplate(
       secretKey: process.env.CERTIFICATE_SECRET_KEY,
       verificationBaseUrl: 'https://certificates.example.com/verify',
       algorithm: 'sha256',
-      expiresIn: 10 * 365 * 24 * 60 * 60
-    }
+      expiresIn: 10 * 365 * 24 * 60 * 60,
+    },
   }
 )
 ```
@@ -355,13 +365,19 @@ interface TemplateField {
   w: number
   h: number
   type: 'text' | 'qrcode' | 'date' | 'number'
-  
+
   // Pour type 'text'
   fontSize?: number
-  fontFamily?: 'Helvetica' | 'Helvetica-Bold' | 'Times-Roman' | 'Times-Bold' | 'Courier' | 'Courier-Bold'
+  fontFamily?:
+    | 'Helvetica'
+    | 'Helvetica-Bold'
+    | 'Times-Roman'
+    | 'Times-Bold'
+    | 'Courier'
+    | 'Courier-Bold'
   align?: 'left' | 'center' | 'right'
   textColor?: string
-  
+
   // Pour type 'qrcode'
   qrcodeOptions?: QRCodeOptions
   qrcodeAuth?: QRCodeCertificateAuth
@@ -418,6 +434,7 @@ interface QRCodeStorageUrl {
 ### Le QR Code ne s'affiche pas
 
 **Vérifiez** :
+
 1. Le champ est bien de type `'qrcode'`
 2. La clé du champ est unique
 3. Les données fournies lors de la génération contiennent les valeurs nécessaires
@@ -425,12 +442,14 @@ interface QRCodeStorageUrl {
 ### Le QR Code n'est pas scannable
 
 **Causes possibles** :
+
 1. Contraste insuffisant (couleurs trop proches)
 2. Taille trop petite (min 100×100 recommandé)
 3. Niveau de correction d'erreur trop élevé avec beaucoup de données
 4. Marge insuffisante autour du QR Code
 
 **Solutions** :
+
 - Augmenter la taille du champ
 - Utiliser des couleurs à fort contraste
 - Réduire la quantité de données dans le QR Code
@@ -439,6 +458,7 @@ interface QRCodeStorageUrl {
 ### L'authentification ne fonctionne pas
 
 **Vérifiez** :
+
 1. La variable `CERTIFICATE_SECRET_KEY` est définie
 2. L'URL de vérification est correcte et accessible
 3. Les clés des `certificateFields` correspondent aux données fournies
@@ -456,4 +476,3 @@ interface QRCodeStorageUrl {
 ---
 
 **Dernière mise à jour** : 2025-01-15
-

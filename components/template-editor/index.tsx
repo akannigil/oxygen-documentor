@@ -24,4 +24,3 @@ export function TemplateEditor(props: TemplateEditorProps) {
 }
 
 export type { TemplateEditorProps }
-

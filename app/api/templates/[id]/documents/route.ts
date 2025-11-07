@@ -27,7 +27,10 @@ export async function GET(request: Request, { params }: RouteParams) {
     })
 
     if (!template) {
-      return NextResponse.json({ error: 'Template non trouvé ou accès non autorisé' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Template non trouvé ou accès non autorisé' },
+        { status: 404 }
+      )
     }
 
     const { searchParams } = new URL(request.url)
@@ -68,10 +71,8 @@ export async function GET(request: Request, { params }: RouteParams) {
     })
 
     return NextResponse.json(documents)
-
   } catch (error) {
     console.error('Erreur lors de la récupération des documents:', error)
     return NextResponse.json({ error: 'Une erreur interne est survenue' }, { status: 500 })
   }
 }
-

@@ -12,8 +12,12 @@ L'authentification des certificats est maintenant **directement intégrée** dan
 // Complexe : 3 étapes séparées
 import { generateAuthenticatedCertificate } from '@/lib/qrcode/certificate-auth'
 
-const authConfig = { /* ... */ }
-const certificateData = { /* ... */ }
+const authConfig = {
+  /* ... */
+}
+const certificateData = {
+  /* ... */
+}
 
 // 1. Générer le certificat authentifié
 const authenticated = generateAuthenticatedCertificate(certificateData, authConfig)
@@ -75,18 +79,21 @@ Modifiez `app/api/projects/[id]/generate/route.ts` :
 
 ```typescript
 // Détecter si c'est un certificat
-const isCertificate = template.name.toLowerCase().includes('certificat') ||
-                      template.name.toLowerCase().includes('diplome') ||
-                      template.name.toLowerCase().includes('attestation')
+const isCertificate =
+  template.name.toLowerCase().includes('certificat') ||
+  template.name.toLowerCase().includes('diplome') ||
+  template.name.toLowerCase().includes('attestation')
 
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: data,
-  
+
   // Activer automatiquement pour les certificats
-  certificate: isCertificate ? {
-    enabled: true,
-    includeDocumentHash: true, // Sécurité maximale
-  } : undefined,
+  certificate: isCertificate
+    ? {
+        enabled: true,
+        includeDocumentHash: true, // Sécurité maximale
+      }
+    : undefined,
 })
 ```
 
@@ -99,13 +106,15 @@ interface GenerateRequest {
   enableCertificateAuth?: boolean // ← Nouveau paramètre
 }
 
-const body = await request.json() as GenerateRequest
+const body = (await request.json()) as GenerateRequest
 
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: data,
-  certificate: body.enableCertificateAuth ? {
-    enabled: true,
-  } : undefined,
+  certificate: body.enableCertificateAuth
+    ? {
+        enabled: true,
+      }
+    : undefined,
 })
 ```
 
@@ -113,14 +122,14 @@ const docxBuffer = await generateDOCX(templateBuffer, {
 
 Le système détecte automatiquement ces champs dans vos variables :
 
-| Champ certificat | Noms de variables reconnus |
-|------------------|---------------------------|
-| **certificateId** | `certificate_id`, `certificateId`, `id`, `cert_id` |
-| **holderName** | `holder_name`, `holderName`, `student_name`, `participant_name`, `name` |
-| **title** | `title`, `course_name`, `formation`, `training` |
-| **issueDate** | `issue_date`, `issueDate`, `date`, `creation_date` |
-| **issuer** | `issuer`, `organization`, `organisme`, `emetteur` |
-| **grade** | `grade`, `note`, `mention`, `result` |
+| Champ certificat  | Noms de variables reconnus                                              |
+| ----------------- | ----------------------------------------------------------------------- |
+| **certificateId** | `certificate_id`, `certificateId`, `id`, `cert_id`                      |
+| **holderName**    | `holder_name`, `holderName`, `student_name`, `participant_name`, `name` |
+| **title**         | `title`, `course_name`, `formation`, `training`                         |
+| **issueDate**     | `issue_date`, `issueDate`, `date`, `creation_date`                      |
+| **issuer**        | `issuer`, `organization`, `organisme`, `emetteur`                       |
+| **grade**         | `grade`, `note`, `mention`, `result`                                    |
 
 ## ⚙️ Configuration
 
@@ -308,4 +317,3 @@ R: Voir `examples/workflow-integration.ts` (9 exemples)
 **Version** : 1.0  
 **Date** : 3 novembre 2024  
 **Auteur** : Oxygen Document Team
-

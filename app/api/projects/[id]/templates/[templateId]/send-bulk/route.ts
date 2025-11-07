@@ -65,7 +65,11 @@ export async function POST(request: Request, { params }: RouteParams) {
     const validatedData = sendBulkEmailSchema.parse(body)
 
     // Récupérer les documents à envoyer
-    const where: any = {
+    const where: {
+      templateId: string
+      projectId: string
+      status?: 'generated' | 'sent' | 'failed'
+    } = {
       templateId,
       projectId,
     }
@@ -122,11 +126,12 @@ export async function POST(request: Request, { params }: RouteParams) {
     const useQueue =
       areQueuesAvailable() && emailSendingQueue !== null && validatedData.useQueue === true
 
-    if (useQueue && emailSendingQueue) {
+    if (useQueue && emailSendingQueue !== null) {
       // Créer des jobs BullMQ pour chaque document
+      const queue = emailSendingQueue // Variable locale pour garantir le type non-null
       const jobs = await Promise.all(
         documentsWithEmail.map((doc) =>
-          emailSendingQueue.add(
+          queue.add(
             'send-email',
             {
               documentId: doc.id,
@@ -160,10 +165,14 @@ export async function POST(request: Request, { params }: RouteParams) {
     const emailPayloads = documentsWithEmail.map((doc) => ({
       documentId: doc.id,
       recipientEmail: doc.recipientEmail!,
-      subject: validatedData.subject,
-      htmlTemplate: validatedData.htmlTemplate,
-      variables: validatedData.variables as EmailTemplateVariables | undefined,
-      attachDocument: validatedData.attachDocument,
+      ...(validatedData.subject ? { subject: validatedData.subject } : {}),
+      ...(validatedData.htmlTemplate ? { htmlTemplate: validatedData.htmlTemplate } : {}),
+      ...(validatedData.variables
+        ? { variables: validatedData.variables as EmailTemplateVariables }
+        : {}),
+      ...(validatedData.attachDocument !== undefined
+        ? { attachDocument: validatedData.attachDocument }
+        : {}),
     }))
 
     const results = await sendDocumentEmailsBatch(emailPayloads)
@@ -185,7 +194,7 @@ export async function POST(request: Request, { params }: RouteParams) {
           : `${successCount} email(s) envoyé(s), ${failureCount} échec(s).`,
     })
   } catch (error) {
-    console.error('Erreur lors de l\'envoi en bulk:', error)
+    console.error("Erreur lors de l'envoi en bulk:", error)
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -195,9 +204,8 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     return NextResponse.json(
-      { error: 'Une erreur est survenue lors de l\'envoi en bulk' },
+      { error: "Une erreur est survenue lors de l'envoi en bulk" },
       { status: 500 }
     )
   }
 }
-

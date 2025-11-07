@@ -28,11 +28,11 @@ async function createUser() {
   const rl = createReadlineInterface()
 
   try {
-    console.log('🚀 Création d\'un nouvel utilisateur\n')
+    console.log("🚀 Création d'un nouvel utilisateur\n")
 
     const email = await question(rl, 'Email: ')
     if (!email) {
-      throw new Error('L\'email est obligatoire')
+      throw new Error("L'email est obligatoire")
     }
 
     // Vérifier si l'utilisateur existe déjà
@@ -60,8 +60,12 @@ async function createUser() {
     const userData: UserInput = {
       email,
       password,
-      name: name || undefined,
       role: role || 'user',
+    }
+
+    // Ajouter name seulement s'il n'est pas vide
+    if (name && name.trim()) {
+      userData.name = name.trim()
     }
 
     // Hasher le mot de passe
@@ -81,7 +85,7 @@ async function createUser() {
           data: {
             email: userData.email,
             passwordHash,
-            name: userData.name,
+            ...(userData.name && { name: userData.name }),
             role: userData.role || 'user',
           },
         })
@@ -93,7 +97,7 @@ async function createUser() {
     console.log(`  Nom: ${user.name || '(non défini)'}`)
     console.log(`  Rôle: ${user.role}`)
   } catch (error) {
-    console.error('\n❌ Erreur lors de la création de l\'utilisateur:', error)
+    console.error("\n❌ Erreur lors de la création de l'utilisateur:", error)
     process.exit(1)
   } finally {
     rl.close()
@@ -102,4 +106,3 @@ async function createUser() {
 }
 
 createUser()
-

@@ -21,19 +21,18 @@ console.log('📋 Appuyez sur Ctrl+C pour arrêter')
 // Gérer l'arrêt propre
 process.on('SIGINT', async () => {
   console.log('\n🛑 Arrêt des workers...')
-  
+
   if (documentWorker) {
     await documentWorker.close()
   }
-  
+
   if (emailWorker) {
     await emailWorker.close()
   }
-  
+
   console.log('✅ Workers arrêtés')
   process.exit(0)
 })
 
 // Garder le processus actif
 process.stdin.resume()
-

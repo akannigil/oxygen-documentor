@@ -97,7 +97,10 @@ export async function sendDocumentEmail(
       message: 'Vous trouverez ci-joint votre document généré.',
       additional_info: '',
       created_at: document.createdAt.toLocaleDateString('fr-FR'),
-      created_at_full: document.createdAt.toLocaleString('fr-FR',
+      created_at_full: new Intl.DateTimeFormat('fr-FR', {
+        dateStyle: 'full',
+        timeStyle: 'short',
+      }).format(document.createdAt),
     }
 
     // Fusionner avec les variables fournies
@@ -113,7 +116,7 @@ export async function sendDocumentEmail(
       downloadUrl = await storage.getSignedUrl(document.filePath, 7 * 24 * 60 * 60)
       variables['download_url'] = downloadUrl
     } catch (error) {
-      console.error('Erreur lors de la génération de l\'URL signée:', error)
+      console.error("Erreur lors de la génération de l'URL signée:", error)
       // Continuer sans URL si erreur
     }
 
@@ -137,7 +140,7 @@ export async function sendDocumentEmail(
     // Préparer le template texte
     const textTemplate = options.textTemplate || DEFAULT_EMAIL_TEXT_TEMPLATE
     let text = renderEmailTemplate(textTemplate, variables)
-    
+
     if (downloadUrl) {
       text = text.replace('{{download_url}}', `Télécharger le document : ${downloadUrl}`)
     } else {
@@ -145,26 +148,31 @@ export async function sendDocumentEmail(
     }
 
     // Préparer le sujet
-    const subject = options.subject || renderEmailTemplate('Document généré : {{template_name}}', variables)
+    const subject =
+      options.subject || renderEmailTemplate('Document généré : {{template_name}}', variables)
 
     // Préparer les pièces jointes si demandé
     const attachments = options.attachDocument
       ? [
           {
             filename: (() => {
-              const mailDefaults = document.template.mailDefaults as { attachmentNamePattern?: string } | undefined;
-              const pattern = mailDefaults?.attachmentNamePattern;
-              const defaultName = `${document.template.name}-${document.id}.pdf`;
+              const mailDefaults = document.template.mailDefaults as
+                | { attachmentNamePattern?: string }
+                | undefined
+              const pattern = mailDefaults?.attachmentNamePattern
+              const defaultName = `${document.template.name}-${document.id}.pdf`
               if (pattern) {
                 try {
                   // Basic sanitization to remove invalid filename characters
-                  return renderEmailTemplate(pattern, variables).replace(/[/\\?%*:|"<>]/g, '-') + '.pdf';
+                  return (
+                    renderEmailTemplate(pattern, variables).replace(/[/\\?%*:|"<>]/g, '-') + '.pdf'
+                  )
                 } catch (e) {
-                  console.error('Error rendering attachment filename:', e);
-                  return defaultName;
+                  console.error('Error rendering attachment filename:', e)
+                  return defaultName
                 }
               }
-              return defaultName;
+              return defaultName
             })(),
             content: await storage.getBuffer(document.filePath),
             contentType: document.mimeType,
@@ -184,7 +192,9 @@ export async function sendDocumentEmail(
       html,
       text,
       ...(fromHeader ? { from: fromHeader } : {}),
-      ...(options.replyTo || process.env['EMAIL_REPLY_TO'] ? { replyTo: options.replyTo || process.env['EMAIL_REPLY_TO']! } : {}),
+      ...(options.replyTo || process.env['EMAIL_REPLY_TO']
+        ? { replyTo: options.replyTo || process.env['EMAIL_REPLY_TO']! }
+        : {}),
       ...(options.cc ? { cc: options.cc } : {}),
       ...(options.bcc ? { bcc: options.bcc } : {}),
       ...(attachments ? { attachments } : {}),
@@ -213,13 +223,13 @@ export async function sendDocumentEmail(
       where: { id: options.documentId },
       data: {
         status: 'failed',
-        errorMessage: result.error || 'Erreur lors de l\'envoi de l\'email',
+        errorMessage: result.error || "Erreur lors de l'envoi de l'email",
       },
     })
 
     return {
       success: false,
-      error: result.error || 'Erreur lors de l\'envoi de l\'email',
+      error: result.error || "Erreur lors de l'envoi de l'email",
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
@@ -281,4 +291,3 @@ export async function sendDocumentEmailsBatch(
     }
   })
 }
-

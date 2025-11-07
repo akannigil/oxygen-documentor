@@ -30,29 +30,31 @@ export default function ProjectDocumentsPage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const projectId = params['id'] as string
-  
+
   const [docs, setDocs] = useState<DocumentItem[]>([])
   const [pagination, setPagination] = useState<Pagination | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  
+
   // Filtres
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || '')
   const [searchQuery, setSearchQuery] = useState<string>(searchParams.get('search') || '')
   const [startDate, setStartDate] = useState<string>(searchParams.get('startDate') || '')
   const [endDate, setEndDate] = useState<string>(searchParams.get('endDate') || '')
-  const [currentPage, setCurrentPage] = useState<number>(parseInt(searchParams.get('page') || '1', 10))
+  const [currentPage, setCurrentPage] = useState<number>(
+    parseInt(searchParams.get('page') || '1', 10)
+  )
 
   const fetchDocs = useCallback(async () => {
     setLoading(true)
     setError('')
-    
+
     try {
       const queryParams = new URLSearchParams({
         projectId,
         page: currentPage.toString(),
       })
-      
+
       if (statusFilter) queryParams.set('status', statusFilter)
       if (searchQuery) queryParams.set('search', searchQuery)
       if (startDate) queryParams.set('startDate', startDate)
@@ -65,7 +67,9 @@ export default function ProjectDocumentsPage() {
         setPagination(data.pagination || null)
       } else {
         const errorData = await res.json().catch(() => ({}))
-        setError(`Erreur ${res.status}: ${errorData.error || 'Erreur lors du chargement des documents'}`)
+        setError(
+          `Erreur ${res.status}: ${errorData.error || 'Erreur lors du chargement des documents'}`
+        )
       }
     } catch (err) {
       console.error('Fetch error:', err)
@@ -90,7 +94,7 @@ export default function ProjectDocumentsPage() {
         projectId,
         format: 'csv',
       })
-      
+
       if (statusFilter) queryParams.set('status', statusFilter)
       if (searchQuery) queryParams.set('search', searchQuery)
       if (startDate) queryParams.set('startDate', startDate)
@@ -113,7 +117,7 @@ export default function ProjectDocumentsPage() {
       }
     } catch (err) {
       console.error('Export error:', err)
-      alert('Erreur lors de l\'export CSV')
+      alert("Erreur lors de l'export CSV")
     }
   }
 
@@ -142,7 +146,10 @@ export default function ProjectDocumentsPage() {
             >
               Exporter CSV
             </button>
-            <Link href={`/projects/${projectId}/generate`} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">
+            <Link
+              href={`/projects/${projectId}/generate`}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
+            >
               Nouvelle génération
             </Link>
           </div>
@@ -152,7 +159,7 @@ export default function ProjectDocumentsPage() {
         <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Recherche</label>
               <input
                 type="text"
                 value={searchQuery}
@@ -163,7 +170,7 @@ export default function ProjectDocumentsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Statut</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -176,7 +183,7 @@ export default function ProjectDocumentsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date début</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Date début</label>
               <input
                 type="date"
                 value={startDate}
@@ -185,7 +192,7 @@ export default function ProjectDocumentsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date fin</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Date fin</label>
               <input
                 type="date"
                 value={endDate}
@@ -204,9 +211,7 @@ export default function ProjectDocumentsPage() {
           </div>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-800">{error}</div>
-        )}
+        {error && <div className="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-800">{error}</div>}
 
         {docs.length === 0 ? (
           <div className="rounded-lg border border-gray-200 bg-white p-6 text-center text-sm text-gray-600">
@@ -230,7 +235,9 @@ export default function ProjectDocumentsPage() {
                 <tbody className="divide-y divide-gray-200">
                   {docs.map((d) => (
                     <tr key={d.id} className="odd:bg-white even:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-900 font-mono text-xs">{d.id.slice(0, 12)}...</td>
+                      <td className="px-4 py-3 font-mono text-xs text-gray-900">
+                        {d.id.slice(0, 12)}...
+                      </td>
                       <td className="px-4 py-3">{d.template?.name || d.templateId}</td>
                       <td className="px-4 py-3">
                         <span
@@ -238,11 +245,15 @@ export default function ProjectDocumentsPage() {
                             d.status === 'sent'
                               ? 'bg-green-100 text-green-800'
                               : d.status === 'failed'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-blue-100 text-blue-800'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-blue-100 text-blue-800'
                           }`}
                         >
-                          {d.status === 'sent' ? 'Envoyé' : d.status === 'failed' ? 'Échoué' : 'Généré'}
+                          {d.status === 'sent'
+                            ? 'Envoyé'
+                            : d.status === 'failed'
+                              ? 'Échoué'
+                              : 'Généré'}
                         </span>
                       </td>
                       <td className="px-4 py-3">{d.recipient || '-'}</td>
@@ -269,13 +280,15 @@ export default function ProjectDocumentsPage() {
             {pagination && pagination.totalPages > 1 && (
               <div className="mt-6 flex items-center justify-between">
                 <div className="text-sm text-gray-600">
-                  Affichage de {(currentPage - 1) * pagination.limit + 1} à {Math.min(currentPage * pagination.limit, pagination.total)} sur {pagination.total} documents
+                  Affichage de {(currentPage - 1) * pagination.limit + 1} à{' '}
+                  {Math.min(currentPage * pagination.limit, pagination.total)} sur{' '}
+                  {pagination.total} documents
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Précédent
                   </button>
@@ -283,9 +296,9 @@ export default function ProjectDocumentsPage() {
                     Page {currentPage} sur {pagination.totalPages}
                   </span>
                   <button
-                    onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
+                    onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
                     disabled={currentPage === pagination.totalPages}
-                    className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Suivant
                   </button>

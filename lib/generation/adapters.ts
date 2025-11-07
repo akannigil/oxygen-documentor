@@ -5,7 +5,6 @@ import type { TemplateField, DOCXQRCodeConfig, TemplateType, OutputFormat } from
 import type { CertificateAuthConfig } from '@/lib/qrcode/certificate-auth'
 import type { DOCXStyleOptions } from '@/lib/generators/docx-style-module'
 
-
 export interface GenerationContext {
   templateBuffer: Buffer
   templateMimeType: string
@@ -63,16 +62,19 @@ export class PdfImageGeneratorAdapter implements TemplateGeneratorAdapter {
   async generate(_desired: OutputFormat, ctx: GenerationContext): Promise<GenerationResult> {
     const fields: TemplateField[] = ctx.fields ?? []
     const hasQRCodeWithOptions = fields.some(
-      (f) => f.type === 'qrcode' && ((f.qrcodeAuth?.enabled === true) || (f.qrcodeStorageUrl?.enabled === true))
+      (f) =>
+        f.type === 'qrcode' &&
+        (f.qrcodeAuth?.enabled === true || f.qrcodeStorageUrl?.enabled === true)
     )
 
-    const qrOptions = hasQRCodeWithOptions && ctx.authConfig
-      ? {
-          authConfig: ctx.authConfig,
-          ...(ctx.documentFilePath ? { documentFilePath: ctx.documentFilePath } : {}),
-          ...(ctx.getStorageUrl ? { getStorageUrl: ctx.getStorageUrl } : {}),
-        }
-      : undefined
+    const qrOptions =
+      hasQRCodeWithOptions && ctx.authConfig
+        ? {
+            authConfig: ctx.authConfig,
+            ...(ctx.documentFilePath ? { documentFilePath: ctx.documentFilePath } : {}),
+            ...(ctx.getStorageUrl ? { getStorageUrl: ctx.getStorageUrl } : {}),
+          }
+        : undefined
 
     const buffer = await generateDocumentFromTemplate(
       ctx.templateBuffer,
@@ -98,5 +100,3 @@ export function getAdapter(templateType: TemplateType): TemplateGeneratorAdapter
   }
   return found
 }
-
-

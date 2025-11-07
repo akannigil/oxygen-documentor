@@ -9,12 +9,14 @@ Ce dossier contient tous les scripts utilitaires pour la gestion et le déploiem
 Génère automatiquement des secrets cryptographiquement sécurisés pour la production.
 
 **Usage :**
+
 ```bash
 chmod +x scripts/generate-secrets.sh
 ./scripts/generate-secrets.sh
 ```
 
 **Fonctionnalités :**
+
 - ✅ Génère NEXTAUTH_SECRET, POSTGRES_PASSWORD, REDIS_PASSWORD
 - ✅ Affiche les URLs de connexion complètes
 - ✅ Option pour créer automatiquement `.env.production`
@@ -25,6 +27,7 @@ chmod +x scripts/generate-secrets.sh
 Version PowerShell du générateur de secrets.
 
 **Usage :**
+
 ```powershell
 .\scripts\generate-secrets.ps1
 ```
@@ -38,6 +41,7 @@ Version PowerShell du générateur de secrets.
 Script d'initialisation du conteneur Docker, exécuté automatiquement au démarrage.
 
 **Fonctionnalités :**
+
 - ✅ Attend la disponibilité de PostgreSQL (avec retry)
 - ✅ Attend la disponibilité de Redis (avec retry)
 - ✅ Génère le client Prisma
@@ -53,6 +57,7 @@ Script d'initialisation du conteneur Docker, exécuté automatiquement au démar
 Script pour créer un utilisateur administrateur.
 
 **Usage :**
+
 ```bash
 # En développement
 npm run user:create
@@ -71,6 +76,7 @@ make db-seed
 Démarre manuellement les workers BullMQ pour le traitement des jobs en arrière-plan.
 
 **Usage :**
+
 ```bash
 # En développement (si les workers ne sont pas auto-démarrés)
 npm run workers
@@ -85,6 +91,7 @@ npm run workers
 Script PowerShell pour générer le client Prisma avec gestion d'erreurs.
 
 **Usage :**
+
 ```powershell
 npm run db:generate:retry
 ```
@@ -109,20 +116,23 @@ scripts/
 ### Première installation
 
 1. **Générer les secrets :**
+
    ```bash
    # Linux/Mac
    ./scripts/generate-secrets.sh
-   
+
    # Windows
    .\scripts\generate-secrets.ps1
    ```
 
 2. **Compléter la configuration :**
+
    ```bash
    nano .env.production  # Ou notepad .env.production sur Windows
    ```
 
 3. **Déployer :**
+
    ```bash
    ./deploy.sh --migrate
    ```
@@ -158,6 +168,7 @@ Pour changer les secrets en production :
 ### Problème : Les secrets ne sont pas reconnus
 
 **Solution :** Assurez-vous que le fichier `.env.production` a les bonnes permissions :
+
 ```bash
 chmod 600 .env.production
 ```
@@ -165,6 +176,7 @@ chmod 600 .env.production
 ### Problème : Le script generate-secrets.sh n'est pas exécutable
 
 **Solution :**
+
 ```bash
 chmod +x scripts/generate-secrets.sh
 ```
@@ -172,6 +184,7 @@ chmod +x scripts/generate-secrets.sh
 ### Problème : Erreur "openssl: command not found"
 
 **Solution :** Installer OpenSSL :
+
 ```bash
 # Ubuntu/Debian
 sudo apt-get install openssl
@@ -186,6 +199,7 @@ brew install openssl
 ### Problème : PowerShell refuse d'exécuter le script
 
 **Solution :** Modifier la politique d'exécution :
+
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
@@ -234,4 +248,3 @@ Pour ajouter un nouveau script :
 - Tous les scripts shell utilisent `#!/bin/bash` ou `#!/bin/sh`
 - Les scripts PowerShell ont l'extension `.ps1`
 - Les scripts TypeScript/Node.js ont l'extension `.ts` et sont exécutés via `tsx`
-

@@ -25,7 +25,8 @@ const ALLOWED_MIME_TYPES = [
 function getTemplateType(mimeType: string): TemplateType {
   if (mimeType === 'application/pdf') return 'pdf'
   if (mimeType.startsWith('image/')) return 'image'
-  if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx'
+  if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    return 'docx'
   return 'pdf' // Par défaut
 }
 
@@ -104,7 +105,10 @@ export async function POST(request: Request, { params }: RouteParams) {
       } catch (error) {
         console.error('Error parsing DOCX template:', error)
         return NextResponse.json(
-          { error: 'Erreur lors de l\'analyse du template DOCX. Assurez-vous qu\'il contient des variables {{...}}' },
+          {
+            error:
+              "Erreur lors de l'analyse du template DOCX. Assurez-vous qu'il contient des variables {{...}}",
+          },
           { status: 400 }
         )
       }
@@ -154,10 +158,6 @@ export async function POST(request: Request, { params }: RouteParams) {
     return NextResponse.json(template, { status: 201 })
   } catch (error) {
     console.error('Error uploading template:', error)
-    return NextResponse.json(
-      { error: 'Une erreur est survenue lors de l\'upload' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Une erreur est survenue lors de l'upload" }, { status: 500 })
   }
 }
-

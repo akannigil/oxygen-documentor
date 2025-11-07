@@ -19,7 +19,7 @@ async function diagnose() {
   console.log(`   Échoués: ${status.failed}\n`)
 
   if (!documentGenerationQueue) {
-    console.error('❌ La queue document-generation n\'est pas disponible')
+    console.error("❌ La queue document-generation n'est pas disponible")
     console.error('   Vérifiez que REDIS_URL est configuré dans votre .env')
     process.exit(1)
   }
@@ -97,4 +97,3 @@ diagnose().catch((error) => {
   console.error('❌ Erreur lors du diagnostic:', error)
   process.exit(1)
 })
-

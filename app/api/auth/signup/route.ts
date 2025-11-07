@@ -14,10 +14,7 @@ export async function POST(request: Request) {
     })
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'Un compte avec cet email existe déjà' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Un compte avec cet email existe déjà' }, { status: 400 })
     }
 
     // Hasher le mot de passe
@@ -52,4 +49,3 @@ export async function POST(request: Request) {
     )
   }
 }
-

@@ -64,11 +64,13 @@ EMAIL_REPLY_TO="contact@example.com"
 
 1. Installer PostgreSQL 14+ sur votre machine
 2. Créer une base de données :
+
 ```sql
 CREATE DATABASE oxygen_document;
 ```
 
 3. Utiliser cette connexion dans `.env.local` :
+
 ```env
 DATABASE_URL="postgresql://postgres:password@localhost:5432/oxygen_document"
 ```
@@ -114,6 +116,7 @@ Aucune configuration supplémentaire nécessaire. Les fichiers seront stockés d
    - Créer un utilisateur IAM avec permissions S3
    - Générer des access keys
 3. Ajouter dans `.env.local` :
+
 ```env
 STORAGE_TYPE="s3"
 AWS_REGION="us-east-1"
@@ -155,6 +158,7 @@ docker-compose up -d redis
 ```
 
 Puis ajouter dans `.env.local` :
+
 ```env
 REDIS_URL="redis://localhost:6379"
 ```
@@ -162,6 +166,7 @@ REDIS_URL="redis://localhost:6379"
 #### Option C : Redis local (installation native)
 
 Si Redis est installé localement :
+
 ```env
 REDIS_URL="redis://localhost:6379"
 ```
@@ -169,11 +174,13 @@ REDIS_URL="redis://localhost:6379"
 #### Option D : Redis cloud (production)
 
 Utiliser un service comme Upstash ou Redis Cloud et configurer :
+
 ```env
 REDIS_URL="redis://username:password@host:port"
 ```
 
 **Dépannage** :
+
 - Si vous voyez des erreurs `ECONNREFUSED`, vérifiez que Redis est démarré : `docker ps` ou `redis-cli ping`
 - Pour désactiver temporairement Redis : définir `REDIS_DISABLED="true"`
 

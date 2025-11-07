@@ -11,13 +11,13 @@ export interface QRCodeInsertOptions extends QRCodeOptions {
    * @default 914400 (1 inch ≈ 2.54 cm)
    */
   docxWidth?: number
-  
+
   /**
    * Hauteur du QR code dans le document (en EMUs)
    * @default 914400 (1 inch ≈ 2.54 cm)
    */
   docxHeight?: number
-  
+
   /**
    * Description alternative pour l'accessibilité
    * @default 'QR Code'
@@ -35,10 +35,10 @@ function pixelsToEMUs(pixels: number): number {
 
 /**
  * Insère un QR code dans un document DOCX existant
- * 
+ *
  * Cette fonction modifie le DOCX en ajoutant une image de QR code
  * à la place d'un placeholder spécifique.
- * 
+ *
  * @param docxBuffer Buffer du document DOCX
  * @param placeholder Texte du placeholder (ex: "{{qrcode}}")
  * @param qrData Données à encoder dans le QR code
@@ -337,4 +337,3 @@ export async function insertMultipleQRCodesInDOCX(
 
   return currentBuffer
 }
-

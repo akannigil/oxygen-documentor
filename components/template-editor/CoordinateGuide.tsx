@@ -1,9 +1,9 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
+import { useState } from 'react'
 
 export function CoordinateGuide() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
 
   return (
     <>
@@ -13,15 +13,23 @@ export function CoordinateGuide() {
         title="Guide des coordonnées"
       >
         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       </button>
 
       {isOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsOpen(false)} />
-            
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => setIsOpen(false)}
+            />
+
             <div className="relative z-10 w-full max-w-3xl rounded-lg bg-white p-6 shadow-xl">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -32,7 +40,12 @@ export function CoordinateGuide() {
                   className="text-gray-400 hover:text-gray-500"
                 >
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -41,8 +54,9 @@ export function CoordinateGuide() {
                 <div className="rounded-md bg-blue-50 p-4">
                   <h4 className="mb-2 font-semibold text-blue-900">Système de coordonnées</h4>
                   <p className="text-sm text-blue-800">
-                    L&apos;origine (0, 0) se trouve en <strong>haut à gauche</strong> de l&apos;image.&apos;
-                    Les valeurs X augmentent vers la droite, les valeurs Y augmentent vers le bas.
+                    L&apos;origine (0, 0) se trouve en <strong>haut à gauche</strong> de
+                    l&apos;image.&apos; Les valeurs X augmentent vers la droite, les valeurs Y
+                    augmentent vers le bas.
                   </p>
                 </div>
 
@@ -50,8 +64,12 @@ export function CoordinateGuide() {
                   <div className="rounded-md border border-gray-200 p-4">
                     <h5 className="mb-2 font-medium text-gray-900">Coordonnées (x, y)</h5>
                     <ul className="space-y-1 text-sm text-gray-600">
-                      <li>• <strong>x</strong>: Position horizontale (gauche → droite)</li>
-                      <li>• <strong>y</strong>: Position verticale (haut → bas)</li>
+                      <li>
+                        • <strong>x</strong>: Position horizontale (gauche → droite)
+                      </li>
+                      <li>
+                        • <strong>y</strong>: Position verticale (haut → bas)
+                      </li>
                       <li>• Unité: pixels (px)</li>
                     </ul>
                   </div>
@@ -59,8 +77,12 @@ export function CoordinateGuide() {
                   <div className="rounded-md border border-gray-200 p-4">
                     <h5 className="mb-2 font-medium text-gray-900">Dimensions (w, h)</h5>
                     <ul className="space-y-1 text-sm text-gray-600">
-                      <li>• <strong>w</strong>: Largeur de la zone</li>
-                      <li>• <strong>h</strong>: Hauteur de la zone</li>
+                      <li>
+                        • <strong>w</strong>: Largeur de la zone
+                      </li>
+                      <li>
+                        • <strong>h</strong>: Hauteur de la zone
+                      </li>
                       <li>• Unité: pixels (px)</li>
                     </ul>
                   </div>
@@ -69,9 +91,17 @@ export function CoordinateGuide() {
                 <div className="rounded-md bg-green-50 p-4">
                   <h4 className="mb-2 font-semibold text-green-900">Conseils de précision</h4>
                   <ul className="space-y-1 text-sm text-green-800">
-                    <li>✓ Activez <strong>&quot;Aimanter à la grille&quot;</strong> pour un alignement précis</li>
-                    <li>✓ Les coordonnées affichées sont les <strong>valeurs réelles</strong> dans le PDF</li>
-                    <li>✓ La grille est espacée de <strong>10 pixels</strong></li>
+                    <li>
+                      ✓ Activez <strong>&quot;Aimanter à la grille&quot;</strong> pour un alignement
+                      précis
+                    </li>
+                    <li>
+                      ✓ Les coordonnées affichées sont les <strong>valeurs réelles</strong> dans le
+                      PDF
+                    </li>
+                    <li>
+                      ✓ La grille est espacée de <strong>10 pixels</strong>
+                    </li>
                     <li>✓ Utilisez le transformer (poignées) pour redimensionner avec précision</li>
                   </ul>
                 </div>
@@ -80,8 +110,11 @@ export function CoordinateGuide() {
                   <h4 className="mb-2 font-semibold text-yellow-900">Conversion pour le PDF</h4>
                   <p className="text-sm text-yellow-800">
                     Les coordonnées Y sont automatiquement converties lors de la génération du PDF
-                    (origine en bas à gauche dans PDF vs origine en haut à gauche dans l&apos;éditeur).
-                    <strong className="block mt-2">Vous n&apos;avez rien à faire, la conversion est automatique !</strong>
+                    (origine en bas à gauche dans PDF vs origine en haut à gauche dans
+                    l&apos;éditeur).
+                    <strong className="mt-2 block">
+                      Vous n&apos;avez rien à faire, la conversion est automatique !
+                    </strong>
                   </p>
                 </div>
 
@@ -97,7 +130,7 @@ export function CoordinateGuide() {
                     </div>
 
                     {/* Exemple de zone */}
-                    <div 
+                    <div
                       className="absolute border-2 border-blue-600 bg-blue-100/50"
                       style={{ left: '60px', top: '40px', width: '120px', height: '60px' }}
                     >
@@ -133,5 +166,5 @@ export function CoordinateGuide() {
         </div>
       )}
     </>
-  );
+  )
 }

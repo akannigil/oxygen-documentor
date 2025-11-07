@@ -29,7 +29,17 @@ const statusStyles: Record<string, { bg: string; text: string }> = {
   failed: { bg: 'bg-red-100', text: 'text-red-800' },
 }
 
-export function DocumentList({ templateId, refreshCounter, defaultSubject, defaultHtmlTemplate, defaultFromName, defaultFrom, defaultReplyTo, defaultCc, defaultBcc }: DocumentListProps) {
+export function DocumentList({
+  templateId,
+  refreshCounter,
+  defaultSubject,
+  defaultHtmlTemplate,
+  defaultFromName,
+  defaultFrom,
+  defaultReplyTo,
+  defaultCc,
+  defaultBcc,
+}: DocumentListProps) {
   const [documents, setDocuments] = useState<DocumentSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -58,9 +68,13 @@ export function DocumentList({ templateId, refreshCounter, defaultSubject, defau
     fetchDocuments()
   }, [fetchDocuments, refreshCounter])
 
-  const allSelectableIds = useMemo(() => documents.filter(d => d.status === 'generated').map(d => d.id), [documents])
+  const allSelectableIds = useMemo(
+    () => documents.filter((d) => d.status === 'generated').map((d) => d.id),
+    [documents]
+  )
 
-  const isAllSelected = allSelectableIds.length > 0 && allSelectableIds.every(id => selectedIds.has(id))
+  const isAllSelected =
+    allSelectableIds.length > 0 && allSelectableIds.every((id) => selectedIds.has(id))
 
   const toggleSelectAll = () => {
     if (isAllSelected) {
@@ -71,7 +85,7 @@ export function DocumentList({ templateId, refreshCounter, defaultSubject, defau
   }
 
   const toggleSelectOne = (id: string) => {
-    setSelectedIds(prev => {
+    setSelectedIds((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -83,7 +97,7 @@ export function DocumentList({ templateId, refreshCounter, defaultSubject, defau
     try {
       const res = await fetch(`/api/documents/${documentId}`)
       if (!res.ok) throw new Error('Impossible de récupérer le document')
-      const data = await res.json() as { downloadUrl?: string }
+      const data = (await res.json()) as { downloadUrl?: string }
       if (data.downloadUrl) window.open(data.downloadUrl, '_blank')
     } catch {}
   }
@@ -92,7 +106,7 @@ export function DocumentList({ templateId, refreshCounter, defaultSubject, defau
     try {
       const res = await fetch(`/api/documents/${documentId}`)
       if (!res.ok) throw new Error('Impossible de récupérer le document')
-      const data = await res.json() as { downloadUrl?: string }
+      const data = (await res.json()) as { downloadUrl?: string }
       if (data.downloadUrl) {
         const a = document.createElement('a')
         a.href = data.downloadUrl
@@ -115,31 +129,40 @@ export function DocumentList({ templateId, refreshCounter, defaultSubject, defau
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-xl font-semibold">Documents & Envoi</h2>
-          <div className="flex items-center gap-2">
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={isAllSelected} onChange={toggleSelectAll} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-              Sélectionner tout (générés)
-            </label>
-            <button
-              onClick={() => setShowBulkModal(true)}
-              disabled={selectedIds.size === 0}
-              className="rounded-md bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
-            >
-              Envoyer en masse
-            </button>
-            <button onClick={fetchDocuments} disabled={loading} className="text-sm text-blue-600 hover:underline disabled:opacity-50">
-                {loading ? 'Chargement...' : 'Rafraîchir'}
-            </button>
-          </div>
+        <h2 className="text-xl font-semibold">Documents & Envoi</h2>
+        <div className="flex items-center gap-2">
+          <label className="inline-flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={isAllSelected}
+              onChange={toggleSelectAll}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            Sélectionner tout (générés)
+          </label>
+          <button
+            onClick={() => setShowBulkModal(true)}
+            disabled={selectedIds.size === 0}
+            className="rounded-md bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+          >
+            Envoyer en masse
+          </button>
+          <button
+            onClick={fetchDocuments}
+            disabled={loading}
+            className="text-sm text-blue-600 hover:underline disabled:opacity-50"
+          >
+            {loading ? 'Chargement...' : 'Rafraîchir'}
+          </button>
+        </div>
       </div>
-      
+
       {documents.length === 0 ? (
         <p>Aucun document n&apos;a encore été généré pour ce template.</p>
       ) : (
         <div className="flow-root">
           <ul role="list" className="-my-4 divide-y divide-gray-200">
-            {documents.map(doc => (
+            {documents.map((doc) => (
               <li key={doc.id} className="py-4">
                 <div className="flex items-center space-x-4">
                   <input
@@ -150,34 +173,40 @@ export function DocumentList({ templateId, refreshCounter, defaultSubject, defau
                     disabled={doc.status !== 'generated'}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900">{doc.recipient || doc.recipientEmail || 'N/A'}</p>
-                    <p className="truncate text-sm text-gray-500">{new Date(doc.createdAt).toLocaleString('fr-FR')}</p>
+                    <p className="truncate text-sm font-medium text-gray-900">
+                      {doc.recipient || doc.recipientEmail || 'N/A'}
+                    </p>
+                    <p className="truncate text-sm text-gray-500">
+                      {new Date(doc.createdAt).toLocaleString('fr-FR')}
+                    </p>
                     {doc.status === 'failed' && doc.errorMessage && (
-                        <div className="mt-2 rounded-md bg-red-50 p-2">
-                            <p className="text-xs text-red-700">
-                                <span className="font-semibold">Erreur:</span> {doc.errorMessage}
-                            </p>
-                        </div>
+                      <div className="mt-2 rounded-md bg-red-50 p-2">
+                        <p className="text-xs text-red-700">
+                          <span className="font-semibold">Erreur:</span> {doc.errorMessage}
+                        </p>
+                      </div>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles[doc.status]?.bg || 'bg-gray-100'} ${statusStyles[doc.status]?.text || 'text-gray-800'}`}>
-                        {doc.status}
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles[doc.status]?.bg || 'bg-gray-100'} ${statusStyles[doc.status]?.text || 'text-gray-800'}`}
+                    >
+                      {doc.status}
                     </span>
                     <button
                       onClick={() => openPreview(doc.id)}
-                      className="rounded-md bg-white border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                      className="rounded-md border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
                     >
                       Aperçu
                     </button>
                     <button
                       onClick={() => downloadDocument(doc.id)}
-                      className="rounded-md bg-white border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                      className="rounded-md border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
                     >
                       Télécharger
                     </button>
                     {doc.status === 'generated' && (
-                      <button 
+                      <button
                         onClick={() => setSelectedDocument(doc)}
                         className="rounded-md bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-500"
                       >
@@ -210,9 +239,13 @@ export function DocumentList({ templateId, refreshCounter, defaultSubject, defau
       {showBulkModal && (
         <BulkSendEmailModal
           templateId={templateId}
-          selectedDocuments={documents.filter(d => selectedIds.has(d.id))}
+          selectedDocuments={documents.filter((d) => selectedIds.has(d.id))}
           onClose={() => setShowBulkModal(false)}
-          onQueued={() => { setShowBulkModal(false); setSelectedIds(new Set()); fetchDocuments() }}
+          onQueued={() => {
+            setShowBulkModal(false)
+            setSelectedIds(new Set())
+            fetchDocuments()
+          }}
           defaultSubject={defaultSubject}
           defaultHtmlTemplate={defaultHtmlTemplate}
           defaultFromName={defaultFromName}

@@ -11,6 +11,7 @@ Ce guide vous aide à identifier et résoudre les problèmes de génération de 
 Le problème le plus courant est qu'un utilisateur n'existe pas dans la base de données alors que la session est active.
 
 **Solution :**
+
 ```bash
 npm run user:create
 ```
@@ -20,6 +21,7 @@ Créez un utilisateur avec l'email utilisé pour vous connecter.
 ### 2. Vérifier les logs du serveur
 
 Les erreurs sont maintenant mieux loggées. Vérifiez la console du serveur pour voir :
+
 - `Session user ID is missing` - L'ID utilisateur n'est pas dans la session
 - `User does not exist in database` - L'utilisateur n'existe pas en base
 - `Doc generation failed` - Erreur lors de la génération d'un document spécifique
@@ -37,6 +39,7 @@ Ouvrez les outils de développement (F12) et vérifiez l'onglet Network pour voi
 3. Vérifiez que cet utilisateur existe dans la base de données
 
 **Test rapide :**
+
 ```bash
 npm run db:studio
 ```
@@ -49,6 +52,7 @@ Ouvrez la table `User` et vérifiez que votre utilisateur existe.
 2. Vérifiez que vous êtes le propriétaire du projet (`project.ownerId === session.user.id`)
 
 **Erreurs possibles :**
+
 - `Projet non trouvé` - Le projet n'existe pas ou l'ID est incorrect
 - `Non autorisé` - Vous n'êtes pas le propriétaire du projet
 
@@ -59,6 +63,7 @@ Ouvrez la table `User` et vérifiez que votre utilisateur existe.
 3. Vérifiez que le fichier template existe dans le stockage
 
 **Erreurs possibles :**
+
 - `Template non trouvé` - Le template n'existe pas ou n'appartient pas au projet
 - Erreur lors du chargement du template depuis le stockage
 
@@ -69,6 +74,7 @@ Ouvrez la table `User` et vérifiez que votre utilisateur existe.
 3. Vérifiez que les champs du template correspondent aux clés des données
 
 **Erreurs possibles :**
+
 - `rows requis` - Aucune donnée n'a été fournie
 - `Taille maximale 100 lignes par requête` - Trop de lignes dans une seule requête
 
@@ -98,6 +104,7 @@ Les erreurs de génération sont maintenant mieux gérées :
 **Cause :** L'utilisateur de la session n'existe pas dans la base de données.
 
 **Solution :**
+
 1. Créez l'utilisateur avec `npm run user:create`
 2. Déconnectez-vous et reconnectez-vous
 3. Essayez à nouveau de générer le PDF
@@ -107,6 +114,7 @@ Les erreurs de génération sont maintenant mieux gérées :
 **Cause :** Tous les documents ont échoué lors de la génération.
 
 **Solution :**
+
 1. Vérifiez les logs du serveur pour voir l'erreur exacte
 2. Vérifiez que le template est valide
 3. Vérifiez que les données sont correctes
@@ -117,6 +125,7 @@ Les erreurs de génération sont maintenant mieux gérées :
 **Cause :** L'erreur est capturée mais pas remontée.
 
 **Solution :**
+
 1. Vérifiez les logs du serveur (console)
 2. Vérifiez les documents dans la base de données avec `status: 'failed'`
 3. Vérifiez le champ `errorMessage` des documents
@@ -126,6 +135,7 @@ Les erreurs de génération sont maintenant mieux gérées :
 **Cause :** Une référence à une entité inexistante (projet, template, utilisateur).
 
 **Solution :**
+
 1. Vérifiez que tous les entités existent (User, Project, Template)
 2. Vérifiez que les IDs sont corrects
 3. Vérifiez que les relations sont cohérentes
@@ -139,6 +149,7 @@ npm run db:studio
 ```
 
 Ouvrez la table `Document` et vérifiez :
+
 - `status` : `'generated'` (succès) ou `'failed'` (échec)
 - `errorMessage` : Message d'erreur si le statut est `'failed'`
 - `filePath` : Chemin du fichier généré
@@ -147,11 +158,11 @@ Ouvrez la table `Document` et vérifiez :
 ### Avec la base de données
 
 ```sql
-SELECT 
-  id, 
-  status, 
-  "errorMessage", 
-  "filePath", 
+SELECT
+  id,
+  status,
+  "errorMessage",
+  "filePath",
   "mimeType",
   "createdAt"
 FROM documents
@@ -183,4 +194,3 @@ Si le problème persiste après avoir suivi ces étapes :
 2. Notez les erreurs exactes (messages d'erreur complets)
 3. Notez les étapes pour reproduire le problème
 4. Vérifiez la configuration de votre environnement
-

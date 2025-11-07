@@ -30,15 +30,18 @@ export function DOCXQRCodeConfigurationClient({
     setSuccess(false)
 
     try {
-      const response = await fetch(`/api/projects/${projectId}/templates/${templateId}/qrcode-configs`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          qrcodeConfigs: configs,
-        }),
-      })
+      const response = await fetch(
+        `/api/projects/${projectId}/templates/${templateId}/qrcode-configs`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            qrcodeConfigs: configs,
+          }),
+        }
+      )
 
       if (!response.ok) {
         const data = await response.json()
@@ -46,7 +49,7 @@ export function DOCXQRCodeConfigurationClient({
       }
 
       setSuccess(true)
-      
+
       // Rediriger après 1 seconde
       setTimeout(() => {
         router.push(`/projects/${projectId}/templates/${templateId}`)
@@ -139,4 +142,3 @@ export function DOCXQRCodeConfigurationClient({
     </div>
   )
 }
-

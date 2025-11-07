@@ -32,10 +32,7 @@ export async function GET() {
     return NextResponse.json(projects)
   } catch (error) {
     console.error('Error fetching projects:', error)
-    return NextResponse.json(
-      { error: 'Une erreur est survenue' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
 
@@ -98,10 +95,6 @@ export async function POST(request: Request) {
     }
 
     console.error('Error creating project:', error)
-    return NextResponse.json(
-      { error: 'Une erreur est survenue' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
-

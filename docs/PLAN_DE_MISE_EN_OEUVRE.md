@@ -11,12 +11,14 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 ### ✅ Phase 1 : Infrastructure & Configuration (Jours 1-3) — TERMINÉE
 
 #### 1.1 Structure du projet
+
 - [x] Initialiser Next.js avec App Router + TypeScript strict
 - [x] Configurer Tailwind CSS
 - [x] Configurer les alias de chemins (`@/*`)
 - [x] Structure des dossiers (features, shared, lib)
 
 #### 1.2 Base de données
+
 - [x] Installer Prisma
 - [x] Créer le schéma Prisma complet (User, Project, Template, Document)
 - [x] Configurer PostgreSQL (ou Supabase)
@@ -24,12 +26,14 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 - [x] Créer les migrations initiales
 
 #### 1.3 Configuration environnement
+
 - [x] Fichier `.env.example` avec toutes les variables
 - [x] Configuration TypeScript stricte (tsconfig.json)
 - [x] ESLint + Prettier
 - [ ] Configuration Vercel/Production (partiel — docker-compose disponible)
 
 #### 1.4 Authentification
+
 - [x] Installer NextAuth.js
 - [x] Configurer providers (email/password, OAuth optionnel)
 - [x] Modèle User avec rôles (owner, editor, viewer)
@@ -41,12 +45,14 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 ### ✅ Phase 2 : CRUD Projets & Templates (Jours 4-6) — TERMINÉE
 
 #### 2.1 Gestion des projets
+
 - [x] API routes : `GET /api/projects`, `POST /api/projects`
 - [x] API route : `GET /api/projects/[id]`, `PUT /api/projects/[id]`, `DELETE`
 - [x] Vérification des permissions (owner uniquement pour modifier)
 - [x] Pages frontend : liste projets, création, édition
 
 #### 2.2 Upload de templates
+
 - [x] API route : `POST /api/projects/[id]/templates`
 - [x] Upload multipart (formidable ou form-data)
 - [x] Validation : taille max, types (PDF, PNG, JPG, DOCX)
@@ -55,6 +61,7 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 - [x] Support templates DOCX avec parsing variables
 
 #### 2.3 Lecture et extraction de templates
+
 - [x] API route : `GET /api/templates/[id]`
 - [x] Service pour récupérer fichier depuis stockage
 - [x] Extraction de métadonnées (dimensions pour images, variables pour DOCX)
@@ -65,18 +72,21 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 ### ✅ Phase 3 : Éditeur Visuel de Zones (Jours 7-10) — TERMINÉE
 
 #### 3.1 Canvas et affichage
+
 - [x] Installer `react-konva` ou `fabric.js` (react-konva implémenté)
 - [x] Composant `TemplateEditor` : affichage template (PDF première page ou image)
 - [x] Conversion PDF première page en image pour canvas (si nécessaire)
 - [x] Zoom, pan sur le canvas (via ImprovedTemplateEditor)
 
 #### 3.2 Gestion des zones
+
 - [x] Ajouter zone (click + drag rectangle)
 - [x] Sélection, déplacement, redimensionnement (handles)
 - [x] Suppression de zones
 - [x] Propriétés de zone : key, type (text/qrcode), fontSize, align, format
 
 #### 3.3 Sauvegarde des définitions
+
 - [x] API route : `PUT /api/templates/[id]/fields`
 - [x] Stockage JSON des zones dans Prisma (champ `fields`)
 - [x] Aperçu avec valeurs demo
@@ -87,18 +97,21 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 ### ✅ Phase 4 : Import de Données & Mapping (Jours 11-13) — TERMINÉE
 
 #### 4.1 Upload et parsing CSV
+
 - [x] Page frontend : upload CSV/XLSX (composant CSVExcelImport)
 - [x] Client-side parsing : `papaparse` (CSV) + `xlsx` (Excel)
 - [x] Aperçu des colonnes détectées
 - [x] Validation format et encodage
 
 #### 4.2 Mapping colonnes → clés
+
 - [x] Interface de mapping : dropdown colonnes → template keys
 - [x] Prévisualisation 10 premières lignes avec mapping (composant MappingPreview)
 - [x] Gestion des types (string, date, number)
 - [x] Validation : toutes les clés requises mappées ?
 
 #### 4.3 API d'import
+
 - [x] Parsing client-side (papaparse/xlsx) — intégré dans le workflow de génération
 - [x] Validation et mapping effectués côté client
 - [x] Données passées directement à l'API de génération
@@ -108,6 +121,7 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 ### ✅ Phase 5 : Service de Génération PDF (Jours 14-17) — TERMINÉE
 
 #### 5.1 Génération single document
+
 - [x] Service `generateDocumentFromTemplate()` :
   - Charge template depuis stockage
   - Pour PDF : utilise `pdf-lib` pour charger
@@ -121,11 +135,13 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 - [x] Support génération DOCX avec variables {{...}}
 
 #### 5.2 Stockage du document généré
+
 - [x] Upload sur S3 (ou autre) : `projects/{projectId}/documents/{documentId}.pdf`
 - [x] Création record `Document` en DB (filePath, mimeType, status: "generated")
 - [x] Retour URL ou signed URL (temps limité)
 
 #### 5.3 API de génération
+
 - [x] API route : `POST /api/projects/[id]/generate`
 - [x] Body : `{ templateId, rows: [...] }`
 - [x] Validation template + données
@@ -136,6 +152,7 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 ### ✅ Phase 6 : Jobs & Génération en Lot (Jours 18-20) — TERMINÉE
 
 #### 6.1 Configuration BullMQ
+
 - [x] Installer BullMQ + Redis (dépendances installées)
 - [x] Configuration Redis (local ou cloud)
 - [x] Queue : `document-generation`
@@ -143,12 +160,14 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 - [x] Workers : traitement des jobs
 
 #### 6.2 Job de génération batch
+
 - [x] API route `/generate` : crée job BullMQ si batch > 10 lignes (génération synchrone pour petits batches)
 - [x] Worker : traite chaque ligne → appelle `generateDocument()`
 - [x] Progression : événements/métriques (via job.progress)
 - [x] API route : `GET /api/jobs/[id]` pour status
 
 #### 6.3 Gestion des erreurs
+
 - [x] Retry sur échec (3 tentatives avec backoff exponentiel)
 - [x] Logging des erreurs par document
 - [x] Statut "failed" dans DB
@@ -158,12 +177,14 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 ### ✅ Phase 7 : Système d'Envoi Email (Jours 21-23) — TERMINÉE
 
 #### 7.1 Configuration SMTP
+
 - [x] Installer `nodemailer` (dépendance installée)
 - [x] Configuration SMTP (env vars)
 - [x] Template email HTML (avec lien ou pièce jointe)
 - [x] Service `sendDocumentEmail()`
 
 #### 7.2 Providers transactionnels
+
 - [x] Adapter pour Resend API (implémenté)
 - [x] Configuration via env (choix du provider : SMTP ou Resend)
 - [ ] Adapter pour SendGrid API (optionnel futur)
@@ -171,12 +192,14 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 - [ ] Adapter pour Mailgun (optionnel futur)
 
 #### 7.3 Jobs d'envoi
+
 - [x] Queue BullMQ : `email-sending` (implémenté)
 - [x] Job : récupère document, génère email, envoie (worker implémenté)
 - [x] Mise à jour `Document.emailSentAt`, `status: "sent"` (implémenté dans service)
 - [x] Gestion erreurs (implémenté dans service et worker)
 
 #### 7.4 API d'envoi
+
 - [x] API route : `POST /api/documents/[id]/send`
 - [x] Body : `{ recipientEmail, subject?, htmlTemplate?, variables?, attachDocument? }`
 - [x] Validation email (Zod schema)
@@ -184,6 +207,7 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 - [x] Support envoi asynchrone via BullMQ (optionnel avec `useQueue: true`)
 
 #### 7.5 Publipostage et templates
+
 - [x] Système de variables dans templates (`{{variable}}`)
 - [x] Variables imbriquées (`{{recipient.name}}`)
 - [x] Formats de date (`{{date|date:DD/MM/YYYY}}`)
@@ -195,12 +219,14 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 ### ✅ Phase 8 : Interface Dashboard & Historique (Jours 24-26) — TERMINÉE
 
 #### 8.1 Dashboard principal
+
 - [x] Page `/dashboard` : vue d'ensemble projets
 - [x] Statistiques : nombre templates, documents générés/sent
 - [x] Liste projets avec compteurs
 - [x] Actions rapides (nouveau projet)
 
 #### 8.2 Liste des documents
+
 - [x] Page `/projects/[id]/documents`
 - [x] Filtres : status (generated, sent, failed), date
 - [x] Recherche par destinataire
@@ -208,12 +234,14 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 - [x] Téléchargement individuel (signed URL via API)
 
 #### 8.3 Détails document
+
 - [x] Page `/documents/[id]`
 - [x] Métadonnées : template, données utilisées, dates
 - [x] Aperçu PDF (iframe ou viewer)
 - [x] Actions : supprimer (renvoyer, régénérer à implémenter)
 
 #### 8.4 Export historique
+
 - [x] Export CSV de la liste documents (métadonnées)
 - [x] Filtres appliqués dans l'export
 
@@ -222,6 +250,7 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 ### ⚠️ Phase 9 : Sécurité & Optimisations (Jours 27-29) — PARTIELLEMENT IMPLÉMENTÉE
 
 #### 9.1 Sécurité
+
 - [ ] Rate limiting (API routes sensibles : `/generate`, `/import`)
 - [ ] Vérification uploads : scan virus (ClamAV optionnel)
 - [x] Signed URLs pour S3 (expiration configurable) — implémenté dans storage adapters
@@ -229,12 +258,14 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 - [ ] Sanitization des inputs (basique via Zod)
 
 #### 9.2 Permissions & RBAC
+
 - [x] Middleware vérifiant authentification
 - [x] Vérification ownerId pour projets/templates/documents
 - [ ] Restrictions : viewer ne peut pas modifier/générer (structure prête, pas de logique métier)
 - [ ] Audit log (optionnel) : qui a fait quoi
 
 #### 9.3 Performance
+
 - [ ] Cache des templates (Redis)
 - [ ] Compression des PDFs générés (optionnel)
 - [ ] Optimisation images (resize avant upload)
@@ -245,16 +276,19 @@ Application web Next.js (App Router) pour la gestion et génération en masse d'
 ### ⚠️ Phase 10 : Tests & Documentation (Jours 30-32) — PARTIELLEMENT IMPLÉMENTÉE
 
 #### 10.1 Tests unitaires
+
 - [ ] Tests services : génération PDF, QR codes
 - [ ] Tests adaptateurs stockage
 - [ ] Tests parsing CSV/Excel
 - [ ] Tests utilitaires (formattage, validation)
 
 #### 10.2 Tests d'intégration
+
 - [ ] Tests API routes (Vitest + supertest ou Playwright)
 - [ ] Tests flux complet : import → génération → envoi
 
 #### 10.3 Documentation
+
 - [x] README avec installation et configuration
 - [ ] Documentation API (Swagger/OpenAPI optionnel)
 - [x] Guide utilisateur (création template, import, génération) — docs/ avec guides QR codes, certificats, DOCX
@@ -308,25 +342,25 @@ oxygen-document/
 
 ### Stack Technique Détaillée
 
-| Composant | Technologie | Version cible |
-|-----------|-------------|---------------|
-| Framework | Next.js | 14+ (App Router) |
-| Language | TypeScript | 5+ (strict mode) |
-| Styling | Tailwind CSS | 3+ |
-| ORM | Prisma | 5+ |
-| Database | PostgreSQL | 14+ (ou Supabase) |
-| Auth | NextAuth.js | 5+ |
-| PDF | pdf-lib | 1.17+ |
-| QR Code | qrcode | 1.5+ |
-| Canvas | react-konva | 9+ |
-| CSV | papaparse | 5+ |
-| Excel | xlsx (SheetJS) | 0.18+ |
-| Jobs | BullMQ | 4+ |
-| Queue | Redis | 7+ |
-| Storage | AWS SDK v3 | 3+ |
-| Email | nodemailer | 6+ |
-| Testing | Vitest | 1+ |
-| Validation | Zod | 3+ |
+| Composant  | Technologie    | Version cible     |
+| ---------- | -------------- | ----------------- |
+| Framework  | Next.js        | 14+ (App Router)  |
+| Language   | TypeScript     | 5+ (strict mode)  |
+| Styling    | Tailwind CSS   | 3+                |
+| ORM        | Prisma         | 5+                |
+| Database   | PostgreSQL     | 14+ (ou Supabase) |
+| Auth       | NextAuth.js    | 5+                |
+| PDF        | pdf-lib        | 1.17+             |
+| QR Code    | qrcode         | 1.5+              |
+| Canvas     | react-konva    | 9+                |
+| CSV        | papaparse      | 5+                |
+| Excel      | xlsx (SheetJS) | 0.18+             |
+| Jobs       | BullMQ         | 4+                |
+| Queue      | Redis          | 7+                |
+| Storage    | AWS SDK v3     | 3+                |
+| Email      | nodemailer     | 6+                |
+| Testing    | Vitest         | 1+                |
+| Validation | Zod            | 3+                |
 
 ---
 
@@ -372,31 +406,37 @@ NODE_ENV="development"
 ## Points d'Attention & Décisions à Prendre
 
 ### 1. Choix Canvas Library
+
 - **react-konva** : Plus léger, bien intégré React
 - **fabric.js** : Plus de features, mais plus lourd
 - **Recommandation** : `react-konva` pour MVP, migration possible si besoin
 
 ### 2. Conversion PDF → Image pour Canvas
+
 - Option A : Convertir côté serveur (pdf2pic, pdf-lib + canvas)
 - Option B : Utiliser PDF.js côté client pour render
 - **Recommandation** : PDF.js côté client (moins de charge serveur)
 
 ### 3. Génération QR Code
+
 - Génération côté serveur (plus sûr, contrôle total)
 - Embed dans PDF via pdf-lib
 - Taille configurable par zone
 
 ### 4. Stockage Fichiers
+
 - **Production** : S3 (scalable, CDN)
 - **Dev local** : Stockage local (dossier `uploads/`)
 - **Fallback** : FTP (pour clients spécifiques)
 
 ### 5. Gestion des Erreurs
+
 - Sentry pour monitoring production
 - Logs structurés (Winston ou Pino)
 - Notifications admin sur erreurs critiques
 
 ### 6. Scalabilité
+
 - Utiliser Vercel pour frontend (serverless)
 - Worker séparé pour BullMQ (VPS ou Railway)
 - S3 pour storage (pas de limite pratique)
@@ -407,6 +447,7 @@ NODE_ENV="development"
 ## Checklist MVP (Priorités)
 
 ### ✅ Priorité 1 (Core) — TERMINÉE
+
 - [x] Auth + CRUD projets
 - [x] Upload template + éditeur zones visuel
 - [x] Import CSV/Excel + mapping
@@ -414,11 +455,13 @@ NODE_ENV="development"
 - [x] Support templates DOCX avec variables
 
 ### ⚠️ Priorité 2 (Fonctionnel) — TERMINÉE
+
 - [x] Historique documents (liste et détails)
 - [x] Batch generate + worker (génération synchrone batch + BullMQ pour batches > 10 lignes)
 - [x] Envoi email (SMTP/Resend) + logging (service complet avec publipostage)
 
 ### ⚠️ Priorité 3 (Production-ready) — PARTIELLEMENT TERMINÉE
+
 - [x] Role-based access + signed URLs (structure prête, vérification ownerId)
 - [ ] Rate limiting
 - [x] Tests + documentation (documentation présente, tests manquants)
@@ -439,6 +482,7 @@ NODE_ENV="development"
 **Progression globale : ~92%**
 
 ### Phases terminées (✅)
+
 - Phase 1 : Infrastructure & Configuration — **100%**
 - Phase 2 : CRUD Projets & Templates — **100%**
 - Phase 3 : Éditeur Visuel de Zones — **95%**
@@ -449,10 +493,12 @@ NODE_ENV="development"
 - Phase 8 : Interface Dashboard & Historique — **100%**
 
 ### Phases partiellement terminées (⚠️)
+
 - Phase 9 : Sécurité & Optimisations — **50%** (validation Zod, signed URLs, permissions basiques)
 - Phase 10 : Tests & Documentation — **60%** (documentation présente, tests manquants)
 
 ### Fonctionnalités supplémentaires implémentées
+
 - ✅ Support templates DOCX avec variables `{{...}}`
 - ✅ Génération DOCX avec docxtemplater
 - ✅ Conversion DOCX → PDF avec Puppeteer
@@ -509,6 +555,7 @@ NODE_ENV="development"
 ## Points Restants
 
 #### Must-have (avant mise en production)
+
 - [ ] Rate limiting sur routes sensibles (`/generate`, `/import`, `/documents/[id]/send`)
 - [ ] RBAC: interdire toute modification/génération au rôle `viewer`; définir droits `editor`
 - [ ] Sanitization des inputs (complémentaire à la validation Zod)
@@ -517,6 +564,7 @@ NODE_ENV="development"
 - [ ] Monitoring (Sentry) et logs structurés (Pino/Winston)
 
 #### Should-have
+
 - [ ] Export/Import JSON de configuration de l'éditeur
 - [ ] Lazy loading des listes volumineuses
 - [ ] Documentation API (Swagger/OpenAPI)
@@ -524,6 +572,7 @@ NODE_ENV="development"
 - [ ] Optimisation d’images avant upload
 
 #### Nice-to-have / Optionnels
+
 - [ ] Adapters email supplémentaires: SendGrid, AWS SES, Mailgun
 - [ ] Audit log (qui a fait quoi, quand)
 - [ ] Améliorations avancées DOCX/QR (alignements, wrapping, z-order)
@@ -539,4 +588,3 @@ NODE_ENV="development"
 - Gérer les erreurs de manière explicite
 - Documenter les fonctions complexes
 - Écrire des tests pour les services critiques
-

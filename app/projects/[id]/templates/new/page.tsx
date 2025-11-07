@@ -131,12 +131,12 @@ export default function NewTemplatePage() {
 
             {/* Upload de fichier */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 Fichier template <span className="text-red-500">*</span>
               </label>
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-colors"
+                className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 transition-colors hover:border-blue-500 hover:bg-blue-50"
               >
                 {preview ? (
                   <div className="space-y-4">
@@ -183,14 +183,10 @@ export default function NewTemplatePage() {
                       />
                     </svg>
                     <p className="mt-2 text-sm text-gray-600">
-                      <span className="font-semibold text-blue-600">
-                        Cliquez pour télécharger
-                      </span>{' '}
+                      <span className="font-semibold text-blue-600">Cliquez pour télécharger</span>{' '}
                       ou glissez-déposez
                     </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                      PDF, PNG, JPG ou DOCX (max. 10MB)
-                    </p>
+                    <p className="mt-1 text-xs text-gray-500">PDF, PNG, JPG ou DOCX (max. 10MB)</p>
                   </div>
                 )}
                 <input
@@ -270,4 +266,3 @@ export default function NewTemplatePage() {
     </div>
   )
 }
-

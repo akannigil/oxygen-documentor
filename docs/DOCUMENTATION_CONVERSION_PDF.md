@@ -17,10 +17,12 @@ npm install mammoth puppeteer
 **Puppeteer** nécessite Chromium (navigateur headless) qui peut nécessiter des dépendances système supplémentaires.
 
 #### Windows
+
 - ✅ Fonctionne généralement sans configuration supplémentaire
 - Puppeteer télécharge automatiquement Chromium lors de l'installation
 
 #### Linux / Docker
+
 Vous devrez peut-être installer des packages système supplémentaires :
 
 ```bash
@@ -67,6 +69,7 @@ apt-get install -y \
 ```
 
 #### Docker
+
 Si vous utilisez Docker, vous devrez peut-être ajouter ces packages dans votre `Dockerfile` :
 
 ```dockerfile
@@ -166,11 +169,13 @@ export async function convertDOCXToPDF(docxBuffer: Buffer): Promise<Buffer> {
 ```
 
 **Avantages** :
+
 - ✅ Plus fidèle à Word
 - ✅ Pas de navigateur nécessaire
 - ✅ Plus rapide pour les documents complexes
 
 **Inconvénients** :
+
 - ⚠️ Nécessite LibreOffice installé sur le serveur
 - ⚠️ Dépendances système plus lourdes
 
@@ -182,17 +187,18 @@ export async function convertDOCXToPDF(docxBuffer: Buffer): Promise<Buffer> {
 
 ## 📊 Formats de sortie supportés
 
-| Format template | Formats de sortie |
-|----------------|-------------------|
-| **DOCX** | DOCX (par défaut) ou PDF |
-| **PDF** | PDF uniquement |
-| **Image** | PDF uniquement |
+| Format template | Formats de sortie        |
+| --------------- | ------------------------ |
+| **DOCX**        | DOCX (par défaut) ou PDF |
+| **PDF**         | PDF uniquement           |
+| **Image**       | PDF uniquement           |
 
 ## 🐛 Résolution de problèmes
 
 ### Erreur : "Could not find Chromium"
 
 **Solution** :
+
 1. Vérifier que `puppeteer` est bien installé : `npm list puppeteer`
 2. Réinstaller puppeteer : `npm install puppeteer --force`
 3. Sur Linux, installer les dépendances système (voir ci-dessus)
@@ -202,6 +208,7 @@ export async function convertDOCXToPDF(docxBuffer: Buffer): Promise<Buffer> {
 **Cause** : Document trop complexe ou Chromium qui ne répond pas
 
 **Solution** :
+
 - Réduire la taille/complexité du document
 - Augmenter le timeout dans le code
 - Utiliser LibreOffice à la place
@@ -209,7 +216,7 @@ export async function convertDOCXToPDF(docxBuffer: Buffer): Promise<Buffer> {
 ### Performance lente
 
 **Solutions** :
+
 - Utiliser LibreOffice (plus rapide)
 - Générer en lot avec un système de files d'attente (BullMQ)
 - Limiter le nombre de documents par batch
-

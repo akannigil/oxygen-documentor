@@ -14,19 +14,19 @@ export interface QRCodeOptions {
    * @default basé sur field.w
    */
   width?: number
-  
+
   /**
    * Marge autour du QR code (en modules)
    * @default 1
    */
   margin?: number
-  
+
   /**
    * Niveau de correction d'erreur
    * @default 'M'
    */
   errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H'
-  
+
   /**
    * Couleurs du QR code
    */
@@ -44,22 +44,22 @@ export interface QRCodeCertificateAuth {
    * Active l'authentification de certificat
    */
   enabled: boolean
-  
+
   /**
    * URL de base pour la vérification (ex: "https://example.com/verify")
    */
   verificationBaseUrl?: string
-  
+
   /**
    * Durée de validité en secondes (optionnel)
    */
   expiresIn?: number
-  
+
   /**
    * Inclure le hash du document pour vérifier l'intégrité
    */
   includeDocumentHash?: boolean
-  
+
   /**
    * Champs à utiliser pour construire les données du certificat
    */
@@ -82,12 +82,12 @@ export interface QRCodeStorageUrl {
    * Active l'intégration de l'URL de stockage
    */
   enabled: boolean
-  
+
   /**
    * Type d'URL à générer
    */
   urlType?: 'signed' | 'public' // signed: URL signée temporaire, public: URL publique
-  
+
   /**
    * Durée de validité en secondes pour les URLs signées
    * @default 3600 (1 heure)
@@ -105,22 +105,28 @@ export interface TemplateField {
   align?: 'left' | 'center' | 'right'
   type: 'text' | 'qrcode' | 'date' | 'number'
   format?: string // Format optionnel (e.g., "YYYY-MM-DD" pour dates, mask pour textes)
-  fontFamily?: 'Helvetica' | 'Helvetica-Bold' | 'Times-Roman' | 'Times-Bold' | 'Courier' | 'Courier-Bold'
+  fontFamily?:
+    | 'Helvetica'
+    | 'Helvetica-Bold'
+    | 'Times-Roman'
+    | 'Times-Bold'
+    | 'Courier'
+    | 'Courier-Bold'
   textColor?: string // Couleur hex (e.g., "#000000")
   backgroundColor?: string // Couleur de fond hex
   borderColor?: string // Couleur de bordure hex
   borderWidth?: number // Épaisseur de bordure
-  
+
   /**
    * Options de personnalisation pour les QR codes (uniquement si type === 'qrcode')
    */
   qrcodeOptions?: QRCodeOptions
-  
+
   /**
    * Configuration d'authentification pour les QR codes de certificats
    */
   qrcodeAuth?: QRCodeCertificateAuth
-  
+
   /**
    * Configuration pour intégrer l'URL de stockage dans le QR code
    */
@@ -142,29 +148,29 @@ export interface DOCXQRCodeConfig {
    * Placeholder dans le template DOCX (ex: "{{qrcode_verification}}")
    */
   placeholder: string
-  
+
   /**
    * Pattern du contenu du QR Code, peut contenir des variables
    * Ex: "https://verify.example.com/{{id}}/{{code}}"
    * Ex: "BEGIN:VCARD\nFN:{{nom}} {{prenom}}\nEND:VCARD"
    */
   contentPattern: string
-  
+
   /**
    * Type de contenu du QR Code (optionnel, pour assistance)
    */
   contentType?: 'url' | 'text' | 'vcard' | 'email' | 'phone' | 'custom'
-  
+
   /**
    * Options visuelles du QR Code
    */
   options?: QRCodeOptions
-  
+
   /**
    * Configuration d'authentification (pour certificats)
    */
   auth?: QRCodeCertificateAuth
-  
+
   /**
    * Configuration pour URL de stockage
    */
@@ -188,4 +194,3 @@ export interface ColumnMapping {
 export type DocumentStatus = 'generated' | 'sent' | 'failed'
 
 export type UserRole = 'owner' | 'editor' | 'viewer'
-

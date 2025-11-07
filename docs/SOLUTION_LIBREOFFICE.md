@@ -11,7 +11,7 @@ J'ai implémenté une solution utilisant **LibreOffice en mode headless**, qui f
 ### Pourquoi LibreOffice ?
 
 - ✅ **Fidélité parfaite** au document Word
-- ✅ **Images de fond préservées** avec positionnement exact  
+- ✅ **Images de fond préservées** avec positionnement exact
 - ✅ **Texte superposé maintenu** sans déplacement
 - ✅ **Fallback automatique** vers Puppeteer si LibreOffice n'est pas disponible
 
@@ -30,11 +30,13 @@ const pdfBuffer = await convertDOCXToPDFWithStyles(docxBuffer)
 ### Windows (Votre Environnement)
 
 **Option 1 : Téléchargement (5 minutes)**
+
 1. Télécharger LibreOffice : https://www.libreoffice.org/download/
 2. Installer
 3. Redémarrer le serveur Node.js
 
 **Option 2 : PowerShell (si vous avez Chocolatey)**
+
 ```powershell
 choco install libreoffice
 ```
@@ -68,11 +70,13 @@ soffice --version
 ## 📊 Résultat Attendu
 
 ### Avant (avec Puppeteer uniquement)
+
 - ❌ Image de fond disparue ou mal positionnée
 - ❌ Texte déplacé en bas de page
 - ⚠️ Conversion approximative
 
 ### Après (avec LibreOffice)
+
 - ✅ Image de fond parfaitement préservée
 - ✅ Texte exactement au bon endroit
 - ✅ Conversion identique à "Exporter en PDF" dans Word
@@ -93,6 +97,7 @@ soffice --version
 ## 💡 Alternatives si LibreOffice ne Fonctionne Pas
 
 Si vous ne pouvez pas installer LibreOffice :
+
 - L'application utilisera automatiquement Puppeteer (moins fidèle)
 - Vous pouvez utiliser un service cloud de conversion (CloudConvert, etc.)
 - En production Docker : facile à installer (voir docs/INSTALLATION_LIBREOFFICE.md)
@@ -102,4 +107,3 @@ Si vous ne pouvez pas installer LibreOffice :
 **Auteur :** Assistant IA  
 **Date :** 2 Novembre 2025  
 **Statut :** ✅ Implémenté et Testé
-

@@ -17,16 +17,17 @@ Ce guide explique comment intégrer et configurer des QR Codes selon le type de 
 
 Oxygen Document supporte **deux approches différentes** pour intégrer des QR Codes selon le type de template :
 
-| Type de Template | Méthode d'intégration | Configuration |
-|------------------|----------------------|---------------|
-| **PDF / Image** (PNG, JPG) | Éditeur visuel avec zones cliquables | Interface graphique |
-| **DOCX** (Word) | Placeholders textuels `{{qrcode_xxx}}` | Programmation/API |
+| Type de Template           | Méthode d'intégration                  | Configuration       |
+| -------------------------- | -------------------------------------- | ------------------- |
+| **PDF / Image** (PNG, JPG) | Éditeur visuel avec zones cliquables   | Interface graphique |
+| **DOCX** (Word)            | Placeholders textuels `{{qrcode_xxx}}` | Programmation/API   |
 
 ---
 
 ## Templates PDF/Image (Éditeur Visuel)
 
 ### 🎯 Cas d'usage
+
 - Certificats avec QR Code à position fixe
 - Badges avec QR Code
 - Attestations formatées
@@ -55,7 +56,7 @@ Oxygen Document supporte **deux approches différentes** pour intégrer des QR C
    - **Cliquer et maintenir** le bouton de la souris
    - **Glisser** pour créer un rectangle à l'endroit désiré
    - **Relâcher** pour finaliser la zone
-   
+
    ```
    ┌─────────────────────────────┐
    │  Votre Template             │
@@ -80,10 +81,11 @@ Dans le **panneau de propriétés à droite** :
 1. **Changer le type**
    - Sélectionner le menu déroulant "Type"
    - Choisir **"QR Code"**
-   
+
    Les options de QR Code apparaissent automatiquement !
 
 2. **Donner un nom au champ**
+
    ```
    Clé du champ: qrcode_verification
    ```
@@ -91,7 +93,6 @@ Dans le **panneau de propriétés à droite** :
 3. **Configurer les options du QR Code** (optionnel)
 
    #### 3.1 Options de base
-
    - **Niveau de correction d'erreur**
      - `L` (Low) - 7% : Plus petit QR Code
      - `M` (Medium) - 15% : **Recommandé par défaut**
@@ -110,12 +111,12 @@ Dans le **panneau de propriétés à droite** :
    #### 3.2 Authentification de certificat (Avancé)
 
    Cochez **"Activer l'authentification"** pour sécuriser le QR Code :
-
    - **URL de vérification** : `https://monsite.com/verify`
    - **Durée de validité** : `315360000` (10 ans en secondes)
    - **Inclure le hash du document** : ☑ (recommandé pour sécurité maximale)
 
    **Champs du certificat à inclure :**
+
    ```
    ID Certificat: certificate_id
    Nom du titulaire: holder_name
@@ -127,7 +128,6 @@ Dans le **panneau de propriétés à droite** :
    #### 3.3 URL de stockage (Avancé)
 
    Cochez **"Intégrer l'URL de stockage"** pour créer un lien vers le document :
-
    - **Type d'URL**
      - `signed` : URL temporaire sécurisée (recommandé)
      - `public` : URL permanente publique
@@ -186,7 +186,7 @@ const data = {
   holder_name: 'Jean Dupont',
   title: 'Certificat de Formation',
   issue_date: '2025-01-15',
-  issuer: 'Formation Pro'
+  issuer: 'Formation Pro',
 }
 
 // Le QR Code sera automatiquement généré avec ces données
@@ -197,6 +197,7 @@ const data = {
 ## Templates DOCX (Placeholders)
 
 ### 🎯 Cas d'usage
+
 - Documents Word existants
 - Templates avec mise en forme complexe
 - Documents avec flux de texte dynamique
@@ -208,6 +209,7 @@ const data = {
 
 1. **Ouvrir votre document Word**
 2. **Insérer les placeholders de variables normales**
+
    ```
    Nom: {{nom}}
    Prénom: {{prenom}}
@@ -218,19 +220,20 @@ const data = {
 3. **Insérer le placeholder de QR Code**
    - Placez le curseur où vous voulez le QR Code
    - Tapez le placeholder : `{{qrcode_verification}}`
-   
+
    Exemple complet :
+
    ```
    CERTIFICAT DE FORMATION
-   
+
    Nom: {{nom}}
    Prénom: {{prenom}}
    Formation: {{formation}}
    Date: {{date}}
-   
+
    Pour vérifier l'authenticité de ce certificat, scannez ce QR Code :
    {{qrcode_verification}}
-   
+
    Signature: {{signature}}
    ```
 
@@ -259,20 +262,20 @@ const docxBuffer = await generateDOCX(templateBuffer, {
     email: 'jean.dupont@example.com',
     date: '15/01/2025',
     formation: 'React Avancé',
-    signature: 'Directeur Formation'
+    signature: 'Directeur Formation',
   },
-  
+
   // QR Codes à insérer
   qrcodes: {
-    '{{qrcode_verification}}': 'https://verify.example.com/cert/CERT-2025-001'
+    '{{qrcode_verification}}': 'https://verify.example.com/cert/CERT-2025-001',
   },
-  
+
   // Options des QR Codes
   qrcodeOptions: {
-    width: 200,              // Taille en pixels
-    margin: 1,               // Marge (modules)
-    errorCorrectionLevel: 'M' // L, M, Q, ou H
-  }
+    width: 200, // Taille en pixels
+    margin: 1, // Marge (modules)
+    errorCorrectionLevel: 'M', // L, M, Q, ou H
+  },
 })
 ```
 
@@ -282,12 +285,12 @@ const docxBuffer = await generateDOCX(templateBuffer, {
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: {
     nom: 'Dupont',
-    prenom: 'Jean'
+    prenom: 'Jean',
   },
   qrcodes: {
     // QR Code de vérification
     '{{qrcode_verification}}': 'https://verify.example.com/cert/12345',
-    
+
     // QR Code de contact (vCard)
     '{{qrcode_contact}}': `BEGIN:VCARD
 VERSION:3.0
@@ -295,14 +298,14 @@ FN:Jean Dupont
 EMAIL:jean.dupont@example.com
 TEL:+33123456789
 END:VCARD`,
-    
+
     // QR Code vers portail
-    '{{qrcode_portal}}': 'https://portal.example.com/student/jean-dupont'
+    '{{qrcode_portal}}': 'https://portal.example.com/student/jean-dupont',
   },
   qrcodeOptions: {
     width: 150,
-    errorCorrectionLevel: 'Q'
-  }
+    errorCorrectionLevel: 'Q',
+  },
 })
 ```
 
@@ -317,15 +320,15 @@ const docxBuffer = await generateDOCX(templateBuffer, {
     holder_name: 'Jean Dupont',
     title: 'Certificat React Avancé',
     issue_date: '2025-01-15',
-    issuer: 'Formation Pro'
+    issuer: 'Formation Pro',
   },
-  
+
   // Activer l'authentification automatique
   certificate: {
     enabled: true,
     qrcodePlaceholder: '{{qrcode_verification}}', // Placeholder à remplacer
     includeDocumentHash: true, // Hash SHA-256 du document
-    
+
     // Données du certificat (ou auto-détection depuis variables)
     data: {
       certificateId: 'CERT-2025-001',
@@ -333,22 +336,22 @@ const docxBuffer = await generateDOCX(templateBuffer, {
       title: 'Certificat React Avancé',
       issueDate: '2025-01-15',
       issuer: 'Formation Pro',
-      grade: 'Excellent'
+      grade: 'Excellent',
     },
-    
+
     // Configuration d'authentification
     authConfig: {
       secretKey: process.env.CERTIFICATE_SECRET_KEY,
       verificationBaseUrl: 'https://certificates.example.com/verify',
       algorithm: 'sha256',
-      expiresIn: 10 * 365 * 24 * 60 * 60 // 10 ans
-    }
+      expiresIn: 10 * 365 * 24 * 60 * 60, // 10 ans
+    },
   },
-  
+
   qrcodeOptions: {
     width: 200,
-    errorCorrectionLevel: 'Q' // Q ou H recommandé pour certificats
-  }
+    errorCorrectionLevel: 'Q', // Q ou H recommandé pour certificats
+  },
 })
 ```
 
@@ -358,12 +361,12 @@ const docxBuffer = await generateDOCX(templateBuffer, {
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: {
     nom: 'Dupont',
-    prenom: 'Jean'
+    prenom: 'Jean',
   },
   qrcodes: {
     // Le contenu sera l'URL vers le document stocké
-    '{{qrcode_download}}': await getStorageUrl(documentPath, true, 3600)
-  }
+    '{{qrcode_download}}': await getStorageUrl(documentPath, true, 3600),
+  },
 })
 ```
 
@@ -373,17 +376,17 @@ const docxBuffer = await generateDOCX(templateBuffer, {
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: { nom: 'Dupont' },
   qrcodes: {
-    '{{qrcode_brand}}': 'https://example.com'
+    '{{qrcode_brand}}': 'https://example.com',
   },
   qrcodeOptions: {
     width: 200,
     margin: 2,
     errorCorrectionLevel: 'M',
     color: {
-      dark: '#1a56db',   // Bleu pour les modules
-      light: '#f0f4ff'   // Bleu clair pour le fond
-    }
-  }
+      dark: '#1a56db', // Bleu pour les modules
+      light: '#f0f4ff', // Bleu clair pour le fond
+    },
+  },
 })
 ```
 
@@ -428,31 +431,33 @@ Document authentifié | Vérification : https://verify.example.com
 
 ## Tableau Comparatif
 
-| Critère | PDF/Image (Visuel) | DOCX (Placeholder) |
-|---------|-------------------|-------------------|
-| **Configuration** | Interface graphique | Code / API |
-| **Position** | Coordonnées exactes (x, y, w, h) | Position dans le flux de texte |
-| **Édition template** | Éditeur visuel intégré | Microsoft Word ou équivalent |
-| **Complexité** | Simple (point & click) | Moyenne (code) |
-| **Flexibilité layout** | Position fixe | Dynamique avec le texte |
-| **Multiple QR Codes** | Un par zone dessinée | Autant que de placeholders |
-| **Options en temps réel** | ✅ Interface graphique | ❌ Défini dans le code |
-| **Authentification** | ✅ Configuré dans l'éditeur | ✅ Configuré dans l'API |
-| **Prévisualisation** | ✅ Visible dans l'éditeur | ❌ Uniquement après génération |
-| **Maintenance** | Facile (UI) | Nécessite accès au code |
-| **Cas d'usage idéal** | Certificats, badges, attestations | Documents Word existants, rapports |
+| Critère                   | PDF/Image (Visuel)                | DOCX (Placeholder)                 |
+| ------------------------- | --------------------------------- | ---------------------------------- |
+| **Configuration**         | Interface graphique               | Code / API                         |
+| **Position**              | Coordonnées exactes (x, y, w, h)  | Position dans le flux de texte     |
+| **Édition template**      | Éditeur visuel intégré            | Microsoft Word ou équivalent       |
+| **Complexité**            | Simple (point & click)            | Moyenne (code)                     |
+| **Flexibilité layout**    | Position fixe                     | Dynamique avec le texte            |
+| **Multiple QR Codes**     | Un par zone dessinée              | Autant que de placeholders         |
+| **Options en temps réel** | ✅ Interface graphique            | ❌ Défini dans le code             |
+| **Authentification**      | ✅ Configuré dans l'éditeur       | ✅ Configuré dans l'API            |
+| **Prévisualisation**      | ✅ Visible dans l'éditeur         | ❌ Uniquement après génération     |
+| **Maintenance**           | Facile (UI)                       | Nécessite accès au code            |
+| **Cas d'usage idéal**     | Certificats, badges, attestations | Documents Word existants, rapports |
 
 ---
 
 ## 🎯 Recommandations
 
 ### Choisir PDF/Image si :
+
 - ✅ Vous avez un design fixe (certificat, badge)
 - ✅ Vous préférez une interface visuelle
 - ✅ Vos utilisateurs métier doivent pouvoir configurer
 - ✅ Vous voulez voir le résultat en temps réel
 
 ### Choisir DOCX si :
+
 - ✅ Vous avez déjà des templates Word
 - ✅ Votre layout est dynamique (texte qui varie en longueur)
 - ✅ Vous avez besoin de mise en forme complexe Word
@@ -492,27 +497,33 @@ Document authentifié | Vérification : https://verify.example.com
 ## ❓ FAQ
 
 ### Q : Puis-je changer la couleur du QR Code dans l'éditeur PDF/Image ?
+
 **R :** Oui, dans le panneau de propriétés, section "Couleurs du QR Code".
 
 ### Q : Combien de QR Codes puis-je mettre dans un document ?
+
 **R :** Illimité pour les deux types de templates.
 
 ### Q : Le QR Code DOCX garde-t-il la mise en forme autour ?
+
 **R :** Oui, le QR Code s'insère dans le flux de texte en remplaçant le placeholder.
 
 ### Q : Puis-je utiliser des variables dans le contenu du QR Code ?
+
 **R :** Oui ! Les variables sont résolues avant la génération du QR Code.
 
 ### Q : Quelle taille recommandez-vous pour un QR Code ?
-**R :** 
+
+**R :**
+
 - Minimum : 100x100 px
 - Recommandé : 150-200 px
 - Certificats : 200-250 px
 
 ### Q : Les QR Codes sont-ils scannables sur tous les téléphones ?
+
 **R :** Oui, avec n'importe quelle application de lecture QR Code standard.
 
 ---
 
 **Dernière mise à jour** : 2025-01-15
-

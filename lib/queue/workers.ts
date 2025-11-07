@@ -34,14 +34,17 @@ export interface DocumentGenerationJobData {
       italic?: boolean
       underline?: boolean
     }
-    variableStyles?: Record<string, {
-      fontFamily?: string
-      fontSize?: number
-      color?: string
-      bold?: boolean
-      italic?: boolean
-      underline?: boolean
-    }>
+    variableStyles?: Record<
+      string,
+      {
+        fontFamily?: string
+        fontSize?: number
+        color?: string
+        bold?: boolean
+        italic?: boolean
+        underline?: boolean
+      }
+    >
   }
 }
 
@@ -54,9 +57,12 @@ export interface DocumentGenerationJobResult {
 /**
  * Worker pour la génération de documents
  */
-export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobData, DocumentGenerationJobResult> | null {
+export function createDocumentGenerationWorker(): Worker<
+  DocumentGenerationJobData,
+  DocumentGenerationJobResult
+> | null {
   const redisConnection = createRedisConnection()
-  
+
   if (!redisConnection || !documentGenerationQueue) {
     console.warn('Redis non configuré, worker de génération désactivé')
     return null
@@ -98,7 +104,9 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
           throw new Error(`Template ${templateId} n'appartient pas au projet ${projectId}`)
         }
         console.log(`[Worker] Template trouvé: ${template.name} (type: ${template.mimeType})`)
-        console.log(`[Worker] Configuration de stockage: ${projectStorageConfig?.type || 'défaut (env)'}`)
+        console.log(
+          `[Worker] Configuration de stockage: ${projectStorageConfig?.type || 'défaut (env)'}`
+        )
 
         // Utiliser le stockage du projet pour récupérer le template
         const templateBuffer = await projectStorage.getBuffer(template.filePath)
@@ -107,17 +115,26 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
         const getTemplateType = (mimeType: string): 'pdf' | 'image' | 'docx' => {
           if (mimeType === 'application/pdf') return 'pdf'
           if (mimeType.startsWith('image/')) return 'image'
-          if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx'
+          if (
+            mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          )
+            return 'docx'
           return 'pdf'
         }
         const templateType = getTemplateType(template.mimeType)
 
         const authConfig: CertificateAuthConfig | undefined = process.env['CERTIFICATE_SECRET_KEY']
-          ? { secretKey: process.env['CERTIFICATE_SECRET_KEY'], verificationBaseUrl: process.env['CERTIFICATE_VERIFICATION_BASE_URL']!, algorithm: 'sha256' }
+          ? {
+              secretKey: process.env['CERTIFICATE_SECRET_KEY'],
+              verificationBaseUrl: process.env['CERTIFICATE_VERIFICATION_BASE_URL']!,
+              algorithm: 'sha256',
+            }
           : undefined
 
         const getStorageUrl = (filePath: string, signed = false, expiresIn = 3600) => {
-          return signed ? projectStorage.getSignedUrl(filePath, expiresIn) : projectStorage.getUrl(filePath)
+          return signed
+            ? projectStorage.getSignedUrl(filePath, expiresIn)
+            : projectStorage.getUrl(filePath)
         }
 
         for (let i = 0; i < rows.length; i++) {
@@ -126,18 +143,22 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
 
           try {
             console.log(`[Worker] Traitement ligne ${i + 1}/${rows.length}`)
-            
+
             const finalData = { ...data }
 
             // Simplification: Récupérer directement les données mappées depuis le front-end
             const recipientEmail = (finalData['recipientEmail'] as string) || null
-            const recipientName = (finalData['recipientName'] as string) || (recipientEmail?.split('@')[0]) || null
+            const recipientName =
+              (finalData['recipientName'] as string) || recipientEmail?.split('@')[0] || null
 
             // Log pour debug si email manquant
             if (!recipientEmail) {
-              console.warn(`[Worker] Ligne ${i + 1}: Aucun email destinataire trouvé dans les données mappées. Colonnes disponibles:`, Object.keys(finalData))
+              console.warn(
+                `[Worker] Ligne ${i + 1}: Aucun email destinataire trouvé dans les données mappées. Colonnes disponibles:`,
+                Object.keys(finalData)
+              )
             }
-            
+
             const doc = await prisma.document.create({
               data: {
                 projectId,
@@ -156,9 +177,10 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
             let fileExtension: string
 
             if (templateType === 'docx') {
-              outputMimeType = outputFormat === 'pdf'
-                ? 'application/pdf'
-                : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+              outputMimeType =
+                outputFormat === 'pdf'
+                  ? 'application/pdf'
+                  : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
               fileExtension = outputFormat === 'pdf' ? 'pdf' : 'docx'
             } else {
               outputMimeType = 'application/pdf'
@@ -172,14 +194,20 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
               templateMimeType: template.mimeType,
               templateBuffer,
               data: sanitizeVariables(finalData as Record<string, unknown>),
-              fields: (template.fields as unknown as import('@/shared/types').TemplateField[] | undefined) ?? [],
-              qrcodeConfigs: (template.qrcodeConfigs as unknown as import('@/shared/types').DOCXQRCodeConfig[] | undefined) ?? [],
+              fields:
+                (template.fields as unknown as
+                  | import('@/shared/types').TemplateField[]
+                  | undefined) ?? [],
+              qrcodeConfigs:
+                (template.qrcodeConfigs as unknown as
+                  | import('@/shared/types').DOCXQRCodeConfig[]
+                  | undefined) ?? [],
               documentFilePath: documentKey,
               getStorageUrl,
               ...(authConfig ? { authConfig } : {}),
               ...(pdfOptions ? { pdfOptions } : {}),
               ...(styleOptions ? { styleOptions } : {}),
-              outputFormat: (templateType === 'docx' ? (outputFormat ?? 'docx') : 'pdf'),
+              outputFormat: templateType === 'docx' ? (outputFormat ?? 'docx') : 'pdf',
             })
 
             const documentBuffer = genResult.buffer
@@ -195,7 +223,6 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
 
             documentIds.push(docId)
             console.log(`[Worker] Document ${docId} généré avec succès`)
-
           } catch (e) {
             const errorMessage = e instanceof Error ? e.message : 'Erreur inconnue'
             const errorStack = e instanceof Error ? e.stack : String(e)
@@ -210,11 +237,17 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
               })
             }
           }
-          await job.updateProgress({ percent: Math.round(((i + 1) / rows.length) * 100), current: i + 1, total: rows.length })
+          await job.updateProgress({
+            percent: Math.round(((i + 1) / rows.length) * 100),
+            current: i + 1,
+            total: rows.length,
+          })
         }
 
         const result = { success: errors.length === 0, documentIds, errors }
-        console.log(`[Worker] ✅ Job ${job.id} terminé: ${documentIds.length} documents générés, ${errors.length} erreurs`)
+        console.log(
+          `[Worker] ✅ Job ${job.id} terminé: ${documentIds.length} documents générés, ${errors.length} erreurs`
+        )
         return result
       } catch (error) {
         // Erreur fatale avant le traitement des lignes (template introuvable, etc.)
@@ -229,7 +262,9 @@ export function createDocumentGenerationWorker(): Worker<DocumentGenerationJobDa
   )
 
   worker.on('completed', (job, result) => {
-    console.log(`[Worker] ✅ Job ${job.id} complété avec ${result.documentIds.length} documents sur ${result.documentIds.length + result.errors.length} total`)
+    console.log(
+      `[Worker] ✅ Job ${job.id} complété avec ${result.documentIds.length} documents sur ${result.documentIds.length + result.errors.length} total`
+    )
     if (result.errors.length > 0) {
       console.log(`[Worker] ⚠️  Erreurs rencontrées:`, result.errors)
     }
@@ -274,18 +309,34 @@ export interface EmailSendingJobData {
 /**
  * Worker pour l'envoi d'emails
  */
-export function createEmailSendingWorker(): Worker<EmailSendingJobData, { success: boolean; messageId?: string }> | null {
+export function createEmailSendingWorker(): Worker<
+  EmailSendingJobData,
+  { success: boolean; messageId?: string }
+> | null {
   const redisConnection = createRedisConnection()
-  
+
   if (!redisConnection || !emailSendingQueue) {
-    console.warn('Redis non configuré, worker d\'envoi email désactivé')
+    console.warn("Redis non configuré, worker d'envoi email désactivé")
     return null
   }
 
   const worker = new Worker<EmailSendingJobData, { success: boolean; messageId?: string }>(
     'email-sending',
     async (job: Job<EmailSendingJobData, { success: boolean; messageId?: string }>) => {
-      const { documentId, recipientEmail, subject, htmlTemplate, textTemplate, variables, attachDocument, from, fromName, replyTo, cc, bcc } = job.data
+      const {
+        documentId,
+        recipientEmail,
+        subject,
+        htmlTemplate,
+        textTemplate,
+        variables,
+        attachDocument,
+        from,
+        fromName,
+        replyTo,
+        cc,
+        bcc,
+      } = job.data
 
       const result = await sendDocumentEmail({
         documentId,
@@ -303,11 +354,11 @@ export function createEmailSendingWorker(): Worker<EmailSendingJobData, { succes
       })
 
       if (!result.success) {
-        throw new Error(result.error || 'Erreur lors de l\'envoi de l\'email')
+        throw new Error(result.error || "Erreur lors de l'envoi de l'email")
       }
 
       // Ajouter un délai pour respecter les limites de taux du service d'envoi d'emails
-      await new Promise(resolve => setTimeout(resolve, 500)); // 500ms de délai = 2 requêtes/seconde
+      await new Promise((resolve) => setTimeout(resolve, 500)) // 500ms de délai = 2 requêtes/seconde
 
       return {
         success: true,
@@ -356,7 +407,7 @@ export function initializeWorkers() {
   if (!globalEmailWorker) {
     globalEmailWorker = createEmailSendingWorker()
     if (globalEmailWorker) {
-      console.log('✅ Worker d\'envoi d\'emails initialisé')
+      console.log("✅ Worker d'envoi d'emails initialisé")
     }
   }
 
@@ -365,4 +416,3 @@ export function initializeWorkers() {
     emailWorker: globalEmailWorker,
   }
 }
-

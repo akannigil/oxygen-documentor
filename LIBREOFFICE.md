@@ -50,12 +50,12 @@ RUN apk add --no-cache \
 ### API TypeScript
 
 ```typescript
-import { 
+import {
   checkLibreOfficeAvailable,
   convertDocument,
   docxToPdf,
   pptxToPdf,
-  xlsxToPdf 
+  xlsxToPdf,
 } from '@/lib/libreoffice'
 
 // Vérifier la disponibilité
@@ -74,7 +74,7 @@ const pdfPath = await xlsxToPdf('/path/to/spreadsheet.xlsx')
 const outputPath = await convertDocument('/path/to/document.docx', {
   format: 'pdf',
   outputDir: '/path/to/output',
-  timeout: 60000
+  timeout: 60000,
 })
 ```
 
@@ -131,12 +131,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
-    
+
     if (!file) {
-      return NextResponse.json(
-        { error: 'Fichier manquant' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Fichier manquant' }, { status: 400 })
     }
 
     // Sauvegarder le fichier temporairement
@@ -163,10 +160,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
   } catch (error: unknown) {
     console.error('Erreur de conversion:', error)
-    return NextResponse.json(
-      { error: 'Erreur lors de la conversion' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erreur lors de la conversion' }, { status: 500 })
   }
 }
 ```
@@ -219,10 +213,7 @@ async function generateInvoicePdf(
   let modifiedContent = docxContent.toString()
 
   Object.entries(data).forEach(([key, value]) => {
-    modifiedContent = modifiedContent.replace(
-      new RegExp(`{{${key}}}`, 'g'),
-      value
-    )
+    modifiedContent = modifiedContent.replace(new RegExp(`{{${key}}}`, 'g'), value)
   })
 
   // 2. Sauvegarder le DOCX modifié
@@ -259,13 +250,13 @@ LIBREOFFICE_PATH=/usr/bin/soffice
 interface ConversionOptions {
   /** Format de sortie (pdf, html, etc.) */
   format?: string
-  
+
   /** Dossier de sortie */
   outputDir?: string
-  
+
   /** Filtres de conversion spécifiques */
   filters?: string
-  
+
   /** Timeout en millisecondes (défaut: 60000) */
   timeout?: number
 }
@@ -306,7 +297,7 @@ RUN apk add --no-cache font-liberation font-noto-emoji
 // Augmenter le timeout pour les gros fichiers
 const pdfPath = await convertDocument(docxPath, {
   format: 'pdf',
-  timeout: 120000 // 2 minutes
+  timeout: 120000, // 2 minutes
 })
 ```
 
@@ -333,12 +324,12 @@ L'ajout de LibreOffice ajoute environ **~300 MB** à l'image Docker :
 
 Temps moyens de conversion sur Alpine Linux :
 
-| Type | Taille | Temps |
-|------|--------|-------|
-| DOCX simple | 50 KB | ~2s |
-| DOCX complexe | 500 KB | ~5s |
-| PPTX | 2 MB | ~8s |
-| XLSX | 100 KB | ~3s |
+| Type          | Taille | Temps |
+| ------------- | ------ | ----- |
+| DOCX simple   | 50 KB  | ~2s   |
+| DOCX complexe | 500 KB | ~5s   |
+| PPTX          | 2 MB   | ~8s   |
+| XLSX          | 100 KB | ~3s   |
 
 ## 🎯 Cas d'usage
 
@@ -393,7 +384,7 @@ function validateFile(file: File): void {
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
     throw new Error('Type de fichier non supporté')
   }
-  
+
   if (file.size > MAX_FILE_SIZE) {
     throw new Error('Fichier trop volumineux')
   }
@@ -417,4 +408,3 @@ LibreOffice est maintenant intégré dans votre application Docker Oxygen Docume
 - ✅ Support complet des polices (dont MS Core Fonts)
 
 **Prêt à utiliser ! 🚀**
-

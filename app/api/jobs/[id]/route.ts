@@ -59,10 +59,6 @@ export async function GET(request: Request, { params }: RouteParams) {
     })
   } catch (error) {
     console.error('Erreur lors de la récupération du job:', error)
-    return NextResponse.json(
-      { error: 'Une erreur est survenue' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
-

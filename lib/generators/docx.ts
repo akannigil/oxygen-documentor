@@ -52,7 +52,7 @@ function formatValueForDOCX(value: string | number | Date | undefined, format?: 
         return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()
     }
   }
-  
+
   return text
 }
 
@@ -61,20 +61,20 @@ export interface GenerateDOCXOptions {
    * Variables à remplacer dans le template
    */
   variables: Record<string, string | number | Date>
-  
+
   /**
    * Mapping des champs du template aux formats (optionnel)
    * Ex: { date: 'DD/MM/YYYY', montant: '0.00' }
    */
   formats?: Record<string, string>
-  
+
   /**
    * Configuration des QR codes à générer
    * Chaque entrée définit un placeholder et les données du QR code
    * Ex: { '{{qrcode_url}}': 'https://example.com' }
    */
   qrcodes?: Record<string, string>
-  
+
   /**
    * Options de génération des QR codes (taille, marge, etc.)
    */
@@ -83,13 +83,13 @@ export interface GenerateDOCXOptions {
     margin?: number
     errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H'
   }
-  
+
   /**
    * Configurations des QR Codes DOCX avec patterns dynamiques (nouvelle méthode)
    * Remplace progressivement qrcodes et permet des QR Codes avec variables
    */
   qrcodeConfigs?: DOCXQRCodeConfig[]
-  
+
   /**
    * (Avancé) Chemin du fichier final pour ce document, utilisé pour générer une URL de stockage
    * Ex: "projects/{projectId}/documents/{documentId}.docx"
@@ -116,23 +116,23 @@ export interface GenerateDOCXOptions {
      * Activer l'authentification de certificat
      */
     enabled: boolean
-    
+
     /**
      * Données du certificat (détectées automatiquement depuis variables si non fournies)
      */
     data?: Partial<CertificateData>
-    
+
     /**
      * Configuration d'authentification
      */
     authConfig?: CertificateAuthConfig
-    
+
     /**
      * Placeholder du QR code dans le template
      * @default '{{qrcode_verification}}'
      */
     qrcodePlaceholder?: string
-    
+
     /**
      * Inclure le hash du document pour vérifier l'intégrité
      * @default false
@@ -144,9 +144,11 @@ export interface GenerateDOCXOptions {
 /**
  * Détecte et extrait automatiquement les données de certificat depuis les variables
  */
-function detectCertificateData(variables: Record<string, string | number | Date>): Partial<CertificateData> {
+function detectCertificateData(
+  variables: Record<string, string | number | Date>
+): Partial<CertificateData> {
   const data: Partial<CertificateData> = {}
-  
+
   // Détection des champs communs de certificat
   const idFields = ['certificate_id', 'certificateId', 'id', 'cert_id']
   const holderFields = ['holder_name', 'holderName', 'student_name', 'participant_name', 'name']
@@ -154,11 +156,11 @@ function detectCertificateData(variables: Record<string, string | number | Date>
   const issueDateFields = ['issue_date', 'issueDate', 'date', 'creation_date']
   const issuerFields = ['issuer', 'organization', 'organisme', 'emetteur']
   const gradeFields = ['grade', 'note', 'mention', 'result']
-  
+
   // Extraire les champs
   for (const [key, value] of Object.entries(variables)) {
     const lowerKey = key.toLowerCase()
-    
+
     if (idFields.includes(lowerKey)) {
       data.certificateId = String(value)
     } else if (holderFields.includes(lowerKey)) {
@@ -174,13 +176,13 @@ function detectCertificateData(variables: Record<string, string | number | Date>
       data.grade = String(value)
     }
   }
-  
+
   return data
 }
 
 /**
  * Génère un document DOCX à partir d'un template et de données
- * 
+ *
  * @param templateBuffer Buffer du template DOCX contenant des variables {{...}}
  * @param options Options de génération
  * @returns Buffer du document DOCX généré
@@ -250,9 +252,10 @@ export async function generateDOCX(
     // Appliquer les styles aux variables si configuré
     if (options.styleOptions) {
       // Vérifier si une Google Font est utilisée
-      const fontFamily = options.styleOptions.defaultStyle?.fontFamily || 
-                        Object.values(options.styleOptions.variableStyles || {})[0]?.fontFamily
-      
+      const fontFamily =
+        options.styleOptions.defaultStyle?.fontFamily ||
+        Object.values(options.styleOptions.variableStyles || {})[0]?.fontFamily
+
       if (fontFamily && POPULAR_GOOGLE_FONTS[fontFamily]) {
         // Télécharger et intégrer la Google Font
         try {
@@ -264,7 +267,7 @@ export async function generateDOCX(
           // Continuer sans intégrer la police (le document utilisera une police de substitution)
         }
       }
-      
+
       applyVariableStyles(doc.getZip(), formattedData, options.styleOptions)
     }
 
@@ -427,7 +430,8 @@ export async function generateDOCX(
           }
 
           // Intégration URL de stockage si demandée ou si le pattern le requiert
-          const wantsStorageUrl = Boolean(config.storageUrl?.enabled) || qrContent.includes('{{storage_url}}')
+          const wantsStorageUrl =
+            Boolean(config.storageUrl?.enabled) || qrContent.includes('{{storage_url}}')
           if (wantsStorageUrl) {
             if (!options.documentFilePath || !options.getStorageUrl) {
               throw new Error(
@@ -437,7 +441,11 @@ export async function generateDOCX(
 
             const useSigned = (config.storageUrl?.urlType ?? 'signed') === 'signed'
             const expiresIn = config.storageUrl?.expiresIn ?? 3600
-            const storageUrl = await options.getStorageUrl(options.documentFilePath, useSigned, expiresIn)
+            const storageUrl = await options.getStorageUrl(
+              options.documentFilePath,
+              useSigned,
+              expiresIn
+            )
 
             if (qrContent.trim().length === 0 || qrContent.trim() === '{{storage_url}}') {
               qrContent = storageUrl
@@ -568,21 +576,20 @@ export async function generateDOCX(
           })
           .filter(Boolean)
           .join('\n')
-        
+
         throw new Error(`Erreur de template DOCX:\n${errorMessages}`)
       }
-      
+
       throw new Error(`Erreur lors de la génération DOCX: ${error.message}`)
     }
-    
+
     throw new Error('Erreur inconnue lors de la génération DOCX')
   }
 }
 
 /**
  * DÉPRÉCIÉ: Utiliser generateQRCodeBuffer de @/lib/qrcode à la place
- * 
+ *
  * @deprecated Utiliser import { generateQRCodeBuffer } from '@/lib/qrcode'
  */
 export { generateQRCodeBuffer } from '@/lib/qrcode'
-

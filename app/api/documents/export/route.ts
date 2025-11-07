@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     if (!session?.user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
     const { searchParams } = new URL(request.url)
-    
+
     const queryParams = {
       projectId: searchParams.get('projectId') ?? undefined,
       status: searchParams.get('status') ?? undefined,
@@ -34,7 +34,8 @@ export async function GET(request: Request) {
 
     const project = await prisma.project.findUnique({ where: { id: validated.projectId } })
     if (!project) return NextResponse.json({ error: 'Projet non trouvé' }, { status: 404 })
-    if (project.ownerId !== session.user.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
+    if (project.ownerId !== session.user.id)
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
 
     // Construire les filtres (même logique que l'API de liste)
     const where: any = {
@@ -78,7 +79,16 @@ export async function GET(request: Request) {
     })
 
     // Générer le CSV
-    const headers = ['ID', 'Template', 'Statut', 'Destinataire', 'Email', 'Date création', 'Date envoi', 'Message erreur']
+    const headers = [
+      'ID',
+      'Template',
+      'Statut',
+      'Destinataire',
+      'Email',
+      'Date création',
+      'Date envoi',
+      'Message erreur',
+    ]
     const rows = docs.map((doc) => [
       doc.id,
       doc.template?.name || doc.templateId,
@@ -115,7 +125,7 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error('Export CSV error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Paramètres invalides', details: error.errors },
@@ -126,4 +136,3 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
-

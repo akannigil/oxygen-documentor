@@ -26,6 +26,7 @@ Ce système permet de générer des certificats (diplômes, attestations, habili
 - ✅ Une date d'expiration
 
 **Avantages :**
+
 - 🔒 **Infalsifiable** : Toute modification des données invalide la signature
 - ⚡ **Vérification instantanée** : Scan du QR code + API = validation en secondes
 - 🌐 **Hors ligne possible** : Les données sont dans le QR code
@@ -41,14 +42,14 @@ Ce système permet de générer des certificats (diplômes, attestations, habili
 ❌ **Falsification facile** : Modification du PDF/DOCX avec des outils d'édition  
 ❌ **Impression frauduleuse** : Impression d'un faux certificat ressemblant  
 ❌ **Vérification manuelle** : Appels téléphoniques, emails, perte de temps  
-❌ **Pas de traçabilité** : Impossible de savoir si un certificat est révoqué  
+❌ **Pas de traçabilité** : Impossible de savoir si un certificat est révoqué
 
 ### Solutions avec authentification
 
 ✅ **Signature cryptographique** : Impossible de modifier sans invalider  
 ✅ **Vérification automatique** : Scan QR code → API → Résultat instantané  
 ✅ **Révocation possible** : Base de données centrale pour gérer les révocations  
-✅ **Audit trail** : Logs de toutes les vérifications  
+✅ **Audit trail** : Logs de toutes les vérifications
 
 ---
 
@@ -57,7 +58,7 @@ Ce système permet de générer des certificats (diplômes, attestations, habili
 ### 1. Génération du certificat
 
 ```
-[Données certificat] + [Clé secrète] 
+[Données certificat] + [Clé secrète]
     ↓ HMAC SHA-256
 [Signature cryptographique]
     ↓
@@ -84,13 +85,13 @@ Ce système permet de générer des certificats (diplômes, attestations, habili
 
 ### 3. Composants de sécurité
 
-| Composant | Description | Rôle |
-|-----------|-------------|------|
-| **HMAC** | Hash-based Message Authentication Code | Signature infalsifiable |
-| **Secret Key** | Clé secrète côté serveur | Seul le serveur peut signer |
-| **Timestamp** | Horodatage de génération | Anti-rejeu |
-| **Document Hash** | Empreinte SHA-256 du fichier | Vérifier que le document n'a pas été modifié |
-| **Expiration** | Date limite de validité | Certificats temporaires |
+| Composant         | Description                            | Rôle                                         |
+| ----------------- | -------------------------------------- | -------------------------------------------- |
+| **HMAC**          | Hash-based Message Authentication Code | Signature infalsifiable                      |
+| **Secret Key**    | Clé secrète côté serveur               | Seul le serveur peut signer                  |
+| **Timestamp**     | Horodatage de génération               | Anti-rejeu                                   |
+| **Document Hash** | Empreinte SHA-256 du fichier           | Vérifier que le document n'a pas été modifié |
+| **Expiration**    | Date limite de validité                | Certificats temporaires                      |
 
 ---
 
@@ -108,13 +109,13 @@ import { CertificateAuthConfig } from '@/lib/qrcode/certificate-auth'
 const authConfig: CertificateAuthConfig = {
   // ⚠️ IMPORTANT : En production, utiliser une variable d'environnement
   secretKey: process.env.CERTIFICATE_SECRET_KEY!,
-  
+
   // URL de base pour la vérification
   verificationBaseUrl: 'https://certificates.votredomaine.com/verify',
-  
+
   // Algorithme de hash (sha256 ou sha512)
   algorithm: 'sha256',
-  
+
   // Durée de validité du QR code (optionnel, en secondes)
   expiresIn: 10 * 365 * 24 * 60 * 60, // 10 ans
 }
@@ -155,10 +156,7 @@ const certificateData: CertificateData = {
 }
 
 // Générer le certificat authentifié
-const authenticated = generateAuthenticatedCertificate(
-  certificateData,
-  authConfig
-)
+const authenticated = generateAuthenticatedCertificate(certificateData, authConfig)
 
 // Générer le QR code
 const qrBuffer = await generateQRCodeBuffer(authenticated.qrCodeData, {
@@ -196,7 +194,9 @@ console.log(`Hash du document: ${authenticated.documentHash}`)
 
 // 3. Générer le document final avec le QR code
 const finalBuffer = await generateDOCX(templateBuffer, {
-  variables: { /* ... */ },
+  variables: {
+    /* ... */
+  },
   qrcodes: {
     '{{qrcode_verification}}': authenticated.qrCodeData,
   },
@@ -226,6 +226,7 @@ const qrBuffer = await generateQRCodeBuffer(authUrl, {
 ```
 
 **Différence** :
+
 - ✅ QR code moins dense (plus facile à scanner)
 - ✅ URL courte
 - ⚠️ Nécessite une API pour récupérer les détails
@@ -242,10 +243,7 @@ import { verifyCertificateSignature } from '@/lib/qrcode'
 // Données extraites du QR code scanné
 const scannedData = '{"type":"certificate_verification",...}'
 
-const isValid = verifyCertificateSignature(
-  scannedData,
-  process.env.CERTIFICATE_SECRET_KEY!
-)
+const isValid = verifyCertificateSignature(scannedData, process.env.CERTIFICATE_SECRET_KEY!)
 
 if (isValid) {
   console.log('✓ Certificat authentique')
@@ -269,10 +267,7 @@ const isValid = verifyCertificateSignature(
 ```typescript
 import { verifySimpleAuthUrl } from '@/lib/qrcode'
 
-const verification = verifySimpleAuthUrl(
-  scannedUrl,
-  process.env.CERTIFICATE_SECRET_KEY!
-)
+const verification = verifySimpleAuthUrl(scannedUrl, process.env.CERTIFICATE_SECRET_KEY!)
 
 if (verification) {
   console.log(`✓ Certificat valide`)
@@ -324,6 +319,7 @@ const docxBuffer = await generateDOCX(templateBuffer, {
 ### Positionnement du QR code
 
 **Recommandations :**
+
 - 📄 **Bas de page** : Discret, ne gêne pas le contenu principal
 - 📐 **Coin supérieur droit** : Visible, facile à scanner
 - 📏 **Taille** : 3-5 cm pour impression A4
@@ -363,41 +359,38 @@ app.use(express.json())
 // Endpoint de vérification (données complètes dans QR code)
 app.post('/api/certificates/verify', async (req, res) => {
   const { qrCodeData } = req.body
-  
+
   if (!qrCodeData) {
     return res.status(400).json({ error: 'qrCodeData requis' })
   }
-  
+
   try {
     // 1. Vérifier la signature cryptographique
-    const isValid = verifyCertificateSignature(
-      qrCodeData,
-      process.env.CERTIFICATE_SECRET_KEY!
-    )
-    
+    const isValid = verifyCertificateSignature(qrCodeData, process.env.CERTIFICATE_SECRET_KEY!)
+
     if (!isValid) {
       return res.status(401).json({
         valid: false,
         error: 'Signature invalide - certificat possiblement falsifié',
       })
     }
-    
+
     // 2. Parser les données
     const payload = JSON.parse(qrCodeData)
     const certificateId = payload.certificate.id
-    
+
     // 3. Vérifier dans la base de données
     const dbCertificate = await db.certificates.findOne({
       id: certificateId,
     })
-    
+
     if (!dbCertificate) {
       return res.status(404).json({
         valid: false,
         error: 'Certificat non trouvé dans la base de données',
       })
     }
-    
+
     // 4. Vérifier si le certificat a été révoqué
     if (dbCertificate.revoked) {
       return res.status(403).json({
@@ -407,7 +400,7 @@ app.post('/api/certificates/verify', async (req, res) => {
         reason: dbCertificate.revocationReason,
       })
     }
-    
+
     // 5. Logger la vérification (audit trail)
     await db.verificationLogs.create({
       certificateId,
@@ -415,7 +408,7 @@ app.post('/api/certificates/verify', async (req, res) => {
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
     })
-    
+
     // 6. Tout est OK
     return res.json({
       valid: true,
@@ -433,7 +426,6 @@ app.post('/api/certificates/verify', async (req, res) => {
         documentHash: payload.verification.documentHash,
       },
     })
-    
   } catch (error) {
     console.error('Erreur lors de la vérification:', error)
     return res.status(500).json({
@@ -447,42 +439,39 @@ app.post('/api/certificates/verify', async (req, res) => {
 app.get('/api/certificates/verify/:id', async (req, res) => {
   const { id } = req.params
   const token = req.query.token as string
-  
+
   if (!token) {
     return res.status(400).json({ error: 'Token requis' })
   }
-  
+
   const url = `${process.env.VERIFICATION_BASE_URL}/${id}?token=${token}`
-  
-  const verification = verifySimpleAuthUrl(
-    url,
-    process.env.CERTIFICATE_SECRET_KEY!
-  )
-  
+
+  const verification = verifySimpleAuthUrl(url, process.env.CERTIFICATE_SECRET_KEY!)
+
   if (!verification) {
     return res.status(401).json({
       valid: false,
       error: 'Token invalide ou expiré',
     })
   }
-  
+
   // Récupérer les détails depuis la base de données
   const certificate = await db.certificates.findOne({ id })
-  
+
   if (!certificate) {
-    return res.status(404).json({ 
-      valid: false, 
+    return res.status(404).json({
+      valid: false,
       error: 'Certificat non trouvé',
     })
   }
-  
+
   if (certificate.revoked) {
     return res.status(403).json({
       valid: false,
       error: 'Certificat révoqué',
     })
   }
-  
+
   return res.json({
     valid: true,
     certificate,
@@ -502,31 +491,31 @@ Page web pour scanner et vérifier :
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Vérification de Certificat</title>
-</head>
-<body>
-  <h1>Vérification de Certificat</h1>
-  
-  <button id="scanBtn">Scanner un QR Code</button>
-  
-  <div id="result"></div>
-  
-  <script>
-    document.getElementById('scanBtn').addEventListener('click', async () => {
-      // Utiliser une bibliothèque de scan QR comme html5-qrcode
-      const qrCodeData = await scanQRCode() // Fonction de scan
-      
-      const response = await fetch('/api/certificates/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ qrCodeData })
-      })
-      
-      const result = await response.json()
-      
-      if (result.valid) {
-        document.getElementById('result').innerHTML = `
+  <head>
+    <title>Vérification de Certificat</title>
+  </head>
+  <body>
+    <h1>Vérification de Certificat</h1>
+
+    <button id="scanBtn">Scanner un QR Code</button>
+
+    <div id="result"></div>
+
+    <script>
+      document.getElementById('scanBtn').addEventListener('click', async () => {
+        // Utiliser une bibliothèque de scan QR comme html5-qrcode
+        const qrCodeData = await scanQRCode() // Fonction de scan
+
+        const response = await fetch('/api/certificates/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ qrCodeData }),
+        })
+
+        const result = await response.json()
+
+        if (result.valid) {
+          document.getElementById('result').innerHTML = `
           <div style="color: green;">
             ✓ Certificat Authentique
             <br>Titulaire: ${result.certificate.holder}
@@ -534,17 +523,17 @@ Page web pour scanner et vérifier :
             <br>Date: ${result.certificate.issueDate}
           </div>
         `
-      } else {
-        document.getElementById('result').innerHTML = `
+        } else {
+          document.getElementById('result').innerHTML = `
           <div style="color: red;">
             ✗ Certificat Invalide
             <br>${result.error}
           </div>
         `
-      }
-    })
-  </script>
-</body>
+        }
+      })
+    </script>
+  </body>
 </html>
 ```
 
@@ -555,12 +544,14 @@ Page web pour scanner et vérifier :
 ### 🔐 Gestion de la clé secrète
 
 ✅ **À FAIRE :**
+
 - Utiliser une variable d'environnement (`process.env.CERTIFICATE_SECRET_KEY`)
 - Générer une clé de 256 bits minimum (32 bytes)
 - Rotation régulière (tous les 1-2 ans)
 - Stocker dans un gestionnaire de secrets (AWS Secrets Manager, HashiCorp Vault)
 
 ❌ **À NE PAS FAIRE :**
+
 - Coder en dur dans le code source
 - Committer dans Git
 - Utiliser une clé faible ou prévisible
@@ -568,13 +559,13 @@ Page web pour scanner et vérifier :
 
 ### 🛡️ Protection contre les attaques
 
-| Attaque | Protection |
-|---------|------------|
-| **Modification des données** | Signature HMAC invalide si données modifiées |
-| **Rejeu** | Timestamp + vérification en DB |
-| **Timing attack** | `crypto.timingSafeEqual()` pour comparer les signatures |
-| **Brute force** | Utiliser SHA-256 ou SHA-512 |
-| **Expiration** | `expiresIn` + vérification côté serveur |
+| Attaque                      | Protection                                              |
+| ---------------------------- | ------------------------------------------------------- |
+| **Modification des données** | Signature HMAC invalide si données modifiées            |
+| **Rejeu**                    | Timestamp + vérification en DB                          |
+| **Timing attack**            | `crypto.timingSafeEqual()` pour comparer les signatures |
+| **Brute force**              | Utiliser SHA-256 ou SHA-512                             |
+| **Expiration**               | `expiresIn` + vérification côté serveur                 |
 
 ### 📊 Audit et logging
 
@@ -639,13 +630,10 @@ const diplomaData: CertificateData = {
   },
 }
 
-const authenticated = generateAuthenticatedCertificate(
-  diplomaData,
-  {
-    ...authConfig,
-    expiresIn: undefined, // Pas d'expiration pour un diplôme
-  }
-)
+const authenticated = generateAuthenticatedCertificate(diplomaData, {
+  ...authConfig,
+  expiresIn: undefined, // Pas d'expiration pour un diplôme
+})
 ```
 
 ### 2. Habilitations temporaires
@@ -664,14 +652,11 @@ const habilitationData: CertificateData = {
   },
 }
 
-const authenticated = generateAuthenticatedCertificate(
-  habilitationData,
-  {
-    ...authConfig,
-    algorithm: 'sha512', // Plus sécurisé pour habilitations
-    expiresIn: 3 * 365 * 24 * 60 * 60, // 3 ans
-  }
-)
+const authenticated = generateAuthenticatedCertificate(habilitationData, {
+  ...authConfig,
+  algorithm: 'sha512', // Plus sécurisé pour habilitations
+  expiresIn: 3 * 365 * 24 * 60 * 60, // 3 ans
+})
 ```
 
 ### 3. Certificats médicaux
@@ -740,4 +725,3 @@ const quickUrl = generateSimpleAuthUrl(badgeData, authConfig)
 ---
 
 **Note** : Ce système ne remplace pas une PKI complète (Public Key Infrastructure), mais offre un excellent compromis entre sécurité et simplicité pour la plupart des cas d'usage de certificats.
-

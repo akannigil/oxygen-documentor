@@ -8,58 +8,60 @@ Votre application **Oxygen Document** est maintenant entièrement configurée po
 
 ### Configuration Docker
 
-| Fichier | Description | Statut |
-|---------|-------------|--------|
-| `Dockerfile` | Configuration multi-stage optimisée | ✅ Créé |
-| `docker-compose.prod.yml` | Configuration production (App + PostgreSQL + Redis) | ✅ Créé |
-| `docker-compose.yml` | Configuration développement (PostgreSQL + Redis) | ✅ Mis à jour |
-| `.dockerignore.prod` | Exclusions optimisées pour le build | ✅ Créé |
+| Fichier                   | Description                                         | Statut        |
+| ------------------------- | --------------------------------------------------- | ------------- |
+| `Dockerfile`              | Configuration multi-stage optimisée                 | ✅ Créé       |
+| `docker-compose.prod.yml` | Configuration production (App + PostgreSQL + Redis) | ✅ Créé       |
+| `docker-compose.yml`      | Configuration développement (PostgreSQL + Redis)    | ✅ Mis à jour |
+| `.dockerignore.prod`      | Exclusions optimisées pour le build                 | ✅ Créé       |
 
 ### Scripts de déploiement
 
-| Fichier | Description | Statut |
-|---------|-------------|--------|
-| `deploy.sh` | Script de déploiement automatisé (Linux/Mac) | ✅ Créé |
-| `deploy.ps1` | Script de déploiement automatisé (Windows) | ✅ Créé |
-| `Makefile` | Commandes simplifiées pour gérer l'app | ✅ Créé |
+| Fichier      | Description                                  | Statut  |
+| ------------ | -------------------------------------------- | ------- |
+| `deploy.sh`  | Script de déploiement automatisé (Linux/Mac) | ✅ Créé |
+| `deploy.ps1` | Script de déploiement automatisé (Windows)   | ✅ Créé |
+| `Makefile`   | Commandes simplifiées pour gérer l'app       | ✅ Créé |
 
 ### Configuration et secrets
 
-| Fichier | Description | Statut |
-|---------|-------------|--------|
-| `env.production.example` | Template de configuration production | ✅ Créé |
-| `scripts/generate-secrets.sh` | Générateur de secrets (Linux/Mac) | ✅ Créé |
-| `scripts/generate-secrets.ps1` | Générateur de secrets (Windows) | ✅ Créé |
+| Fichier                        | Description                          | Statut  |
+| ------------------------------ | ------------------------------------ | ------- |
+| `env.production.example`       | Template de configuration production | ✅ Créé |
+| `scripts/generate-secrets.sh`  | Générateur de secrets (Linux/Mac)    | ✅ Créé |
+| `scripts/generate-secrets.ps1` | Générateur de secrets (Windows)      | ✅ Créé |
 | `scripts/docker-entrypoint.sh` | Script d'initialisation du conteneur | ✅ Créé |
 
 ### Documentation
 
-| Fichier | Description | Statut |
-|---------|-------------|--------|
-| `DEPLOIEMENT.md` | Guide complet de déploiement | ✅ Créé |
-| `QUICKSTART-DEPLOY.md` | Guide de démarrage rapide (5 min) | ✅ Créé |
-| `RESUME-DEPLOIEMENT.md` | Résumé de tous les fichiers | ✅ Créé |
-| `scripts/README.md` | Documentation des scripts | ✅ Créé |
-| `nginx-advanced.conf` | Configuration Nginx avancée pour NPM | ✅ Créé |
+| Fichier                 | Description                          | Statut  |
+| ----------------------- | ------------------------------------ | ------- |
+| `DEPLOIEMENT.md`        | Guide complet de déploiement         | ✅ Créé |
+| `QUICKSTART-DEPLOY.md`  | Guide de démarrage rapide (5 min)    | ✅ Créé |
+| `RESUME-DEPLOIEMENT.md` | Résumé de tous les fichiers          | ✅ Créé |
+| `scripts/README.md`     | Documentation des scripts            | ✅ Créé |
+| `nginx-advanced.conf`   | Configuration Nginx avancée pour NPM | ✅ Créé |
 
 ### Code applicatif
 
-| Fichier | Description | Statut |
-|---------|-------------|--------|
-| `app/api/health/route.ts` | Endpoint de santé pour monitoring | ✅ Créé |
-| `next.config.js` | Ajout du mode standalone | ✅ Modifié |
+| Fichier                   | Description                       | Statut     |
+| ------------------------- | --------------------------------- | ---------- |
+| `app/api/health/route.ts` | Endpoint de santé pour monitoring | ✅ Créé    |
+| `next.config.js`          | Ajout du mode standalone          | ✅ Modifié |
 
 ## 🚀 Déploiement en 5 étapes
 
 ### 1️⃣ Générer les secrets
 
 **Linux/Mac :**
+
 ```bash
 chmod +x scripts/generate-secrets.sh
 ./scripts/generate-secrets.sh
 ```
 
 **Windows :**
+
 ```powershell
 .\scripts\generate-secrets.ps1
 ```
@@ -109,6 +111,7 @@ chmod +x deploy.sh
 ```
 
 **Ou avec Make :**
+
 ```bash
 make deploy
 ```
@@ -229,13 +232,13 @@ Internet
 
 ## 📚 Documentation disponible
 
-| Document | Contenu | Pour qui |
-|----------|---------|----------|
-| `QUICKSTART-DEPLOY.md` | Guide rapide (5 min) | Déploiement rapide |
-| `DEPLOIEMENT.md` | Guide complet | Configuration détaillée |
-| `RESUME-DEPLOIEMENT.md` | Résumé des fichiers | Vue d'ensemble |
-| `scripts/README.md` | Documentation scripts | Développeurs |
-| `Makefile` (make help) | Commandes disponibles | Utilisation quotidienne |
+| Document                | Contenu               | Pour qui                |
+| ----------------------- | --------------------- | ----------------------- |
+| `QUICKSTART-DEPLOY.md`  | Guide rapide (5 min)  | Déploiement rapide      |
+| `DEPLOIEMENT.md`        | Guide complet         | Configuration détaillée |
+| `RESUME-DEPLOIEMENT.md` | Résumé des fichiers   | Vue d'ensemble          |
+| `scripts/README.md`     | Documentation scripts | Développeurs            |
+| `Makefile` (make help)  | Commandes disponibles | Utilisation quotidienne |
 
 ## 🛠️ Commandes utiles
 
@@ -370,5 +373,4 @@ Votre application est maintenant prête à être déployée en production. Tous 
 
 ---
 
-*Configuration créée le 6 novembre 2025 pour Oxygen Document*
-
+_Configuration créée le 6 novembre 2025 pour Oxygen Document_

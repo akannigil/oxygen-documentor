@@ -43,6 +43,7 @@ Scannez ce QR code pour vérifier l'authenticité :
 Le système détecte automatiquement les données de certificat depuis les variables.
 
 **Champs détectés automatiquement :**
+
 - `certificate_id`, `certificateId`, `id` → ID du certificat
 - `holder_name`, `holderName`, `student_name`, `name` → Titulaire
 - `title`, `course_name`, `formation` → Titre/Formation
@@ -88,7 +89,7 @@ const docxBuffer = await generateDOCX(templateBuffer, {
   },
   certificate: {
     enabled: true,
-    
+
     // Données manuelles du certificat
     data: {
       certificateId: 'CERT-2024-SEC-002',
@@ -139,10 +140,10 @@ const docxBuffer = await generateDOCX(templateBuffer, {
   },
   certificate: {
     enabled: true,
-    
+
     // Placeholder personnalisé (si différent de {{qrcode_verification}})
     qrcodePlaceholder: '{{qr_auth}}',
-    
+
     // Configuration d'authentification personnalisée
     authConfig: {
       secretKey: process.env['CUSTOM_SECRET_KEY']!,
@@ -151,7 +152,7 @@ const docxBuffer = await generateDOCX(templateBuffer, {
       expiresIn: 3 * 365 * 24 * 60 * 60, // 3 ans
     },
   },
-  
+
   // Options du QR code
   qrcodeOptions: {
     width: 220,
@@ -168,18 +169,21 @@ Modifiez `app/api/projects/[id]/generate/route.ts` :
 
 ```typescript
 // Détecter si c'est un certificat
-const isCertificate = template.name.toLowerCase().includes('certificat') ||
-                      template.name.toLowerCase().includes('diplome') ||
-                      template.name.toLowerCase().includes('attestation')
+const isCertificate =
+  template.name.toLowerCase().includes('certificat') ||
+  template.name.toLowerCase().includes('diplome') ||
+  template.name.toLowerCase().includes('attestation')
 
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: data,
-  
+
   // Activer automatiquement l'authentification pour les certificats
-  certificate: isCertificate ? {
-    enabled: true,
-    includeDocumentHash: true, // Recommandé pour les certificats officiels
-  } : undefined,
+  certificate: isCertificate
+    ? {
+        enabled: true,
+        includeDocumentHash: true, // Recommandé pour les certificats officiels
+      }
+    : undefined,
 })
 ```
 
@@ -200,9 +204,11 @@ const body: GenerateRequestBody = await request.json()
 
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: data,
-  certificate: body.enableCertificateAuth ? {
-    enabled: true,
-  } : undefined,
+  certificate: body.enableCertificateAuth
+    ? {
+        enabled: true,
+      }
+    : undefined,
 })
 ```
 
@@ -356,15 +362,17 @@ const certificatMedical = await generateDOCX(templateBuffer, {
 ```typescript
 const blacklist = ['template_facture', 'template_devis']
 
-const shouldAuthenticate = !blacklist.includes(template.name) && 
-                          (template.name.includes('certificat') ||
-                           template.name.includes('diplome'))
+const shouldAuthenticate =
+  !blacklist.includes(template.name) &&
+  (template.name.includes('certificat') || template.name.includes('diplome'))
 
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: data,
-  certificate: shouldAuthenticate ? {
-    enabled: true,
-  } : undefined,
+  certificate: shouldAuthenticate
+    ? {
+        enabled: true,
+      }
+    : undefined,
 })
 ```
 
@@ -373,7 +381,7 @@ const docxBuffer = await generateDOCX(templateBuffer, {
 ```typescript
 if (options.certificate?.enabled) {
   const authenticated = generateAuthenticatedCertificate(...)
-  
+
   // Logger la génération
   await db.certificateAudit.create({
     certificateId: authenticated.certificate.certificateId,
@@ -382,7 +390,7 @@ if (options.certificate?.enabled) {
     signature: authenticated.signature,
     userId: session.user.id,
   })
-  
+
   console.log(`✓ Certificat authentifié généré: ${authenticated.certificate.certificateId}`)
 }
 ```
@@ -399,33 +407,24 @@ import { verifyCertificateSignature } from '@/lib/qrcode/certificate-auth'
 
 export async function POST(request: Request) {
   const { qrCodeData } = await request.json()
-  
-  const isValid = verifyCertificateSignature(
-    qrCodeData,
-    process.env['CERTIFICATE_SECRET_KEY']!
-  )
-  
+
+  const isValid = verifyCertificateSignature(qrCodeData, process.env['CERTIFICATE_SECRET_KEY']!)
+
   if (!isValid) {
-    return NextResponse.json(
-      { valid: false, error: 'Signature invalide' },
-      { status: 401 }
-    )
+    return NextResponse.json({ valid: false, error: 'Signature invalide' }, { status: 401 })
   }
-  
+
   const payload = JSON.parse(qrCodeData)
-  
+
   // Vérifier en base de données
   const cert = await db.certificate.findUnique({
-    where: { id: payload.certificate.id }
+    where: { id: payload.certificate.id },
   })
-  
+
   if (cert?.revoked) {
-    return NextResponse.json(
-      { valid: false, error: 'Certificat révoqué' },
-      { status: 403 }
-    )
+    return NextResponse.json({ valid: false, error: 'Certificat révoqué' }, { status: 403 })
   }
-  
+
   return NextResponse.json({
     valid: true,
     certificate: payload.certificate,
@@ -486,4 +485,3 @@ const docxBuffer = await generateDOCX(templateBuffer, {
 **Version** : 1.0  
 **Date** : 3 novembre 2024  
 **Auteur** : Oxygen Document Team
-

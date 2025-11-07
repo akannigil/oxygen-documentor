@@ -54,8 +54,8 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Aucun document valide' }, { status: 400 })
     }
 
-    const eligible = docs.filter(d => d.recipientEmail && d.status !== 'failed')
-    const withoutEmail = docs.filter(d => !d.recipientEmail).length
+    const eligible = docs.filter((d) => d.recipientEmail && d.status !== 'failed')
+    const withoutEmail = docs.filter((d) => !d.recipientEmail).length
 
     const useQueue = validated.useQueue && areQueuesAvailable() && emailSendingQueue !== null
 
@@ -113,14 +113,14 @@ export async function POST(request: Request, { params }: RouteParams) {
       errors,
       mode: useQueue ? 'queued' : 'sync',
     })
-
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Données invalides', details: error.errors }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Données invalides', details: error.errors },
+        { status: 400 }
+      )
     }
     console.error('Bulk send error:', error)
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
-
-

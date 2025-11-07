@@ -8,12 +8,12 @@ interface DOCXQRCodeConfigurationProps {
    * Variables détectées dans le template DOCX
    */
   variables: TemplateVariable[]
-  
+
   /**
    * Configurations actuelles des QR Codes
    */
   qrcodeConfigs: DOCXQRCodeConfig[]
-  
+
   /**
    * Callback appelé quand les configurations changent
    */
@@ -58,10 +58,7 @@ export function DOCXQRCodeConfiguration({
     setEditingIndex(null)
   }
 
-  const handleUpdateOptions = (
-    index: number,
-    updates: Partial<DOCXQRCodeConfig['options']>
-  ) => {
+  const handleUpdateOptions = (index: number, updates: Partial<DOCXQRCodeConfig['options']>) => {
     const updated = [...qrcodeConfigs]
     const currentConfig = updated[index]
     if (currentConfig) {
@@ -439,4 +436,3 @@ export function DOCXQRCodeConfiguration({
     </div>
   )
 }
-

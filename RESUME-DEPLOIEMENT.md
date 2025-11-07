@@ -5,12 +5,15 @@ Voici un résumé de tous les fichiers créés pour le déploiement de l'applica
 ## 🗂️ Fichiers créés
 
 ### 1. **Dockerfile** ⭐ Principal
+
 Configuration Docker multi-stage optimisée pour la production :
+
 - **Stage 1** : Installation des dépendances
 - **Stage 2** : Build de l'application Next.js avec Prisma
 - **Stage 3** : Image de production minimale avec Alpine Linux
 
 **Caractéristiques :**
+
 - ✅ Support Puppeteer/Chromium pour génération PDF
 - ✅ Support Prisma pour la base de données
 - ✅ Utilisateur non-root pour la sécurité
@@ -18,26 +21,33 @@ Configuration Docker multi-stage optimisée pour la production :
 - ✅ Mode standalone Next.js pour optimisation
 
 ### 2. **docker-compose.prod.yml** ⭐ Principal
+
 Configuration Docker Compose pour la production :
+
 - Service PostgreSQL 15 avec volumes persistants
 - Service Redis 7 avec authentification
 - Service Application Next.js avec toutes les dépendances
 - Réseaux isolés et health checks
 
 **Caractéristiques :**
+
 - ✅ Variables d'environnement sécurisées
 - ✅ Volumes persistants pour données
 - ✅ Health checks sur tous les services
 - ✅ Restart automatique des conteneurs
 
 ### 3. **docker-compose.yml**
+
 Configuration Docker Compose pour le développement :
+
 - Services de base (PostgreSQL + Redis uniquement)
 - Permet de développer avec `npm run dev` en local
 - Données isolées du mode production
 
 ### 4. **deploy.sh** ⭐ Script de déploiement Linux/Mac
+
 Script Bash automatisé pour déployer l'application :
+
 - ✅ Vérification des prérequis
 - ✅ Validation des variables d'environnement
 - ✅ Construction et démarrage des services
@@ -45,25 +55,33 @@ Script Bash automatisé pour déployer l'application :
 - ✅ Options : `--build-only`, `--no-cache`, `--migrate`
 
 ### 5. **deploy.ps1**
+
 Version PowerShell du script de déploiement pour Windows :
+
 - Fonctionnalités identiques à deploy.sh
 - Compatible avec Windows PowerShell et PowerShell Core
 
 ### 6. **scripts/docker-entrypoint.sh**
+
 Script d'initialisation du conteneur :
+
 - ✅ Attend la disponibilité de PostgreSQL et Redis
 - ✅ Génère le client Prisma
 - ✅ Exécute les migrations en production
 - ✅ Gestion d'erreurs robuste
 
 ### 7. **env.production.example**
+
 Template de configuration pour la production :
+
 - Toutes les variables d'environnement documentées
 - Valeurs d'exemple et instructions
 - À copier en `.env.production` et configurer
 
 ### 8. **Makefile** ⭐ Utilitaire
+
 Commandes simplifiées pour gérer l'application :
+
 ```bash
 make deploy          # Déployer en production
 make logs            # Voir les logs
@@ -74,7 +92,9 @@ make status          # Statut des services
 ```
 
 ### 9. **DEPLOIEMENT.md** ⭐ Documentation complète
+
 Guide de déploiement complet avec :
+
 - Prérequis et installation
 - Configuration pas à pas
 - Configuration Nginx Proxy Manager
@@ -83,13 +103,17 @@ Guide de déploiement complet avec :
 - Sécurité
 
 ### 10. **QUICKSTART-DEPLOY.md**
+
 Guide de démarrage rapide (5 minutes) :
+
 - Instructions essentielles uniquement
 - Configuration minimale
 - Déploiement rapide
 
 ### 11. **nginx-advanced.conf**
+
 Configuration Nginx avancée pour NPM :
+
 - Headers de sécurité
 - Cache optimisé pour Next.js
 - Compression Gzip/Brotli
@@ -97,19 +121,25 @@ Configuration Nginx avancée pour NPM :
 - Limites d'upload augmentées
 
 ### 12. **app/api/health/route.ts**
+
 Endpoint de santé pour monitoring :
+
 - Vérifie l'état de l'application
 - Vérifie la connexion à la base de données
 - Utilisé par les health checks Docker
 
 ### 13. **next.config.js** (modifié)
+
 Ajout du mode standalone :
+
 - Optimise la taille de l'image Docker
 - Réduit les dépendances de production
 - Améliore les performances
 
 ### 14. **.dockerignore.prod**
+
 Liste optimisée des fichiers à exclure du build Docker :
+
 - Réduit la taille du contexte de build
 - Accélère la construction des images
 - Exclut les fichiers sensibles
@@ -243,6 +273,7 @@ git pull origin main
 ## 🆘 Dépannage rapide
 
 ### Problème : Les conteneurs ne démarrent pas
+
 ```bash
 make logs
 docker-compose -f docker-compose.prod.yml down
@@ -250,12 +281,14 @@ docker-compose -f docker-compose.prod.yml down
 ```
 
 ### Problème : Erreur de connexion à la base de données
+
 ```bash
 make shell-db
 # Vérifier la connexion
 ```
 
 ### Problème : L'application ne répond pas
+
 ```bash
 make health
 make restart
@@ -263,6 +296,7 @@ make logs-app
 ```
 
 ### Problème : Génération PDF échoue
+
 ```bash
 # Vérifier Chromium
 make shell
@@ -296,4 +330,3 @@ make shell
 Vous disposez maintenant d'une configuration de déploiement complète, robuste et professionnelle pour votre application Oxygen Document. Tous les fichiers sont prêts à l'emploi et documentés.
 
 **Bon déploiement ! 🚀**
-

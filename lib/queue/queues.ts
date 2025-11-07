@@ -6,7 +6,7 @@ import Redis from 'ioredis'
  */
 export function createRedisConnection(): Redis | null {
   const redisUrl = process.env['REDIS_URL']
-  
+
   if (!redisUrl) {
     console.warn('⚠️  REDIS_URL non configuré, queues BullMQ désactivées')
     return null
@@ -25,7 +25,9 @@ export function createRedisConnection(): Redis | null {
       retryStrategy: (times) => {
         // Limiter les tentatives de reconnexion
         if (times > 3) {
-          console.error('❌ Redis: Échec de connexion après 3 tentatives. Les queues BullMQ sont désactivées.')
+          console.error(
+            '❌ Redis: Échec de connexion après 3 tentatives. Les queues BullMQ sont désactivées.'
+          )
           console.error('💡 Pour démarrer Redis localement: docker-compose up -d redis')
           console.error('💡 Pour désactiver Redis: définir REDIS_DISABLED=true dans votre .env')
           return null // Arrêter les tentatives
@@ -124,7 +126,7 @@ const redisConnection = createRedisConnection()
  */
 const getDefaultQueueOptions = (): QueueOptions | null => {
   if (!redisConnection) return null
-  
+
   return {
     connection: redisConnection,
     defaultJobOptions: {
@@ -149,16 +151,16 @@ const defaultQueueOptions = getDefaultQueueOptions()
 /**
  * Queue pour la génération de documents
  */
-export const documentGenerationQueue = redisConnection && defaultQueueOptions
-  ? new Queue('document-generation', defaultQueueOptions)
-  : null
+export const documentGenerationQueue =
+  redisConnection && defaultQueueOptions
+    ? new Queue('document-generation', defaultQueueOptions)
+    : null
 
 /**
  * Queue pour l'envoi d'emails
  */
-export const emailSendingQueue = redisConnection && defaultQueueOptions
-  ? new Queue('email-sending', defaultQueueOptions)
-  : null
+export const emailSendingQueue =
+  redisConnection && defaultQueueOptions ? new Queue('email-sending', defaultQueueOptions) : null
 
 /**
  * Vérifie si les queues sont disponibles
@@ -207,4 +209,3 @@ export async function getQueueStatus(queueName: 'document-generation' | 'email-s
     failed,
   }
 }
-

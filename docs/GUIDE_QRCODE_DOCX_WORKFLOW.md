@@ -27,9 +27,9 @@ qrcodeConfigs: [
     contentPattern: 'https://verify.example.com/{{id}}/{{code}}',
     options: {
       width: 200,
-      errorCorrectionLevel: 'M'
-    }
-  }
+      errorCorrectionLevel: 'M',
+    },
+  },
 ]
 ```
 
@@ -74,11 +74,11 @@ QR Code de vérification :
 
 #### Configuration de base
 
-| Champ | Description | Exemple |
-|-------|-------------|---------|
-| **Placeholder** | Variable dans le template | `{{qrcode_verification}}` |
-| **Type de contenu** | Type de données | URL, vCard, Texte, etc. |
-| **Pattern de contenu** | Contenu avec variables | `https://verify.com/{{id}}/{{code}}` |
+| Champ                  | Description               | Exemple                              |
+| ---------------------- | ------------------------- | ------------------------------------ |
+| **Placeholder**        | Variable dans le template | `{{qrcode_verification}}`            |
+| **Type de contenu**    | Type de données           | URL, vCard, Texte, etc.              |
+| **Pattern de contenu** | Contenu avec variables    | `https://verify.com/{{id}}/{{code}}` |
 
 #### Exemple concret
 
@@ -89,19 +89,20 @@ Pattern : https://verify.example.com/cert/{{certificat_id}}?name={{nom}}
 ```
 
 **Résultat** : Chaque document aura un QR Code différent :
+
 - Document 1 : `https://verify.example.com/cert/CERT001?name=Dupont`
 - Document 2 : `https://verify.example.com/cert/CERT002?name=Martin`
 - Document 3 : `https://verify.example.com/cert/CERT003?name=Bernard`
 
 #### Options visuelles
 
-| Option | Description | Valeurs |
-|--------|-------------|---------|
-| **Largeur** | Taille du QR Code | 50-500 pixels (défaut: 200) |
-| **Marge** | Espacement autour | 0-10 modules (défaut: 1) |
+| Option              | Description             | Valeurs                           |
+| ------------------- | ----------------------- | --------------------------------- |
+| **Largeur**         | Taille du QR Code       | 50-500 pixels (défaut: 200)       |
+| **Marge**           | Espacement autour       | 0-10 modules (défaut: 1)          |
 | **Niveau d'erreur** | Résistance aux dommages | L (7%), M (15%), Q (25%), H (30%) |
-| **Couleur sombre** | Couleur des modules | Hex (défaut: #000000) |
-| **Couleur claire** | Couleur du fond | Hex (défaut: #FFFFFF) |
+| **Couleur sombre**  | Couleur des modules     | Hex (défaut: #000000)             |
+| **Couleur claire**  | Couleur du fond         | Hex (défaut: #FFFFFF)             |
 
 4. **Sauvegardez** la configuration
 
@@ -142,7 +143,7 @@ Résultat : https://verify.example.com/cert?id=CERT001&name=Dupont&date=2025-01-
 ### 3. vCard (Carte de visite)
 
 ```
-Pattern : 
+Pattern :
 BEGIN:VCARD
 VERSION:3.0
 FN:{{nom}} {{prenom}}
@@ -225,8 +226,8 @@ Pattern : https://legal-verify.com/doc/{{document_id}}/{{hash}}
 const docxBuffer = await generateDOCX(templateBuffer, {
   variables: data,
   qrcodes: {
-    '{{qrcode_url}}': 'https://static-url.com'
-  }
+    '{{qrcode_url}}': 'https://static-url.com',
+  },
 })
 ```
 
@@ -241,10 +242,10 @@ const docxBuffer = await generateDOCX(templateBuffer, {
       contentPattern: 'https://verify.com/{{user_id}}', // Maintenant avec variables !
       options: {
         width: 200,
-        errorCorrectionLevel: 'M'
-      }
-    }
-  ]
+        errorCorrectionLevel: 'M',
+      },
+    },
+  ],
 })
 ```
 
@@ -343,4 +344,3 @@ Response:
 Vous pouvez maintenant créer des documents avec des QR Codes **uniques** et **dynamiques** pour chaque génération !
 
 **Questions ?** Consultez la documentation ou créez une issue sur GitHub.
-

@@ -4,9 +4,9 @@ import { prisma } from '@/lib/prisma'
 /**
  * Health Check Endpoint
  * Vérifie l'état de l'application et de ses dépendances
- * 
+ *
  * GET /api/health
- * 
+ *
  * @returns {200} Application saine avec détails des services
  * @returns {503} Application non disponible
  */
@@ -40,4 +40,3 @@ export async function GET(): Promise<NextResponse> {
     { status }
   )
 }
-

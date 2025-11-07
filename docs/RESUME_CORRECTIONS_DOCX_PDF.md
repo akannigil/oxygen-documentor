@@ -5,6 +5,7 @@
 **Symptôme :** Le texte entre accolades (variables de template) placé au-dessus d'une image de fond dans un document DOCX était déplacé en bas de page lors de la conversion en PDF.
 
 **Cause Racine :** La bibliothèque `mammoth` qui convertit DOCX → HTML ne préservait pas :
+
 - Le positionnement absolu du texte
 - Les images de fond
 - La superposition texte/image
@@ -23,6 +24,7 @@ const pdfBuffer = await convertDOCXToPDFWithStyles(docxBuffer)
 ```
 
 **Avantages :**
+
 - ✅ **Fidélité parfaite** : Identique à Word
 - ✅ **Images de fond préservées** : Positionnement exact
 - ✅ **Texte superposé maintenu** : Pas de déplacement
@@ -34,6 +36,7 @@ const pdfBuffer = await convertDOCXToPDFWithStyles(docxBuffer)
 Voir le guide complet : [INSTALLATION_LIBREOFFICE.md](./INSTALLATION_LIBREOFFICE.md)
 
 **Rapide :**
+
 - **Windows :** Télécharger depuis https://www.libreoffice.org/
 - **macOS :** `brew install --cask libreoffice`
 - **Linux :** `sudo apt-get install libreoffice`
@@ -46,6 +49,7 @@ Si LibreOffice n'est pas disponible, le système utilise automatiquement la mét
 ### 1. Analyse Automatique du Document
 
 Le système analyse maintenant le XML du DOCX pour détecter :
+
 - Les éléments avec positionnement absolu (text boxes, formes)
 - Les images de fond
 - Les éléments flottants
@@ -59,6 +63,7 @@ Le système analyse maintenant le XML du DOCX pour détecter :
 ### 3. CSS Optimisé avec Z-Index
 
 Le HTML généré utilise maintenant :
+
 - `z-index: 0` pour les images de fond (en arrière)
 - `z-index: 10` pour tout le texte (au-dessus)
 - Positionnement relatif/absolu pour préserver la mise en page
@@ -66,6 +71,7 @@ Le HTML généré utilise maintenant :
 ### 4. Script JavaScript de Repositionnement
 
 Un script s'exécute dans Puppeteer avant la génération du PDF :
+
 - Détecte automatiquement les images de fond (largeur ≥ 80% du body)
 - Force le positionnement absolu de l'image
 - Applique le z-index correct à tous les éléments texte
@@ -186,17 +192,19 @@ libreoffice --version  # ou 'soffice --version' sur Windows
 ### Test 3 : Document avec Plusieurs Variables
 
 1. **Créer un template complet**
+
    ```
    Certificat de {{type}}
-   
+
    Décerné à {{prenom}} {{nom}}
    Pour {{raison}}
    Le {{date}}
-   
+
    Signé par {{signataire}}
    ```
 
 2. **Importer des données de test**
+
    ```csv
    type,prenom,nom,raison,date,signataire
    Participation,Jean,Dupont,avoir assisté à la formation,01/11/2025,Directeur
@@ -239,24 +247,28 @@ Image 0: position=absolute, zIndex=0
 ## 🎨 Exemples de Templates Supportés
 
 ### ✅ Certificats
+
 - Image de fond décorative
 - Texte centré avec variables
 - Police personnalisée
 - **Format : A4 Portrait**
 
 ### ✅ Badges
+
 - Photo ou logo en fond
 - Informations personnelles
 - QR code (à venir)
 - **Format : A6 ou personnalisé**
 
 ### ✅ Lettres Officielles
+
 - En-tête avec logo
 - Corps de lettre
 - Pied de page
 - **Format : A4 Portrait ou Letter**
 
 ### ✅ Étiquettes
+
 - Design personnalisé
 - Codes-barres (à venir)
 - Informations variables
@@ -300,11 +312,12 @@ Image 0: position=absolute, zIndex=0
 ### Si LibreOffice N'est Pas Détecté
 
 1. **Vérifier l'installation**
+
    ```bash
    # Linux/macOS
    which libreoffice
    libreoffice --version
-   
+
    # Windows (PowerShell)
    where soffice
    soffice --version
@@ -327,6 +340,7 @@ Cela ne devrait PAS arriver avec LibreOffice ! Si c'est le cas :
 ### 1. Vérifier le Document DOCX Source
 
 Dans Word :
+
 - Clic droit sur l'image > **Taille et position**
 - Vérifier **Habillage du texte** = "Derrière le texte"
 - Vérifier que le texte n'est pas dans une image
@@ -334,11 +348,13 @@ Dans Word :
 ### 2. Vérifier les Logs
 
 Regarder les logs de la console serveur :
+
 ```bash
 npm run dev
 ```
 
 Puis générer un document et observer :
+
 - `Analyse du document DOCX: ...`
 - `Image de fond détectée et repositionnée`
 - Compter le nombre d'images et d'éléments texte
@@ -346,6 +362,7 @@ Puis générer un document et observer :
 ### 3. Tester avec un Template Simplifié
 
 Créer un document minimal :
+
 - Une image de fond
 - Un seul paragraphe avec `{{test}}`
 - Pas de mise en forme complexe
@@ -368,18 +385,21 @@ Ouvrir `debug-output.html` dans un navigateur pour vérifier le rendu.
 ## 🚀 Prochaines Améliorations Possibles
 
 ### Court terme
+
 - [ ] Support des QR codes dans les templates DOCX
 - [ ] Support des codes-barres
 - [ ] Prévisualisation en temps réel
 - [ ] Cache des conversions LibreOffice
 
 ### Moyen terme
+
 - [x] ✅ Utilisation de LibreOffice pour conversion fidèle (FAIT !)
 - [ ] API de conversion en background avec files d'attente
 - [ ] Optimisation des performances (pool de processus LibreOffice)
 - [ ] Support des templates multi-pages
 
 ### Long terme
+
 - [ ] Éditeur visuel de templates DOCX
 - [ ] Bibliothèque de templates pré-configurés
 - [ ] Support des macros Word (si sécurisé)
@@ -407,20 +427,21 @@ Ouvrir `debug-output.html` dans un navigateur pour vérifier le rendu.
 
 ## 📊 Comparaison des Méthodes
 
-| Critère | LibreOffice ⭐ | Puppeteer |
-|---------|---------------|-----------|
-| **Fidélité DOCX** | ⭐⭐⭐⭐⭐ Parfaite | ⭐⭐⭐ Approximative |
-| **Images de fond** | ✅ Préservées | ❌ Souvent perdues |
-| **Positionnement texte** | ✅ Exact | ⚠️ Approximatif |
-| **Polices complexes** | ✅ Toutes | ⚠️ Limitées |
-| **Installation** | Requiert LibreOffice | Inclus |
-| **Vitesse** | ⭐⭐⭐⭐ 2-3s | ⭐⭐⭐⭐ 2-3s |
-| **Mémoire** | ~500 MB | ~300 MB |
-| **Recommandation** | ✅ **UTILISER** | Fallback uniquement |
+| Critère                  | LibreOffice ⭐       | Puppeteer            |
+| ------------------------ | -------------------- | -------------------- |
+| **Fidélité DOCX**        | ⭐⭐⭐⭐⭐ Parfaite  | ⭐⭐⭐ Approximative |
+| **Images de fond**       | ✅ Préservées        | ❌ Souvent perdues   |
+| **Positionnement texte** | ✅ Exact             | ⚠️ Approximatif      |
+| **Polices complexes**    | ✅ Toutes            | ⚠️ Limitées          |
+| **Installation**         | Requiert LibreOffice | Inclus               |
+| **Vitesse**              | ⭐⭐⭐⭐ 2-3s        | ⭐⭐⭐⭐ 2-3s        |
+| **Mémoire**              | ~500 MB              | ~300 MB              |
+| **Recommandation**       | ✅ **UTILISER**      | Fallback uniquement  |
 
 ## ✨ Résumé des Bénéfices
 
 ### Pour les Utilisateurs
+
 - ✅ **Conversion fidèle à Word** - Exactement comme "Exporter en PDF"
 - ✅ Templates DOCX avec images de fond **fonctionnent parfaitement**
 - ✅ Pas besoin de connaissances techniques pour créer des templates
@@ -428,6 +449,7 @@ Ouvrir `debug-output.html` dans un navigateur pour vérifier le rendu.
 - ✅ Fallback automatique si LibreOffice n'est pas disponible
 
 ### Pour les Développeurs
+
 - ✅ **Solution robuste** avec LibreOffice
 - ✅ Code bien documenté et modulaire
 - ✅ Système de debugging intégré
@@ -436,6 +458,7 @@ Ouvrir `debug-output.html` dans un navigateur pour vérifier le rendu.
 - ✅ Tests faciles à mettre en place
 
 ### Pour le Projet
+
 - ✅ **Qualité professionnelle** de conversion
 - ✅ Support de nouveaux cas d'usage (certificats, badges, documents complexes)
 - ✅ Solution scalable en production
@@ -448,4 +471,3 @@ Ouvrir `debug-output.html` dans un navigateur pour vérifier le rendu.
 **Auteur :** Assistant IA  
 **Version :** 2.1 (avec LibreOffice)  
 **Statut :** ✅ Implémenté et Testé
-

@@ -1,14 +1,14 @@
 /**
  * Next.js Instrumentation Hook
  * Démarre automatiquement les workers BullMQ au démarrage du serveur
- * 
+ *
  * Note: Dans Next.js 15+, cette fonction est appelée automatiquement
  * au démarrage du serveur Node.js (pas dans Edge Runtime)
- * 
+ *
  * IMPORTANT: En mode développement, cette fonctionnalité est désactivée
  * car elle peut causer des problèmes de compilation webpack.
  * Utilisez `npm run workers` pour démarrer les workers manuellement.
- * 
+ *
  * @see https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
  */
 export async function register(): Promise<void> {
@@ -33,7 +33,9 @@ export async function register(): Promise<void> {
       console.log('   Ou définir ENABLE_WORKERS_IN_DEV=true pour démarrer automatiquement')
       return
     }
-    console.log('ℹ️  [Instrumentation] Mode développement - démarrage des workers (ENABLE_WORKERS_IN_DEV=true)')
+    console.log(
+      'ℹ️  [Instrumentation] Mode développement - démarrage des workers (ENABLE_WORKERS_IN_DEV=true)'
+    )
   }
 
   // Démarrer les workers (production ou dev si ENABLE_WORKERS_IN_DEV=true)
@@ -72,4 +74,3 @@ export async function register(): Promise<void> {
     console.error('   Les workers peuvent être démarrés manuellement avec: npm run workers')
   }
 }
-

@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Oxygen Document — Gestion d\'Attestations',
-  description: 'Application de gestion et génération en masse d\'attestations personnalisées',
+  title: "Oxygen Document — Gestion d'Attestations",
+  description: "Application de gestion et génération en masse d'attestations personnalisées",
 }
 
 export default function RootLayout({
@@ -20,4 +20,3 @@ export default function RootLayout({
     </html>
   )
 }
-

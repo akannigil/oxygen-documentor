@@ -53,10 +53,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     return NextResponse.json(project)
   } catch (error) {
     console.error('Error fetching project:', error)
-    return NextResponse.json(
-      { error: 'Une erreur est survenue' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
 
@@ -109,10 +106,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     }
 
     console.error('Error updating project:', error)
-    return NextResponse.json(
-      { error: 'Une erreur est survenue' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
 
@@ -188,10 +182,6 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     return NextResponse.json({ message: 'Projet supprimé' }, { status: 200 })
   } catch (error) {
     console.error('Error deleting project:', error)
-    return NextResponse.json(
-      { error: 'Une erreur est survenue' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
-

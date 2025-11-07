@@ -12,7 +12,7 @@ Guide visuel rapide pour l'intégration des QR Codes dans Oxygen Document.
 └─────────────────────────────────────────────────────────────────┘
 
 Votre template                    Action
-┌───────────────────┐            
+┌───────────────────┐
 │   CERTIFICAT      │             1️⃣ Clic maintenu
 │                   │             2️⃣ Glisser
 │   Nom: _______    │             3️⃣ Relâcher
@@ -181,13 +181,13 @@ Standard                Personnalisé           ⚠️ Mauvais contraste
 
 ## 📊 Comparaison Rapide
 
-| Question | PDF/Image | DOCX |
-|----------|-----------|------|
-| Comment ajouter ? | Dessiner à la souris | Taper `{{qrcode_xxx}}` |
-| Où configurer ? | Interface graphique | Code JavaScript/TypeScript |
-| Position ? | Fixe (x, y) | Dans le flux de texte |
-| Prévisualisation ? | ✅ Oui | ❌ Après génération |
-| Difficulté ? | ⭐ Facile | ⭐⭐ Moyen |
+| Question           | PDF/Image            | DOCX                       |
+| ------------------ | -------------------- | -------------------------- |
+| Comment ajouter ?  | Dessiner à la souris | Taper `{{qrcode_xxx}}`     |
+| Où configurer ?    | Interface graphique  | Code JavaScript/TypeScript |
+| Position ?         | Fixe (x, y)          | Dans le flux de texte      |
+| Prévisualisation ? | ✅ Oui               | ❌ Après génération        |
+| Difficulté ?       | ⭐ Facile            | ⭐⭐ Moyen                 |
 
 ---
 
@@ -226,11 +226,13 @@ Standard                Personnalisé           ⚠️ Mauvais contraste
 ## 💡 Exemples de Contenu QR Code
 
 ### URL simple
+
 ```
 https://example.com/verify/CERT-123
 ```
 
 ### vCard (Contact)
+
 ```
 BEGIN:VCARD
 VERSION:3.0
@@ -241,21 +243,25 @@ END:VCARD
 ```
 
 ### WiFi
+
 ```
 WIFI:T:WPA;S:MonReseau;P:MotDePasse123;;
 ```
 
 ### Email
+
 ```
 mailto:support@example.com?subject=Verification&body=Bonjour
 ```
 
 ### SMS
+
 ```
 sms:+33123456789?body=Bonjour
 ```
 
 ### Coordonnées GPS
+
 ```
 geo:48.8566,2.3522?q=Tour Eiffel
 ```
@@ -272,4 +278,3 @@ geo:48.8566,2.3522?q=Tour Eiffel
 ---
 
 **Besoin d'aide ?** Consultez le [guide détaillé](./GUIDE_INTEGRATION_QRCODE_PAR_TYPE.md)
-

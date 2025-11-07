@@ -133,8 +133,18 @@ export default function EditTemplatePage() {
                   href={`/projects/${projectId}/generate?templateId=${templateId}`}
                   className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500"
                 >
-                  <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
                   </svg>
                   Générer des documents
                 </Link>
@@ -160,17 +170,32 @@ export default function EditTemplatePage() {
           <div className="space-y-6">
             <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-6">
               <div className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mt-1 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="mr-3 mt-1 h-6 w-6 flex-shrink-0 text-blue-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-blue-900 mb-2">Template DOCX avec publipostage</h3>
-                  <p className="text-sm text-blue-800 mb-4">
-                    Pour les templates DOCX, les zones sont définies directement dans votre document Word avec des variables entre accolades <code className="bg-blue-100 px-1 rounded">{'{{nom}}'}</code>.
-                    Vous n&apos;avez pas besoin d&apos;éditer les zones ici.
+                  <h3 className="mb-2 text-lg font-semibold text-blue-900">
+                    Template DOCX avec publipostage
+                  </h3>
+                  <p className="mb-4 text-sm text-blue-800">
+                    Pour les templates DOCX, les zones sont définies directement dans votre document
+                    Word avec des variables entre accolades{' '}
+                    <code className="rounded bg-blue-100 px-1">{'{{nom}}'}</code>. Vous n&apos;avez
+                    pas besoin d&apos;éditer les zones ici.
                   </p>
-                  <p className="text-sm text-blue-800 font-medium">
-                    Si vous souhaitez modifier les variables, éditionnez le fichier Word directement et ré-uploadez-le.
+                  <p className="text-sm font-medium text-blue-800">
+                    Si vous souhaitez modifier les variables, éditionnez le fichier Word directement
+                    et ré-uploadez-le.
                   </p>
                 </div>
               </div>
@@ -184,17 +209,20 @@ export default function EditTemplatePage() {
                 </h3>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {template.variables.map((variable, index) => (
-                    <div key={`variable-${index}`} className="rounded-md border border-gray-200 p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <code className="text-sm font-mono font-semibold text-blue-600">
+                    <div
+                      key={`variable-${index}`}
+                      className="rounded-md border border-gray-200 p-4"
+                    >
+                      <div className="mb-2 flex items-center justify-between">
+                        <code className="font-mono text-sm font-semibold text-blue-600">
                           {`{{${variable.name}}}`}
                         </code>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-500">
                           {variable.occurrences} occurrence{variable.occurrences > 1 ? 's' : ''}
                         </span>
                       </div>
                       {variable.context && (
-                        <p className="text-xs text-gray-600 italic mt-1">
+                        <p className="mt-1 text-xs italic text-gray-600">
                           Contexte: {variable.context}
                         </p>
                       )}
@@ -207,8 +235,18 @@ export default function EditTemplatePage() {
                     href={`/projects/${projectId}/generate?templateId=${templateId}`}
                     className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500"
                   >
-                    <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    <svg
+                      className="mr-2 h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
                     </svg>
                     Générer des documents
                   </Link>
@@ -217,16 +255,32 @@ export default function EditTemplatePage() {
             ) : (
               <div className="rounded-lg border-2 border-yellow-200 bg-yellow-50 p-6">
                 <div className="flex items-start">
-                  <svg className="h-6 w-6 text-yellow-600 mt-1 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  <svg
+                    className="mr-3 mt-1 h-6 w-6 flex-shrink-0 text-yellow-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
                   </svg>
                   <div>
-                    <h3 className="text-lg font-semibold text-yellow-900 mb-2">Aucune variable détectée</h3>
-                    <p className="text-sm text-yellow-800 mb-4">
-                      Ce template DOCX ne contient pas de variables <code className="bg-yellow-100 px-1 rounded">{'{{...}}'}</code>.
+                    <h3 className="mb-2 text-lg font-semibold text-yellow-900">
+                      Aucune variable détectée
+                    </h3>
+                    <p className="mb-4 text-sm text-yellow-800">
+                      Ce template DOCX ne contient pas de variables{' '}
+                      <code className="rounded bg-yellow-100 px-1">{'{{...}}'}</code>.
                     </p>
                     <p className="text-sm text-yellow-800">
-                      Pour utiliser le publipostage, ajoutez des variables dans votre document Word (ex: <code className="bg-yellow-100 px-1 rounded">{'{{nom}}'}</code>, <code className="bg-yellow-100 px-1 rounded">{'{{date}}'}</code>), puis ré-uploadez le fichier.
+                      Pour utiliser le publipostage, ajoutez des variables dans votre document Word
+                      (ex: <code className="rounded bg-yellow-100 px-1">{'{{nom}}'}</code>,{' '}
+                      <code className="rounded bg-yellow-100 px-1">{'{{date}}'}</code>), puis
+                      ré-uploadez le fichier.
                     </p>
                   </div>
                 </div>
@@ -264,4 +318,3 @@ export default function EditTemplatePage() {
     </div>
   )
 }
-
