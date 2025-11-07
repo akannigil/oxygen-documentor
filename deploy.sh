@@ -100,7 +100,28 @@ log_success "Fichier .env.production trouvé"
 # Charger les variables d'environnement
 # Filter out empty lines and lines starting with #, then export
 set -a # automatically export all variables
-source <(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env.production)
+# Utiliser une méthode plus robuste pour charger le .env qui gère les espaces
+while IFS='=' read -r key value; do
+    # Ignorer les lignes vides et les commentaires
+    if [[ -n "$key" && ! "$key" =~ ^[[:space:]]*# ]]; then
+        # Nettoyer la clé (supprimer les espaces)
+        key=$(echo "$key" | xargs)
+        # Nettoyer la valeur
+        value=$(echo "$value" | xargs)
+        # Supprimer les guillemets simples et doubles si présents
+        value="${value%\"}"
+        value="${value#\"}"
+        value="${value%\'}"
+        value="${value#\'}"
+        # Supprimer les caractères parasites comme } à la fin
+        value="${value%}"
+        value="${value%%\}}"
+        # Exporter uniquement si la clé n'est pas vide
+        if [[ -n "$key" ]]; then
+            export "$key=$value"
+        fi
+    fi
+done < <(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env.production || true)
 set +a # turn off auto export
 
 # Vérifier les variables critiques

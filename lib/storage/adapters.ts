@@ -290,22 +290,42 @@ export function createStorageAdapter(): StorageAdapter {
         throw new Error('S3_BUCKET_NAME is required for S3 storage')
       }
       {
-        const endpoint = process.env['S3_ENDPOINT'] || process.env['MINIO_ENDPOINT']
+        let endpoint = process.env['S3_ENDPOINT'] || process.env['MINIO_ENDPOINT']
+        
+        // Normaliser l'URL de l'endpoint (ajouter https:// si manquant)
+        if (endpoint && !/^https?:\/\//i.test(endpoint)) {
+          endpoint = `https://${endpoint}`
+        }
+        
         const regionMaybe = process.env['AWS_REGION'] || (endpoint ? 'us-east-1' : undefined)
         if (!regionMaybe) {
           throw new Error('AWS_REGION is required unless S3_ENDPOINT/MINIO_ENDPOINT is provided')
         }
         const region: string = regionMaybe
+        
+        // Détecter si c'est un endpoint AWS S3 standard ou un endpoint personnalisé (MinIO, etc.)
+        const isAwsS3Endpoint = endpoint ? /^https?:\/\/s3[.-].*\.amazonaws\.com/i.test(endpoint) : false
+        
         const forcePathStyleEnv = process.env['S3_FORCE_PATH_STYLE'] || process.env['MINIO_FORCE_PATH_STYLE']
-        const forcePathStyle = forcePathStyleEnv ? forcePathStyleEnv === 'true' : Boolean(endpoint)
+        // Pour AWS S3 standard, ne pas forcer path-style sauf si explicitement demandé
+        // Pour MinIO et autres endpoints personnalisés, forcer path-style par défaut
+        const forcePathStyle = forcePathStyleEnv 
+          ? forcePathStyleEnv === 'true' 
+          : (endpoint && !isAwsS3Endpoint)
 
         const options = {
           ...(endpoint ? { endpoint } : {}),
           ...(forcePathStyle ? { forcePathStyle } : {}),
         }
 
-        const bucketNameEnv = process.env['S3_BUCKET_NAME']
-        const bucketName: string = bucketNameEnv!
+        // Utiliser S3_BUCKET_NAME en priorité, sinon AWS_S3_BUCKET
+        const bucketNameEnv = process.env['S3_BUCKET_NAME'] || process.env['AWS_S3_BUCKET']
+        // Nettoyer le nom du bucket (supprimer les espaces et caractères parasites comme {})
+        const bucketName: string = bucketNameEnv?.trim().replace(/[{}]/g, '') || ''
+        
+        if (!bucketName) {
+          throw new Error('S3_BUCKET_NAME or AWS_S3_BUCKET is required and cannot be empty for S3 storage')
+        }
 
         return new S3StorageAdapter(
           bucketName,
