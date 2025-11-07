@@ -164,10 +164,11 @@ export async function generateQRCodeWithOptions(
   field: TemplateField,
   defaultWidth: number
 ): Promise<Buffer> {
+  // Utiliser les paramètres améliorés par défaut pour une meilleure lisibilité
   const options: QRCodeOptions = {
-    width: field.qrcodeOptions?.width ?? defaultWidth,
-    margin: field.qrcodeOptions?.margin ?? 1,
-    errorCorrectionLevel: field.qrcodeOptions?.errorCorrectionLevel ?? 'M',
+    width: field.qrcodeOptions?.width ?? Math.max(defaultWidth, 300), // Minimum 300px
+    margin: field.qrcodeOptions?.margin ?? 2, // Marge augmentée
+    errorCorrectionLevel: field.qrcodeOptions?.errorCorrectionLevel ?? 'Q', // Niveau élevé
   }
 
   // Ajouter color seulement s'il est défini

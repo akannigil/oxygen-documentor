@@ -249,6 +249,11 @@ export async function generateDOCX(
     // Rendre le template avec les données
     doc.render(formattedData)
 
+    // Préserver les styles de paragraphe pour éviter les décalages verticaux
+    // Cette étape doit être faite après doc.render() mais avant l'application des styles
+    const { preserveParagraphStyles } = await import('./docx-style-module')
+    preserveParagraphStyles(doc.getZip())
+
     // Appliquer les styles aux variables si configuré
     if (options.styleOptions) {
       // Vérifier si une Google Font est utilisée
@@ -304,13 +309,13 @@ export async function generateDOCX(
           errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H'
           color?: { dark?: string; light?: string }
         } = {
-          width: config.options?.width ?? 200,
-          margin: config.options?.margin ?? 1,
-          errorCorrectionLevel: (config.options?.errorCorrectionLevel ?? 'M') as
+          width: config.options?.width ?? 300, // Taille augmentée pour meilleure lisibilité
+          margin: config.options?.margin ?? 2, // Marge augmentée
+          errorCorrectionLevel: (config.options?.errorCorrectionLevel ?? 'Q') as
             | 'L'
             | 'M'
             | 'Q'
-            | 'H',
+            | 'H', // Niveau élevé par défaut
           ...(config.options?.color && { color: config.options.color }),
         }
 
@@ -471,9 +476,9 @@ export async function generateDOCX(
           placeholder,
           data,
           options: {
-            width: options.qrcodeOptions?.width ?? 200,
-            margin: options.qrcodeOptions?.margin ?? 1,
-            errorCorrectionLevel: options.qrcodeOptions?.errorCorrectionLevel ?? 'M',
+            width: options.qrcodeOptions?.width ?? 300, // Taille augmentée
+            margin: options.qrcodeOptions?.margin ?? 2, // Marge augmentée
+            errorCorrectionLevel: options.qrcodeOptions?.errorCorrectionLevel ?? 'Q', // Niveau élevé
           },
         })
       })
@@ -544,9 +549,9 @@ export async function generateDOCX(
         placeholder,
         data: authenticated.qrCodeData,
         options: {
-          width: options.qrcodeOptions?.width ?? 200,
-          margin: options.qrcodeOptions?.margin ?? 1,
-          errorCorrectionLevel: options.qrcodeOptions?.errorCorrectionLevel ?? 'Q',
+          width: options.qrcodeOptions?.width ?? 300, // Taille augmentée
+          margin: options.qrcodeOptions?.margin ?? 2, // Marge augmentée
+          errorCorrectionLevel: options.qrcodeOptions?.errorCorrectionLevel ?? 'Q', // Niveau élevé pour certificats
         },
       })
     }

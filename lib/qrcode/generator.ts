@@ -6,23 +6,23 @@ import QRCode from 'qrcode'
 export interface QRCodeOptions {
   /**
    * Largeur du QR code en pixels
-   * @default 200
+   * @default 300 (recommandé pour une bonne lisibilité après conversion PDF)
    */
   width?: number
 
   /**
    * Marge autour du QR code (en modules)
-   * @default 1
+   * @default 2 (recommandé pour éviter les problèmes de lecture)
    */
   margin?: number
 
   /**
    * Niveau de correction d'erreur
    * - 'L': ~7% de correction
-   * - 'M': ~15% de correction (défaut)
-   * - 'Q': ~25% de correction
-   * - 'H': ~30% de correction
-   * @default 'M'
+   * - 'M': ~15% de correction
+   * - 'Q': ~25% de correction (défaut, recommandé pour documents imprimés)
+   * - 'H': ~30% de correction (maximum, pour documents très dégradés)
+   * @default 'Q'
    */
   errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H'
 
@@ -83,13 +83,44 @@ export async function generateQRCodeBuffer(
   options: QRCodeOptions = {}
 ): Promise<Buffer> {
   try {
+    // Validation du contenu
+    if (!data || typeof data !== 'string') {
+      throw new Error('Le contenu du QR code doit être une chaîne de caractères non vide')
+    }
+
+    // Normaliser le contenu (trim et vérifier qu'il n'est pas vide après)
+    const normalizedData = data.trim()
+    if (normalizedData.length === 0) {
+      throw new Error('Le contenu du QR code ne peut pas être vide')
+    }
+
+    // Vérifier la longueur maximale recommandée pour un QR code
+    // Les QR codes peuvent encoder jusqu'à ~3000 caractères, mais pour une bonne lisibilité,
+    // on recommande moins de 1000 caractères
+    if (normalizedData.length > 3000) {
+      console.warn(
+        `⚠️ Le contenu du QR code est très long (${normalizedData.length} caractères). ` +
+          'Cela peut affecter la lisibilité. Considérez utiliser un niveau de correction H.'
+      )
+    }
+
+    // Paramètres améliorés pour une meilleure lisibilité
+    // Taille minimale recommandée : 300px pour une bonne lisibilité après conversion PDF
+    const defaultWidth = 300
+    // Marge minimale recommandée : 2 modules pour éviter les problèmes de lecture
+    const defaultMargin = 2
+    // Niveau de correction d'erreur élevé pour résister à la dégradation lors de la conversion
+    // Utiliser 'H' si le contenu est long pour une meilleure robustesse
+    const defaultErrorCorrectionLevel: 'L' | 'M' | 'Q' | 'H' =
+      normalizedData.length > 1000 ? 'H' : 'Q'
+    
     const qrOptions: QRCode.QRCodeToDataURLOptions = {
-      width: options.width ?? 200,
-      margin: options.margin ?? 1,
-      errorCorrectionLevel: options.errorCorrectionLevel ?? 'M',
+      width: options.width ?? defaultWidth,
+      margin: options.margin ?? defaultMargin,
+      errorCorrectionLevel: options.errorCorrectionLevel ?? defaultErrorCorrectionLevel,
       type: options.type === 'image/jpeg' ? 'image/jpeg' : 'image/png',
       rendererOpts: {
-        quality: options.quality ?? 0.92,
+        quality: options.quality ?? 1.0, // Qualité maximale pour PNG
       },
     }
 
@@ -101,7 +132,19 @@ export async function generateQRCodeBuffer(
       }
     }
 
-    const qrDataUrl = await QRCode.toDataURL(data, qrOptions)
+    // Log pour déboguer (seulement en développement)
+    if (process.env['NODE_ENV'] === 'development') {
+      console.log(`[QR Code] Génération avec contenu de ${normalizedData.length} caractères`)
+      console.log(`[QR Code] Niveau de correction: ${qrOptions.errorCorrectionLevel}`)
+      console.log(`[QR Code] Taille: ${qrOptions.width}px, Marge: ${qrOptions.margin}`)
+      // Afficher un aperçu du contenu (premiers 100 caractères)
+      const preview = normalizedData.length > 100 
+        ? normalizedData.substring(0, 100) + '...' 
+        : normalizedData
+      console.log(`[QR Code] Aperçu du contenu: ${preview}`)
+    }
+
+    const qrDataUrl = await QRCode.toDataURL(normalizedData, qrOptions)
 
     // Convertir DataURL en Buffer
     const base64Data = qrDataUrl.split(',')[1]
@@ -109,13 +152,23 @@ export async function generateQRCodeBuffer(
       throw new Error('Échec de la génération du QR code: DataURL invalide')
     }
 
-    return Buffer.from(base64Data, 'base64')
+    const buffer = Buffer.from(base64Data, 'base64')
+    
+    // Vérifier que le buffer a été créé correctement
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Le QR code généré est vide ou invalide')
+    }
+
+    // Log pour déboguer (seulement en développement)
+    if (process.env['NODE_ENV'] === 'development') {
+      console.log(`[QR Code] QR code généré avec succès: ${buffer.length} bytes`)
+    }
+
+    return buffer
   } catch (error) {
-    throw new Error(
-      `Erreur lors de la génération du QR code: ${
-        error instanceof Error ? error.message : 'Erreur inconnue'
-      }`
-    )
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
+    console.error(`[QR Code] Erreur lors de la génération: ${errorMessage}`)
+    throw new Error(`Erreur lors de la génération du QR code: ${errorMessage}`)
   }
 }
 
@@ -131,13 +184,18 @@ export async function generateQRCodeDataURL(
   options: QRCodeOptions = {}
 ): Promise<string> {
   try {
+    // Paramètres améliorés pour une meilleure lisibilité
+    const defaultWidth = 300
+    const defaultMargin = 2
+    const defaultErrorCorrectionLevel: 'L' | 'M' | 'Q' | 'H' = 'Q'
+    
     const qrOptions: QRCode.QRCodeToDataURLOptions = {
-      width: options.width ?? 200,
-      margin: options.margin ?? 1,
-      errorCorrectionLevel: options.errorCorrectionLevel ?? 'M',
+      width: options.width ?? defaultWidth,
+      margin: options.margin ?? defaultMargin,
+      errorCorrectionLevel: options.errorCorrectionLevel ?? defaultErrorCorrectionLevel,
       type: options.type === 'image/jpeg' ? 'image/jpeg' : 'image/png',
       rendererOpts: {
-        quality: options.quality ?? 0.92,
+        quality: options.quality ?? 1.0, // Qualité maximale pour PNG
       },
     }
 

@@ -430,6 +430,11 @@ export async function convertDOCXToPDFWithStyles(
       /* Position relative pour permettre le positionnement */
       position: relative;
       z-index: 10;
+      /* Préserver la hauteur de ligne pour éviter les décalages verticaux */
+      line-height: 1.0;
+      /* Préserver l'espacement vertical */
+      margin-bottom: 0;
+      margin-top: 0;
     }
     /* Préserver les tableaux */
     table {

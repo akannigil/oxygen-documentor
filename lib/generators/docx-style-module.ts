@@ -42,6 +42,107 @@ export interface VariableStyleConfig {
 }
 
 /**
+ * Préserve les styles de paragraphe (hauteur de ligne, espacement) après le remplacement des variables
+ * Cette fonction corrige les décalages verticaux causés par docxtemplater
+ */
+export function preserveParagraphStyles(zip: any): void {
+  const documentFile = zip.files['word/document.xml']
+  if (!documentFile) {
+    return
+  }
+
+  const xmlContent = documentFile.asText() || ''
+
+  try {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(xmlContent, 'text/xml')
+
+    // Namespace pour Word
+    const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+
+    // Trouver tous les paragraphes <w:p>
+    const paragraphs = doc.getElementsByTagNameNS(ns, 'p')
+
+    for (let i = 0; i < paragraphs.length; i++) {
+      const paragraph = paragraphs[i]
+      if (!paragraph) continue
+
+      // Vérifier si le paragraphe contient du texte (peut avoir été modifié par docxtemplater)
+      const hasText = paragraph.textContent && paragraph.textContent.trim().length > 0
+      if (!hasText) continue
+
+      // Trouver ou créer <w:pPr> (propriétés du paragraphe)
+      let pPrElement: Element | null = null
+      const children = Array.from(paragraph.childNodes || [])
+
+      for (const child of children) {
+        if (child.nodeType === 1 && (child as Element).nodeName === 'w:pPr') {
+          pPrElement = child as Element
+          break
+        }
+      }
+
+      // Créer <w:pPr> s'il n'existe pas
+      if (!pPrElement) {
+        pPrElement = doc.createElementNS(ns, 'pPr')
+        // Insérer au début du paragraphe
+        if (paragraph.firstChild) {
+          paragraph.insertBefore(pPrElement, paragraph.firstChild)
+        } else {
+          paragraph.appendChild(pPrElement)
+        }
+      }
+
+      // Vérifier si les propriétés d'espacement existent déjà
+      const existingSpacing = pPrElement.getElementsByTagNameNS(ns, 'spacing')[0] as Element | undefined
+      
+      if (existingSpacing) {
+        // Si l'espacement existe, s'assurer qu'il a une hauteur de ligne
+        // pour éviter les décalages verticaux
+        const existingSpacingLine = existingSpacing.getAttribute('w:line')
+        if (!existingSpacingLine) {
+          // Ajouter une hauteur de ligne minimale si elle n'existe pas
+          // 240 = 12pt (hauteur de ligne normale, équivalent à line-height: 1.0)
+          existingSpacing.setAttribute('w:line', '240')
+          existingSpacing.setAttribute('w:lineRule', 'auto')
+        }
+      } else {
+        // Si aucune propriété d'espacement n'existe, en créer une par défaut
+        // pour préserver le positionnement vertical
+        const spacing = doc.createElementNS(ns, 'spacing')
+        
+        // Définir une hauteur de ligne minimale pour éviter les décalages
+        // 240 = 12pt (hauteur de ligne normale, équivalent à line-height: 1.0)
+        // Utiliser 'auto' pour que Word calcule automatiquement la hauteur
+        spacing.setAttribute('w:line', '240')
+        spacing.setAttribute('w:lineRule', 'auto')
+        
+        // Préserver l'espacement après (0 par défaut pour éviter les décalages)
+        spacing.setAttribute('w:after', '0')
+        
+        // Préserver l'espacement avant (0 par défaut)
+        spacing.setAttribute('w:before', '0')
+
+        pPrElement.appendChild(spacing)
+      }
+
+      // Ne pas forcer l'alignement - préserver l'alignement existant du template
+      // L'alignement doit être défini dans le template Word lui-même
+    }
+
+    // Sérialiser le XML modifié
+    const serializer = new XMLSerializer()
+    const updatedXml = serializer.serializeToString(doc)
+
+    // Mettre à jour le fichier XML dans le ZIP
+    zip.file('word/document.xml', updatedXml)
+  } catch (error) {
+    // En cas d'erreur de parsing, on continue sans préserver les styles
+    console.warn("Erreur lors de la préservation des styles de paragraphe:", error)
+  }
+}
+
+/**
  * Configuration globale ou par variable pour les styles
  */
 export interface DOCXStyleOptions {

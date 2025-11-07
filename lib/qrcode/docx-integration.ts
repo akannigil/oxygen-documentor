@@ -52,13 +52,33 @@ export async function insertQRCodeInDOCX(
   options: QRCodeInsertOptions = {}
 ): Promise<Buffer> {
   try {
-    // Générer le QR code
+    // Validation du contenu avant génération
+    if (!qrData || typeof qrData !== 'string' || qrData.trim().length === 0) {
+      throw new Error(
+        `Le contenu du QR code est vide ou invalide pour le placeholder "${placeholder}"`
+      )
+    }
+
+    // Normaliser le contenu (trim)
+    const normalizedQrData = qrData.trim()
+
+    // Log pour déboguer (seulement en développement)
+    if (process.env['NODE_ENV'] === 'development') {
+      console.log(`[QR Code DOCX] Insertion pour placeholder: ${placeholder}`)
+      console.log(`[QR Code DOCX] Contenu: ${normalizedQrData.length} caractères`)
+      const preview = normalizedQrData.length > 100 
+        ? normalizedQrData.substring(0, 100) + '...' 
+        : normalizedQrData
+      console.log(`[QR Code DOCX] Aperçu: ${preview}`)
+    }
+
+    // Générer le QR code avec des paramètres optimisés pour la lisibilité
     const qrOptions: QRCodeOptions = {
-      width: options.width ?? 200,
-      margin: options.margin ?? 1,
-      errorCorrectionLevel: options.errorCorrectionLevel ?? 'M',
+      width: options.width ?? 300, // Taille augmentée pour meilleure lisibilité
+      margin: options.margin ?? 2, // Marge augmentée pour éviter les problèmes de lecture
+      errorCorrectionLevel: options.errorCorrectionLevel ?? 'Q', // Niveau élevé pour résister à la dégradation
       type: options.type ?? 'image/png',
-      quality: options.quality ?? 0.92,
+      quality: options.quality ?? 1.0, // Qualité maximale
     }
 
     // Ajouter la couleur seulement si définie
@@ -66,7 +86,7 @@ export async function insertQRCodeInDOCX(
       qrOptions.color = options.color
     }
 
-    const qrBuffer = await generateQRCodeBuffer(qrData, qrOptions)
+    const qrBuffer = await generateQRCodeBuffer(normalizedQrData, qrOptions)
 
     // Charger le DOCX
     const zip = new PizZip(docxBuffer)
@@ -129,8 +149,10 @@ export async function insertQRCodeInDOCX(
     }
 
     // Dimensions en EMUs
-    const widthEMU = options.docxWidth ?? pixelsToEMUs(options.width ?? 200)
-    const heightEMU = options.docxHeight ?? pixelsToEMUs(options.width ?? 200)
+    // Utiliser une taille minimale de 300px pour une bonne lisibilité
+    const qrWidth = options.width ?? 300
+    const widthEMU = options.docxWidth ?? pixelsToEMUs(qrWidth)
+    const heightEMU = options.docxHeight ?? pixelsToEMUs(qrWidth) // QR codes sont carrés
     const altText = options.altText ?? 'QR Code'
     const uniqueId = Date.now()
 
