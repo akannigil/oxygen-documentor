@@ -98,7 +98,10 @@ fi
 log_success "Fichier .env.production trouvé"
 
 # Charger les variables d'environnement
-export $(grep -v '^#' .env.production | xargs)
+# Filter out empty lines and lines starting with #, then export
+set -a # automatically export all variables
+source <(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env.production)
+set +a # turn off auto export
 
 # Vérifier les variables critiques
 REQUIRED_VARS=("POSTGRES_PASSWORD" "REDIS_PASSWORD" "NEXTAUTH_SECRET" "NEXTAUTH_URL")
