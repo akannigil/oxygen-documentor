@@ -55,18 +55,24 @@ export class S3StorageAdapter implements StorageAdapter {
     this.bucket = bucket
     this.region = region
     this.endpoint = options?.endpoint
-    this.forcePathStyle = options?.forcePathStyle ?? false
+    
+    // Pour les endpoints personnalisés (MinIO, etc.), forcer path-style par défaut
+    const isCustomEndpoint = this.endpoint && !this.endpoint.includes('amazonaws.com')
+    this.forcePathStyle = options?.forcePathStyle ?? (isCustomEndpoint ? true : false)
 
     const clientConfig: any = { region: this.region }
+    
     if (this.endpoint) {
       clientConfig.endpoint = this.endpoint
     }
-    if (typeof this.forcePathStyle === 'boolean') {
-      clientConfig.forcePathStyle = this.forcePathStyle
-    }
+    
+    // IMPORTANT : Toujours définir forcePathStyle explicitement pour éviter le comportement par défaut
+    clientConfig.forcePathStyle = this.forcePathStyle
+    
     if (accessKeyId && secretAccessKey) {
       clientConfig.credentials = { accessKeyId, secretAccessKey }
     }
+    
     this.client = new S3Client(clientConfig)
   }
 
@@ -309,13 +315,14 @@ export function createStorageAdapter(): StorageAdapter {
         const forcePathStyleEnv = process.env['S3_FORCE_PATH_STYLE'] || process.env['MINIO_FORCE_PATH_STYLE']
         // Pour AWS S3 standard, ne pas forcer path-style sauf si explicitement demandé
         // Pour MinIO et autres endpoints personnalisés, forcer path-style par défaut
-        const forcePathStyle = forcePathStyleEnv 
+        const forcePathStyle: boolean = forcePathStyleEnv 
           ? forcePathStyleEnv === 'true' 
-          : (endpoint && !isAwsS3Endpoint)
+          : !!(endpoint && !isAwsS3Endpoint)
 
+        // TOUJOURS passer les options pour que l'adapteur puisse décider
         const options = {
           ...(endpoint ? { endpoint } : {}),
-          ...(forcePathStyle ? { forcePathStyle } : {}),
+          forcePathStyle, // Toujours défini, même si false
         }
 
         // Utiliser S3_BUCKET_NAME en priorité, sinon AWS_S3_BUCKET

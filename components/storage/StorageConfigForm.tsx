@@ -14,6 +14,14 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  
+  // Test de connexion
+  const [isTesting, setIsTesting] = useState(false)
+  const [testResult, setTestResult] = useState<{
+    success: boolean
+    message: string
+    details?: any
+  } | null>(null)
 
   // Configuration S3
   const [s3Bucket, setS3Bucket] = useState('')
@@ -127,6 +135,32 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
 
       default:
         return null
+    }
+  }
+
+  const handleTestConnection = async () => {
+    setIsTesting(true)
+    setTestResult(null)
+
+    try {
+      // Construire la configuration à tester
+      const config = buildConfig()
+
+      const response = await fetch(`/api/projects/${projectId}/storage-config/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config }),
+      })
+
+      const result = await response.json()
+      setTestResult(result)
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: 'Erreur lors du test de connexion : ' + (error instanceof Error ? error.message : 'Erreur inconnue'),
+      })
+    } finally {
+      setIsTesting(false)
     }
   }
 
@@ -488,6 +522,60 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
           </div>
         )}
 
+        {/* Résultat du test de connexion */}
+        {testResult && (
+          <div className={`rounded-md p-4 ${testResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+            <div className="flex items-start gap-3">
+              <svg
+                className={`h-5 w-5 flex-shrink-0 mt-0.5 ${testResult.success ? 'text-green-600' : 'text-red-600'}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {testResult.success ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                )}
+              </svg>
+              <div className="flex-1">
+                <h4 className={`text-sm font-medium ${testResult.success ? 'text-green-900' : 'text-red-900'}`}>
+                  {testResult.success ? 'Connexion réussie !' : 'Échec de la connexion'}
+                </h4>
+                <p className={`mt-1 text-sm ${testResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                  {testResult.message}
+                </p>
+                {testResult.details && (
+                  <div className="mt-2 text-xs text-gray-600 space-y-1">
+                    {testResult.details.bucketCreated && (
+                      <p className="text-green-700 font-medium">✓ Bucket créé automatiquement</p>
+                    )}
+                    {testResult.details.bucketExists && (
+                      <p className="text-green-700">✓ Bucket existant et accessible</p>
+                    )}
+                    {testResult.details.endpoint && (
+                      <p>Endpoint : <code className="font-mono">{testResult.details.endpoint}</code></p>
+                    )}
+                    {testResult.details.region && (
+                      <p>Région : <code className="font-mono">{testResult.details.region}</code></p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Messages d'erreur et de succès */}
         {saveError && (
           <div className="rounded-md bg-red-50 p-4">
@@ -501,12 +589,37 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
           </div>
         )}
 
-        {/* Bouton de sauvegarde */}
-        <div className="mt-6 flex justify-end">
+        {/* Boutons d'action */}
+        <div className="mt-6 flex justify-end gap-3">
+          {storageType === 's3' && (
+            <button
+              type="button"
+              onClick={handleTestConnection}
+              disabled={isTesting || isSaving || !s3Bucket || !s3Region}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isTesting ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Test en cours...
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Tester la connexion
+                </>
+              )}
+            </button>
+          )}
           <button
             type="button"
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || isTesting}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? 'Sauvegarde...' : 'Sauvegarder la configuration'}

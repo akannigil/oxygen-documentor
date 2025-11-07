@@ -42,8 +42,7 @@ export default async function ProjectPage({ params }: PageProps) {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-        <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="rounded-xl border border-red-200 bg-red-50 p-6 shadow-sm">
             <p className="text-sm font-medium text-red-800">Projet non trouvé</p>
           </div>
@@ -61,7 +60,6 @@ export default async function ProjectPage({ params }: PageProps) {
             </svg>
             Retour au dashboard
           </Link>
-        </div>
       </div>
     )
   }
@@ -71,8 +69,7 @@ export default async function ProjectPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header amélioré */}
         <div className="mb-10">
           <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
@@ -256,7 +253,6 @@ export default async function ProjectPage({ params }: PageProps) {
             </div>
           </>
         )}
-      </div>
     </div>
   )
 }
