@@ -13,6 +13,7 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont \
     postgresql-client \
+    redis \
     libreoffice \
     openjdk11-jre \
     fontconfig \
@@ -45,6 +46,7 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont \
     postgresql-client \
+    redis \
     openssl \
     libreoffice \
     openjdk11-jre \
@@ -89,6 +91,7 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont \
     postgresql-client \
+    redis \
     dumb-init \
     libreoffice \
     openjdk11-jre \
