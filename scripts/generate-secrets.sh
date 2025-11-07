@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # ============================================================================
-# Script de gÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â©ration de secrets pour Oxygen Document
+# Script de génération de secrets pour Oxygen Document
 # ============================================================================
-# GÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â¨re des secrets cryptographiquement sÃƒÆ’Ã‚Â©curisÃƒÆ’Ã‚Â©s pour la production
+# Génère des secrets cryptographiquement sécurisés pour la production
 # Usage: ./scripts/generate-secrets.sh
 # ============================================================================
 
@@ -16,21 +16,21 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo "============================================================================"
-echo "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â GÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â©ration de secrets pour Oxygen Document"
+echo "🔐 Génération de secrets pour Oxygen Document"
 echo "============================================================================"
 echo ""
 
-# Fonction pour gÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â©rer un secret
+# Fonction pour générer un secret
 generate_secret() {
     openssl rand -base64 32 | tr -d '\n'
 }
 
-# GÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â©rer les secrets
+# Générer les secrets
 NEXTAUTH_SECRET=$(generate_secret)
 POSTGRES_PASSWORD=$(generate_secret)
 REDIS_PASSWORD=$(generate_secret)
 
-echo -e "${BLUE}Secrets gÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â©rÃƒÆ’Ã‚Â©s avec succÃƒÆ’Ã‚Â¨s !${NC}"
+echo -e "${BLUE}Secrets générés avec succès !${NC}"
 echo ""
 echo "============================================================================"
 echo ""
@@ -49,41 +49,41 @@ echo ""
 
 echo "============================================================================"
 echo ""
-echo -e "${YELLOW}ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â  IMPORTANT :${NC}"
+echo -e "${YELLOW}⚠️  IMPORTANT :${NC}"
 echo "1. Copiez ces valeurs dans votre fichier .env.production"
 echo "2. Ne partagez JAMAIS ces secrets"
-echo "3. Conservez une copie sÃƒÆ’Ã‚Â©curisÃƒÆ’Ã‚Â©e (gestionnaire de mots de passe)"
+echo "3. Conservez une copie sécurisée (gestionnaire de mots de passe)"
 echo ""
-echo "Pour gÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â©rer l'URL complÃƒÆ’Ã‚Â¨te de la base de donnÃƒÆ’Ã‚Â©es :"
+echo "Pour générer l'URL complète de la base de données :"
 echo "DATABASE_URL=postgresql://postgres:$POSTGRES_PASSWORD@postgres:5432/oxygen_document?schema=public"
 echo ""
-echo "Pour gÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â©rer l'URL Redis :"
+echo "Pour générer l'URL Redis :"
 echo "REDIS_URL=redis://:$REDIS_PASSWORD@redis:6379"
 echo ""
 
-# Option pour ÃƒÆ’Ã‚Â©crire directement dans .env.production
-read -p "Voulez-vous crÃƒÆ’Ã‚Â©er automatiquement .env.production ? (y/n): " -n 1 -r
+# Option pour écrire directement dans .env.production
+read -p "Voulez-vous créer automatiquement .env.production ? (y/n): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     if [ -f ".env.production" ]; then
-        echo -e "${YELLOW}ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â  .env.production existe dÃƒÆ’Ã‚Â©jÃƒÆ’Ã‚Â !${NC}"
+        echo -e "${YELLOW}⚠️  .env.production existe déjà !${NC}"
         read -p "Voulez-vous le remplacer ? (y/n): " -n 1 -r
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "AnnulÃƒÆ’Ã‚Â©. Secrets affichÃƒÆ’Ã‚Â©s ci-dessus."
+            echo "Annulé. Secrets affichés ci-dessus."
             exit 0
         fi
     fi
 
-    echo -e "${BLUE}CrÃƒÆ’Ã‚Â©ation de .env.production...${NC}"
+    echo -e "${BLUE}Création de .env.production...${NC}"
     
     if [ ! -f "env.production.example" ]; then
-        echo -e "${YELLOW}ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â  env.production.example non trouvÃƒÆ’Ã‚Â©, crÃƒÆ’Ã‚Â©ation manuelle...${NC}"
+        echo -e "${YELLOW}⚠️  env.production.example non trouvé, création manuelle...${NC}"
         cat > .env.production << EOF
 # ============================================================================
 # Configuration de Production - Oxygen Document
 # ============================================================================
-# Secrets gÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â©rÃƒÆ’Ã‚Â©s le $(date)
+# Secrets générés le $(date)
 
 NODE_ENV=production
 APP_PORT=3000
@@ -91,12 +91,12 @@ APP_PORT=3000
 # URL publique de l'application
 NEXTAUTH_URL=https://votre-domaine.com
 
-# Secrets gÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â©rÃƒÆ’Ã‚Â©s automatiquement
+# Secrets générés automatiquement
 NEXTAUTH_SECRET=$NEXTAUTH_SECRET
 POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 REDIS_PASSWORD=$REDIS_PASSWORD
 
-# Base de donnÃƒÆ’Ã‚Â©es PostgreSQL
+# Base de données PostgreSQL
 POSTGRES_USER=postgres
 POSTGRES_DB=oxygen_document
 DATABASE_URL=postgresql://postgres:$POSTGRES_PASSWORD@postgres:5432/oxygen_document?schema=public
@@ -104,14 +104,14 @@ DATABASE_URL=postgresql://postgres:$POSTGRES_PASSWORD@postgres:5432/oxygen_docum
 # Redis
 REDIS_URL=redis://:$REDIS_PASSWORD@redis:6379
 
-# Stockage (ÃƒÆ’Ã‚Â  configurer)
+# Stockage (à configurer)
 STORAGE_TYPE=s3
 AWS_REGION=eu-west-3
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_S3_BUCKET=
 
-# Email (ÃƒÆ’Ã‚Â  configurer)
+# Email (à configurer)
 EMAIL_PROVIDER=resend
 RESEND_API_KEY=
 
@@ -126,8 +126,8 @@ EOF
         
         # Remplacer les valeurs dans .env.production
         # Utiliser sed -i compatible Linux (GNU sed)
-        # Sur Linux, sed -i nÃƒÆ’Ã‚Â©cessite une extension pour le backup, ou on peut utiliser sed -i '' sur macOS
-        # Ici on utilise une approche compatible avec les deux systÃƒÆ’Ã‚Â¨mes
+        # Sur Linux, sed -i nécessite une extension pour le backup, ou on peut utiliser sed -i '' sur macOS
+        # Ici on utilise une approche compatible avec les deux systèmes
         if sed --version >/dev/null 2>&1; then
             # GNU sed (Linux)
             sed -i "s|NEXTAUTH_SECRET=.*|NEXTAUTH_SECRET=$NEXTAUTH_SECRET|g" .env.production
@@ -147,15 +147,15 @@ EOF
     
     chmod 600 .env.production
     
-    echo -e "${GREEN}ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ .env.production crÃƒÆ’Ã‚Â©ÃƒÆ’Ã‚Â© avec succÃƒÆ’Ã‚Â¨s!${NC}"
+    echo -e "${GREEN}✅ .env.production créé avec succès!${NC}"
     echo ""
-    echo -e "${YELLOW}ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â  N'oubliez pas de configurer les variables suivantes :${NC}"
+    echo -e "${YELLOW}⚠️  N'oubliez pas de configurer les variables suivantes :${NC}"
     echo "  - NEXTAUTH_URL (votre domaine public)"
     echo "  - AWS_* (configuration S3) ou FTP_* (configuration FTP)"
     echo "  - RESEND_API_KEY ou SMTP_* (configuration email)"
     echo ""
-    echo "ÃƒÆ’Ã¢â‚¬Â°ditez le fichier : nano .env.production"
+    echo "Éditez le fichier : nano .env.production"
 fi
 
 echo ""
-echo -e "${GREEN}ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ TerminÃƒÆ’Ã‚Â© !${NC}"
+echo -e "${GREEN}✅ Terminé !${NC}"
