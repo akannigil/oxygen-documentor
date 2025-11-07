@@ -91,6 +91,16 @@ export class S3StorageAdapter implements StorageAdapter {
   }
 
   async getUrl(key: string): Promise<string> {
+    // Si forcePathStyle est activé, toujours utiliser path-style (endpoint/bucket/key)
+    if (this.forcePathStyle) {
+      if (this.endpoint) {
+        const endpointBase = this.endpoint.replace(/\/$/, '')
+        return `${endpointBase}/${this.bucket}/${key}`
+      }
+      // Même pour AWS S3 standard, utiliser path-style si forcePathStyle est activé
+      return `https://s3.${this.region}.amazonaws.com/${this.bucket}/${key}`
+    }
+
     // Si un endpoint custom est fourni (MinIO, R2, etc.), construire l'URL à partir de celui-ci.
     if (this.endpoint) {
       const endpointBase = this.endpoint.replace(/\/$/, '')
@@ -107,15 +117,16 @@ export class S3StorageAdapter implements StorageAdapter {
       Key: key,
     })
 
-    // Si un endpoint personnalisé est utilisé avec forcePathStyle, créer un client S3
-    // avec une configuration explicite pour forcer le path-style
-    if (this.endpoint && this.forcePathStyle) {
+    // Si forcePathStyle est activé, forcer le path-style
+    if (this.forcePathStyle) {
       // Créer un client S3 temporaire avec forcePathStyle explicitement activé
-      // et utiliser l'endpoint exact pour garantir le path-style
       const clientConfig: any = {
         region: this.region,
-        endpoint: this.endpoint,
         forcePathStyle: true, // Forcer explicitement le path-style
+      }
+      
+      if (this.endpoint) {
+        clientConfig.endpoint = this.endpoint
       }
       
       if (this.credentials) {
@@ -125,21 +136,38 @@ export class S3StorageAdapter implements StorageAdapter {
       const pathStyleClient = new S3Client(clientConfig)
       const signedUrl = await getSignedUrl(pathStyleClient, command, { expiresIn })
       
-      // Vérifier que l'URL utilise bien le path-style (endpoint/bucket/key)
+      // Toujours vérifier et corriger l'URL pour s'assurer qu'elle utilise le path-style
       const urlObj = new URL(signedUrl)
-      const endpointHostname = new URL(this.endpoint.replace(/\/$/, '')).hostname
+      const expectedHostname = this.endpoint 
+        ? new URL(this.endpoint.replace(/\/$/, '')).hostname
+        : `s3.${this.region}.amazonaws.com`
       
-      // Si le hostname ne correspond pas à l'endpoint, ou si l'URL utilise virtual-hosted style
-      // (bucket.hostname au lieu de hostname/bucket), corriger l'URL
-      if (urlObj.hostname !== endpointHostname || urlObj.hostname.startsWith(`${this.bucket}.`)) {
+      // Si l'URL utilise virtual-hosted style (bucket.hostname), la corriger en path-style
+      if (urlObj.hostname.startsWith(`${this.bucket}.`) || urlObj.hostname !== expectedHostname) {
         // Construire l'URL path-style manuellement avec la même query string (signature)
-        const endpointBase = this.endpoint.replace(/\/$/, '')
+        const endpointBase = this.endpoint 
+          ? this.endpoint.replace(/\/$/, '')
+          : `https://s3.${this.region}.amazonaws.com`
+        return `${endpointBase}/${this.bucket}/${key}${urlObj.search}`
+      }
+      
+      // Vérifier aussi que le path commence bien par /bucket/key
+      // Le path-style doit être /bucket/key, pas juste /key
+      const pathParts = urlObj.pathname.split('/').filter(Boolean)
+      const isPathStyle = pathParts.length >= 2 && pathParts[0] === this.bucket
+      
+      if (!isPathStyle) {
+        // Reconstruire l'URL en path-style
+        const endpointBase = this.endpoint 
+          ? this.endpoint.replace(/\/$/, '')
+          : `https://s3.${this.region}.amazonaws.com`
         return `${endpointBase}/${this.bucket}/${key}${urlObj.search}`
       }
       
       return signedUrl
     }
 
+    // Si pas de forcePathStyle, utiliser le client par défaut
     return await getSignedUrl(this.client, command, { expiresIn })
   }
 
