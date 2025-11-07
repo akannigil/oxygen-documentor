@@ -5,7 +5,7 @@ import type { StorageConfig, StorageType } from '@/lib/storage/config'
 
 interface StorageConfigFormProps {
   projectId: string
-  initialConfig?: StorageConfig | null
+  initialConfig?: StorageConfig | null | undefined
   onSave?: (config: StorageConfig | null) => void
 }
 
@@ -22,6 +22,10 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
   const [s3SecretAccessKey, setS3SecretAccessKey] = useState('')
   const [s3Endpoint, setS3Endpoint] = useState('')
   const [s3ForcePathStyle, setS3ForcePathStyle] = useState(false)
+
+  // Auto-détection si c'est MinIO ou autre service compatible S3
+  const isMinioOrCompatible =
+    s3Endpoint && !s3Endpoint.includes('amazonaws.com') && s3Endpoint.trim() !== ''
 
   // Configuration Local
   const [localBaseDir, setLocalBaseDir] = useState('./uploads')
@@ -132,6 +136,30 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
     setSaveSuccess(false)
 
     try {
+      // Validation spécifique pour S3/MinIO
+      if (storageType === 's3') {
+        if (!s3Bucket.trim()) {
+          throw new Error('Le nom du bucket est requis')
+        }
+        if (!s3Region.trim()) {
+          throw new Error('La région est requise')
+        }
+        if (s3Endpoint && !/^https?:\/\/.+/.test(s3Endpoint.trim())) {
+          throw new Error("L'endpoint doit commencer par http:// ou https://")
+        }
+        // Avertir si MinIO sans forcePathStyle
+        if (isMinioOrCompatible && !s3ForcePathStyle) {
+          const confirmWithoutPathStyle = window.confirm(
+            'Vous utilisez un endpoint personnalisé (MinIO/compatible S3) sans activer "Forcer le style de chemin".\n\n' +
+              'Cela peut causer des erreurs de connexion. Voulez-vous continuer quand même ?'
+          )
+          if (!confirmWithoutPathStyle) {
+            setIsSaving(false)
+            return
+          }
+        }
+      }
+
       const config = buildConfig()
 
       const response = await fetch(`/api/projects/${projectId}/storage-config`, {
@@ -280,18 +308,66 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                 placeholder="https://s3.example.com"
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Laissez vide pour AWS S3 standard. Pour MinIO, indiquez l&apos;URL complète (ex:{' '}
+                <code>https://s3.mondomaine.com</code>)
+              </p>
             </div>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="s3-force-path-style"
-                checked={s3ForcePathStyle}
-                onChange={(e) => setS3ForcePathStyle(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="s3-force-path-style" className="ml-2 block text-sm text-gray-700">
-                Forcer le style de chemin (path-style, pour MinIO)
-              </label>
+
+            {/* Avertissement pour MinIO */}
+            {isMinioOrCompatible && (
+              <div className="rounded-md bg-amber-50 p-3 border border-amber-200">
+                <div className="flex items-start gap-2">
+                  <svg
+                    className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-amber-900">
+                      Endpoint personnalisé détecté (MinIO/Compatible S3)
+                    </p>
+                    <p className="mt-1 text-xs text-amber-800">
+                      Il est fortement recommandé d&apos;activer &quot;Forcer le style de
+                      chemin&quot; ci-dessous pour assurer la compatibilité.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  type="checkbox"
+                  id="s3-force-path-style"
+                  checked={s3ForcePathStyle}
+                  onChange={(e) => setS3ForcePathStyle(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+              </div>
+              <div className="ml-3">
+                <label htmlFor="s3-force-path-style" className="block text-sm font-medium text-gray-700">
+                  Forcer le style de chemin (path-style)
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  {isMinioOrCompatible ? (
+                    <span className="text-amber-700 font-medium">
+                      ✓ Recommandé pour MinIO et services compatibles S3
+                    </span>
+                  ) : (
+                    <span>Requis pour MinIO, DigitalOcean Spaces, et autres services compatibles S3</span>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -385,7 +461,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
 
         {/* Configuration Google Drive */}
         {storageType === 'google-drive' && (
-          <div className="space-y-4 p-4 bg-white rounded-lg border border-yellow-200 bg-yellow-50">
+          <div className="space-y-4 p-4 rounded-lg border border-yellow-200 bg-yellow-50">
             <div className="flex items-start gap-2">
               <svg
                 className="h-5 w-5 text-yellow-600 mt-0.5"

@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { StorageStatusBanner } from '@/components/storage/StorageStatusBanner'
 
 export default function NewTemplatePage() {
   const router = useRouter()
@@ -119,6 +120,11 @@ export default function NewTemplatePage() {
           <p className="mt-2 text-sm text-gray-600">
             Téléchargez un fichier PDF ou image pour créer un template
           </p>
+        </div>
+
+        {/* Bannière de statut du stockage */}
+        <div className="mb-6">
+          <StorageStatusBanner projectId={projectId} showDetails={true} />
         </div>
 
         <div className="rounded-lg bg-white px-6 py-8 shadow-sm">
