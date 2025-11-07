@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { storage } from '@/lib/storage'
+import { createStorageAdapterFromConfig } from '@/lib/storage/config'
+import type { StorageConfig } from '@/lib/storage/config'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -75,6 +76,7 @@ export async function GET(request: Request, { params }: RouteParams) {
             id: true,
             name: true,
             ownerId: true,
+            storageConfig: true,
           },
         },
       },
@@ -89,14 +91,18 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
     }
 
+    // Utiliser l'adaptateur de stockage du projet ou celui par défaut
+    const projectStorageConfig = template.project.storageConfig as StorageConfig | null | undefined
+    const projectStorage = createStorageAdapterFromConfig(projectStorageConfig)
+
     // Obtenir l'URL du fichier (signed URL pour S3, URL publique pour local)
     let fileUrl: string
     try {
-      fileUrl = await storage.getSignedUrl(template.filePath, 3600)
+      fileUrl = await projectStorage.getSignedUrl(template.filePath, 3600)
     } catch (storageError) {
       console.error('Error getting signed URL:', storageError)
       // En cas d'erreur, essayer getUrl comme fallback
-      fileUrl = await storage.getUrl(template.filePath)
+      fileUrl = await projectStorage.getUrl(template.filePath)
     }
 
     return NextResponse.json({
@@ -138,6 +144,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
         project: {
           select: {
             ownerId: true,
+            storageConfig: true,
           },
         },
       },
@@ -151,9 +158,13 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
     }
 
+    // Utiliser l'adaptateur de stockage du projet ou celui par défaut
+    const projectStorageConfig = template.project.storageConfig as StorageConfig | null | undefined
+    const projectStorage = createStorageAdapterFromConfig(projectStorageConfig)
+
     // Supprimer le fichier du storage
     try {
-      await storage.delete(template.filePath)
+      await projectStorage.delete(template.filePath)
     } catch (error) {
       console.error('Error deleting file from storage:', error)
       // Continuer même si la suppression du fichier échoue

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { storage } from '@/lib/storage'
+import { createStorageAdapterFromConfig } from '@/lib/storage/config'
+import type { StorageConfig } from '@/lib/storage/config'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -17,7 +18,12 @@ export async function GET(request: Request, { params }: RouteParams) {
     const doc = await prisma.document.findUnique({
       where: { id },
       include: {
-        project: { select: { ownerId: true } },
+        project: { 
+          select: { 
+            ownerId: true,
+            storageConfig: true,
+          } 
+        },
         template: { select: { id: true, name: true } },
       },
     })
@@ -26,15 +32,19 @@ export async function GET(request: Request, { params }: RouteParams) {
     if (doc.project.ownerId !== session.user.id)
       return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
 
+    // Utiliser l'adaptateur de stockage du projet ou celui par défaut
+    const projectStorageConfig = doc.project.storageConfig as StorageConfig | null | undefined
+    const projectStorage = createStorageAdapterFromConfig(projectStorageConfig)
+
     let url = ''
     try {
       // Essayer d'obtenir une URL signée (tous les adaptateurs l'implémentent)
-      url = await storage.getSignedUrl(doc.filePath, 3600)
+      url = await projectStorage.getSignedUrl(doc.filePath, 3600)
     } catch (e) {
       console.error('Error getting signed document URL:', e)
       try {
         // Fallback vers URL normale
-        url = await storage.getUrl(doc.filePath)
+        url = await projectStorage.getUrl(doc.filePath)
       } catch (fallbackError) {
         console.error('Error getting fallback URL:', fallbackError)
         return NextResponse.json(
@@ -65,7 +75,12 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     const doc = await prisma.document.findUnique({
       where: { id },
       include: {
-        project: { select: { ownerId: true } },
+        project: { 
+          select: { 
+            ownerId: true,
+            storageConfig: true,
+          } 
+        },
       },
     })
 
@@ -87,7 +102,10 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     // On continue même si le fichier n'existe pas ou si la suppression échoue
     if (doc.filePath) {
       try {
-        await storage.delete(doc.filePath)
+        // Utiliser l'adaptateur de stockage du projet ou celui par défaut
+        const projectStorageConfig = doc.project.storageConfig as StorageConfig | null | undefined
+        const projectStorage = createStorageAdapterFromConfig(projectStorageConfig)
+        await projectStorage.delete(doc.filePath)
         console.log(`File deleted from storage: ${doc.filePath}`)
       } catch (error) {
         console.warn(`File not found or error deleting from storage (${doc.filePath}):`, error)

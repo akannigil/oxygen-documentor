@@ -44,6 +44,7 @@ export class S3StorageAdapter implements StorageAdapter {
   private region: string
   private endpoint: string | undefined
   private forcePathStyle: boolean
+  private credentials: { accessKeyId: string; secretAccessKey: string } | undefined
 
   constructor(
     bucket: string,
@@ -70,7 +71,8 @@ export class S3StorageAdapter implements StorageAdapter {
     clientConfig.forcePathStyle = this.forcePathStyle
     
     if (accessKeyId && secretAccessKey) {
-      clientConfig.credentials = { accessKeyId, secretAccessKey }
+      this.credentials = { accessKeyId, secretAccessKey }
+      clientConfig.credentials = this.credentials
     }
     
     this.client = new S3Client(clientConfig)
@@ -104,6 +106,39 @@ export class S3StorageAdapter implements StorageAdapter {
       Bucket: this.bucket,
       Key: key,
     })
+
+    // Si un endpoint personnalisé est utilisé avec forcePathStyle, créer un client S3
+    // avec une configuration explicite pour forcer le path-style
+    if (this.endpoint && this.forcePathStyle) {
+      // Créer un client S3 temporaire avec forcePathStyle explicitement activé
+      // et utiliser l'endpoint exact pour garantir le path-style
+      const clientConfig: any = {
+        region: this.region,
+        endpoint: this.endpoint,
+        forcePathStyle: true, // Forcer explicitement le path-style
+      }
+      
+      if (this.credentials) {
+        clientConfig.credentials = this.credentials
+      }
+      
+      const pathStyleClient = new S3Client(clientConfig)
+      const signedUrl = await getSignedUrl(pathStyleClient, command, { expiresIn })
+      
+      // Vérifier que l'URL utilise bien le path-style (endpoint/bucket/key)
+      const urlObj = new URL(signedUrl)
+      const endpointHostname = new URL(this.endpoint.replace(/\/$/, '')).hostname
+      
+      // Si le hostname ne correspond pas à l'endpoint, ou si l'URL utilise virtual-hosted style
+      // (bucket.hostname au lieu de hostname/bucket), corriger l'URL
+      if (urlObj.hostname !== endpointHostname || urlObj.hostname.startsWith(`${this.bucket}.`)) {
+        // Construire l'URL path-style manuellement avec la même query string (signature)
+        const endpointBase = this.endpoint.replace(/\/$/, '')
+        return `${endpointBase}/${this.bucket}/${key}${urlObj.search}`
+      }
+      
+      return signedUrl
+    }
 
     return await getSignedUrl(this.client, command, { expiresIn })
   }

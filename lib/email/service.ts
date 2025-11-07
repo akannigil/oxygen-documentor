@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
-import { storage } from '@/lib/storage/adapters'
+import { createStorageAdapterFromConfig } from '@/lib/storage/config'
+import type { StorageConfig } from '@/lib/storage/config'
 import { emailAdapter } from './adapters'
 import {
   renderEmailTemplate,
@@ -71,6 +72,7 @@ export async function sendDocumentEmail(
             id: true,
             name: true,
             ownerId: true,
+            storageConfig: true,
           },
         },
       },
@@ -111,9 +113,13 @@ export async function sendDocumentEmail(
     }
 
     // Générer l'URL de téléchargement signée (valide 7 jours)
+    // Utiliser l'adaptateur de stockage du projet ou celui par défaut
+    const projectStorageConfig = document.project.storageConfig as StorageConfig | null | undefined
+    const projectStorage = createStorageAdapterFromConfig(projectStorageConfig)
+    
     let downloadUrl = ''
     try {
-      downloadUrl = await storage.getSignedUrl(document.filePath, 7 * 24 * 60 * 60)
+      downloadUrl = await projectStorage.getSignedUrl(document.filePath, 7 * 24 * 60 * 60)
       variables['download_url'] = downloadUrl
     } catch (error) {
       console.error("Erreur lors de la génération de l'URL signée:", error)
@@ -174,7 +180,7 @@ export async function sendDocumentEmail(
               }
               return defaultName
             })(),
-            content: await storage.getBuffer(document.filePath),
+            content: await projectStorage.getBuffer(document.filePath),
             contentType: document.mimeType,
           },
         ]
