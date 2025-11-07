@@ -90,9 +90,24 @@ export function createStorageAdapterFromConfig(config: StorageConfig | null | un
         throw new Error('S3_BUCKET_NAME et AWS_REGION sont requis pour le stockage S3')
       }
 
+      // Normaliser l'URL de l'endpoint (ajouter https:// si manquant)
+      let endpoint = s3Config.endpoint
+      if (endpoint && !/^https?:\/\//i.test(endpoint)) {
+        endpoint = `https://${endpoint}`
+      }
+
+      // Détecter si c'est un endpoint AWS S3 standard ou un endpoint personnalisé (MinIO, etc.)
+      const isAwsS3Endpoint = endpoint ? /^https?:\/\/s3[.-].*\.amazonaws\.com/i.test(endpoint) : false
+      
+      // Pour AWS S3 standard, ne pas forcer path-style sauf si explicitement demandé
+      // Pour MinIO et autres endpoints personnalisés, forcer path-style par défaut
+      const forcePathStyle: boolean = s3Config.forcePathStyle !== undefined
+        ? s3Config.forcePathStyle
+        : !!(endpoint && !isAwsS3Endpoint)
+
       const options = {
-        ...(s3Config.endpoint ? { endpoint: s3Config.endpoint } : {}),
-        ...(s3Config.forcePathStyle !== undefined ? { forcePathStyle: s3Config.forcePathStyle } : {}),
+        ...(endpoint ? { endpoint } : {}),
+        forcePathStyle, // Toujours défini, même si false
       }
 
       return new S3StorageAdapter(

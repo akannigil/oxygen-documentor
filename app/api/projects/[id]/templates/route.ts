@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { storage } from '@/lib/storage'
+import { createStorageAdapterFromConfig } from '@/lib/storage/config'
+import type { StorageConfig } from '@/lib/storage/config'
 import { randomUUID } from 'crypto'
 import { validateDOCXTemplate } from '@/lib/templates/docx-parser'
 import type { TemplateType } from '@/shared/types'
@@ -41,8 +42,14 @@ export async function POST(request: Request, { params }: RouteParams) {
     const { id: projectId } = await params
 
     // Vérifier que le projet existe et appartient à l'utilisateur
+    // Récupérer aussi la configuration de stockage du projet
     const project = await prisma.project.findUnique({
       where: { id: projectId },
+      select: {
+        id: true,
+        ownerId: true,
+        storageConfig: true,
+      },
     })
 
     if (!project) {
@@ -52,6 +59,10 @@ export async function POST(request: Request, { params }: RouteParams) {
     if (project.ownerId !== session.user.id) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
     }
+
+    // Récupérer la configuration de stockage du projet ou utiliser celle par défaut
+    const projectStorageConfig = project.storageConfig as StorageConfig | null | undefined
+    const projectStorage = createStorageAdapterFromConfig(projectStorageConfig)
 
     // Parser le FormData
     const formData = await request.formData()
@@ -118,8 +129,8 @@ export async function POST(request: Request, { params }: RouteParams) {
     const fileExtension = file.name.split('.').pop() || 'pdf'
     const storageKey = `projects/${projectId}/templates/${randomUUID()}.${fileExtension}`
 
-    // Upload vers le storage
-    await storage.upload(buffer, storageKey, file.type)
+    // Upload vers le storage en utilisant la configuration du projet
+    await projectStorage.upload(buffer, storageKey, file.type)
 
     // Extraire les métadonnées (dimensions pour images)
     let width: number | undefined
