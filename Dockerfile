@@ -89,7 +89,6 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont \
     postgresql-client \
-    redis \
     dumb-init \
     libreoffice \
     openjdk11-jre \

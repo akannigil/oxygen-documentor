@@ -105,6 +105,12 @@ set +a # turn off auto export
 
 # Vérifier les variables critiques
 REQUIRED_VARS=("POSTGRES_PASSWORD" "REDIS_PASSWORD" "NEXTAUTH_SECRET" "NEXTAUTH_URL")
+
+# Ajouter les variables S3 si STORAGE_TYPE est s3
+if [ "$STORAGE_TYPE" = "s3" ]; then
+    REQUIRED_VARS+=("AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY" "AWS_S3_BUCKET" "S3_BUCKET_NAME")
+fi
+
 MISSING_VARS=()
 
 for var in "${REQUIRED_VARS[@]}"; do

@@ -53,42 +53,34 @@ done
 
 log_success "PostgreSQL est disponible"
 
-# Attendre que Redis soit disponible
-log_info "Attente de Redis..."
-RETRY_COUNT=0
-
-# Vérifier si redis-cli est disponible
-if ! command -v redis-cli > /dev/null 2>&1; then
-    log_error "redis-cli n'est pas installé dans le conteneur"
-    exit 1
-fi
-
-# Attendre que Redis soit disponible (avec ou sans mot de passe)
+# Attendre que Redis soit disponible (si REDIS_PASSWORD est défini)
 if [ -n "$REDIS_PASSWORD" ]; then
+    log_info "Attente de Redis..."
+    RETRY_COUNT=0
     until redis-cli -h redis -a "$REDIS_PASSWORD" ping > /dev/null 2>&1; do
         RETRY_COUNT=$((RETRY_COUNT + 1))
         if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
             log_error "Redis n'est pas disponible après $MAX_RETRIES tentatives"
-            log_error "Vérifiez que le conteneur Redis est démarré et que REDIS_PASSWORD est correct"
             exit 1
         fi
         log_info "Redis n'est pas encore prêt, attente... ($RETRY_COUNT/$MAX_RETRIES)"
         sleep 2
     done
+    log_success "Redis est disponible"
 else
+    log_info "Attente de Redis..."
+    RETRY_COUNT=0
     until redis-cli -h redis ping > /dev/null 2>&1; do
         RETRY_COUNT=$((RETRY_COUNT + 1))
         if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
             log_error "Redis n'est pas disponible après $MAX_RETRIES tentatives"
-            log_error "Vérifiez que le conteneur Redis est démarré"
             exit 1
         fi
         log_info "Redis n'est pas encore prêt, attente... ($RETRY_COUNT/$MAX_RETRIES)"
         sleep 2
     done
+    log_success "Redis est disponible"
 fi
-
-log_success "Redis est disponible"
 
 # Générer le client Prisma (si nécessaire)
 log_info "Génération du client Prisma..."
