@@ -78,6 +78,7 @@ services:
       # NextAuth
       NEXTAUTH_URL: ${NEXTAUTH_URL}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      AUTH_TRUST_HOST: 'true'
 
       # Storage (S3 ou FTP)
       STORAGE_TYPE: ${STORAGE_TYPE:-s3}
@@ -99,6 +100,8 @@ services:
       # Email (Resend ou SMTP)
       EMAIL_PROVIDER: ${EMAIL_PROVIDER:-resend}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
+      EMAIL_FROM: ${EMAIL_FROM:-${RESEND_FROM_EMAIL:-}}
 
       # SMTP (si EMAIL_PROVIDER=smtp)
       SMTP_HOST: ${SMTP_HOST:-}
@@ -107,6 +110,8 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:-}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
+      EMAIL_SENDER_NAME: ${EMAIL_SENDER_NAME:-Oxygen Document}
+      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
 
       # Workers
       ENABLE_WORKERS_IN_DEV: 'false'
