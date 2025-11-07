@@ -71,6 +71,9 @@ RUN npx prisma generate
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
+# Créer le répertoire public s'il n'existe pas (optionnel dans Next.js)
+RUN mkdir -p /app/public || true
+
 # ============================================================================
 # Stage 3: Runner - Image de production
 # ============================================================================

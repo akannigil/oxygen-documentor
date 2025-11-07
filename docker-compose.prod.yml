@@ -111,6 +111,9 @@ services:
       PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
 
+      # LibreOffice
+      LIBREOFFICE_PATH: /usr/bin/soffice
+
     volumes:
       - uploads:/app/uploads
     networks:
