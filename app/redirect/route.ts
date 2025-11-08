@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { storage } from '@/lib/storage/adapters'
+import { prisma } from '@/lib/prisma'
+import { createStorageAdapterFromConfig } from '@/lib/storage/config'
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,12 +16,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing path parameter' }, { status: 400 })
     }
 
-    // Générer une URL signée à la volée (fallback vers URL normale)
+    // Extraire le projectId du chemin de type "projects/{projectId}/documents/..."
+    const match = /^projects\/([^/]+)\//.exec(path)
+    const projectId = match?.[1]
+    if (!projectId) {
+      return NextResponse.json(
+        { error: 'Invalid path: missing projectId (expected projects/{projectId}/...)' },
+        { status: 400 }
+      )
+    }
+
+    // Charger la configuration de stockage spécifique au projet
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { storageConfig: true },
+    })
+    if (!project) {
+      return NextResponse.json({ error: 'Projet introuvable' }, { status: 404 })
+    }
+
+    const projectStorage = createStorageAdapterFromConfig(project.storageConfig as any)
+
+    // Générer une URL signée à la volée (fallback vers URL normale du même adaptateur)
     let target: string
     try {
-      target = await storage.getSignedUrl(path, expiresIn)
+      target = await projectStorage.getSignedUrl(path, expiresIn)
     } catch {
-      target = await storage.getUrl(path)
+      target = await projectStorage.getUrl(path)
     }
 
     return NextResponse.redirect(target, { status: 302 })

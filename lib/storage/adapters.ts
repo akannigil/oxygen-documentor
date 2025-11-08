@@ -485,5 +485,3 @@ export function createStorageAdapter(): StorageAdapter {
   }
 }
 
-export const storage = createStorageAdapter()
-

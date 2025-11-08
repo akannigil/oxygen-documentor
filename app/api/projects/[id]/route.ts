@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { storage } from '@/lib/storage'
+import { createStorageAdapterFromConfig } from '@/lib/storage/config'
 import { updateProjectSchema } from '@/shared/schemas/project'
 import { z } from 'zod'
 
@@ -136,7 +136,8 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     // Récupérer les templates et documents associés pour supprimer leurs fichiers
     const projectWithRelations = await prisma.project.findUnique({
       where: { id },
-      include: {
+      select: {
+        storageConfig: true,
         templates: {
           select: { id: true, filePath: true },
         },
@@ -150,11 +151,13 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Projet non trouvé' }, { status: 404 })
     }
 
+    const projectStorage = createStorageAdapterFromConfig(projectWithRelations.storageConfig as any)
+
     // Supprimer les fichiers des templates
     for (const template of projectWithRelations.templates) {
       if (template.filePath) {
         try {
-          await storage.delete(template.filePath)
+          await projectStorage.delete(template.filePath)
         } catch (error) {
           console.error(`Error deleting template file ${template.id}:`, error)
           // Continuer même si la suppression échoue
@@ -166,7 +169,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     for (const document of projectWithRelations.documents) {
       if (document.filePath) {
         try {
-          await storage.delete(document.filePath)
+          await projectStorage.delete(document.filePath)
         } catch (error) {
           console.error(`Error deleting document file ${document.id}:`, error)
           // Continuer même si la suppression échoue

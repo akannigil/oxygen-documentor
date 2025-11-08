@@ -190,8 +190,8 @@ export default function EditTemplatePage() {
                   <p className="mb-4 text-sm text-blue-800">
                     Pour les templates DOCX, les zones sont définies directement dans votre document
                     Word avec des variables entre accolades{' '}
-                    <code className="rounded bg-blue-100 px-1">{'{{nom}}'}</code>. Vous n&apos;avez
-                    pas besoin d&apos;éditer les zones ici.
+                    <code className="rounded bg-blue-100 px-1">{'{{nom}}'}</code>. Vous n'avez
+                    pas besoin d'éditer les zones ici.
                   </p>
                   <p className="text-sm font-medium text-blue-800">
                     Si vous souhaitez modifier les variables, éditionnez le fichier Word directement
@@ -293,7 +293,7 @@ export default function EditTemplatePage() {
             <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
               <h3 className="mb-2 text-sm font-semibold text-blue-900">Instructions</h3>
               <ul className="list-inside list-disc space-y-1 text-sm text-blue-800">
-                <li>Cliquez et glissez sur l&apos;image pour créer une nouvelle zone</li>
+                <li>Cliquez et glissez sur l'image pour créer une nouvelle zone</li>
                 <li>Cliquez sur une zone existante pour la sélectionner et la modifier</li>
                 <li>Utilisez la molette de la souris pour zoomer</li>
                 <li>Glissez pour déplacer la zone ou utilisez les poignées pour redimensionner</li>
@@ -318,3 +318,5 @@ export default function EditTemplatePage() {
     </div>
   )
 }
+
+

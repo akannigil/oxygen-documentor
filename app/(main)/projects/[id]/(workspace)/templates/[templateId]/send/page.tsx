@@ -36,3 +36,5 @@ export default async function SendCenterPage({ params }: PageProps) {
     </div>
   )
 }
+
+

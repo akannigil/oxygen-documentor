@@ -73,9 +73,9 @@ export type StorageConfig =
  * Crée un adaptateur de stockage à partir d'une configuration JSON
  */
 export function createStorageAdapterFromConfig(config: StorageConfig | null | undefined): StorageAdapter {
-  // Si aucune configuration n'est fournie, utiliser la configuration par défaut (variables d'environnement)
+  // Exiger une configuration explicite de projet (ne plus utiliser les variables d'environnement par défaut)
   if (!config) {
-    return createStorageAdapter()
+    throw new Error('Aucune configuration de stockage projet fournie')
   }
 
   switch (config.type) {

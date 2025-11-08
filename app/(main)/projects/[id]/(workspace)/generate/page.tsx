@@ -326,7 +326,7 @@ export default function GeneratePage() {
                 <p className="mt-2 text-sm text-gray-600">
                   {isDOCX
                     ? 'Ce template DOCX ne contient pas de variables {{...}}. Ajoutez des variables dans votre document Word.'
-                    : 'Ce template n&apos;a pas de zones définies. Définissez d&apos;abord les zones de texte et QR codes.'}
+                    : "Ce template n'a pas de zones définies. Définissez d'abord les zones de texte et QR codes."}
                 </p>
                 {!isDOCX && (
                   <Link
@@ -342,3 +342,5 @@ export default function GeneratePage() {
     </div>
   )
 }
+
+
