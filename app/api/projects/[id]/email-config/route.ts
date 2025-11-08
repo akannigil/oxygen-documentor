@@ -2,20 +2,15 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
+import type { EmailConfig } from '@/lib/email/config'
 
 interface RouteParams {
   params: Promise<{ id: string }>
 }
 
-interface EmailConfig {
-  organizationName?: string
-  appName?: string
-  contactEmail?: string
-}
-
 /**
  * GET /api/projects/[id]/email-config
- * Récupère la configuration système d'email du projet
+ * Récupère la configuration email du projet
  */
 export async function GET(request: Request, { params }: RouteParams) {
   try {
@@ -43,30 +38,8 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
     }
 
-    // Récupérer les valeurs par défaut depuis les variables d'environnement
-    const defaultConfig: EmailConfig = {}
-    const envOrgName = process.env['EMAIL_ORGANIZATION_NAME']
-    const envAppName = process.env['EMAIL_APP_NAME']
-    const envContact = process.env['EMAIL_CONTACT'] || process.env['EMAIL_FROM']
-
-    if (envOrgName) {
-      defaultConfig.organizationName = envOrgName
-    }
-    if (envAppName) {
-      defaultConfig.appName = envAppName
-    } else {
-      defaultConfig.appName = 'Oxygen Document'
-    }
-    if (envContact) {
-      defaultConfig.contactEmail = envContact
-    }
-
-    // Fusionner avec la configuration du projet si elle existe
-    const projectConfig = (project.emailConfig as EmailConfig | null) || {}
-    const config: EmailConfig = {
-      ...defaultConfig,
-      ...projectConfig,
-    }
+    // Récupérer la configuration du projet
+    const config = (project.emailConfig as EmailConfig | null) || null
 
     return NextResponse.json({ config })
   } catch (error) {
@@ -77,7 +50,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
 /**
  * PUT /api/projects/[id]/email-config
- * Met à jour la configuration système d'email du projet
+ * Met à jour la configuration email du projet
  */
 export async function PUT(request: Request, { params }: RouteParams) {
   try {
@@ -107,35 +80,48 @@ export async function PUT(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
     }
 
-    // Valider et nettoyer la configuration
-    const config: EmailConfig = {}
+    // Valider la configuration selon le provider
+    const config = body.config
 
-    if (body.config.organizationName !== undefined) {
-      const trimmed = String(body.config.organizationName).trim()
-      if (trimmed) {
-        config.organizationName = trimmed
+    if (!config.provider || (config.provider !== 'resend' && config.provider !== 'smtp')) {
+      return NextResponse.json(
+        { error: 'Provider invalide (doit être "resend" ou "smtp")' },
+        { status: 400 }
+      )
+    }
+
+    if (config.provider === 'resend') {
+      if (!config.apiKey || !config.from) {
+        return NextResponse.json(
+          { error: "La clé API Resend et l'adresse email from sont requises" },
+          { status: 400 }
+        )
+      }
+    } else if (config.provider === 'smtp') {
+      if (!config.host || !config.port || !config.user || !config.password) {
+        return NextResponse.json(
+          { error: "L'hôte, le port, l'utilisateur et le mot de passe SMTP sont requis" },
+          { status: 400 }
+        )
       }
     }
 
-    if (body.config.appName !== undefined) {
-      const trimmed = String(body.config.appName).trim()
-      if (trimmed) {
-        config.appName = trimmed
-      }
-    }
-
-    if (body.config.contactEmail !== undefined) {
-      const trimmed = String(body.config.contactEmail).trim()
-      if (trimmed) {
-        config.contactEmail = trimmed
-      }
+    // Nettoyer les valeurs optionnelles
+    const cleanedConfig: EmailConfig = {
+      ...config,
+      ...(config.organizationName?.trim() && { organizationName: config.organizationName.trim() }),
+      ...(config.appName?.trim() && { appName: config.appName.trim() }),
+      ...(config.contactEmail?.trim() && { contactEmail: config.contactEmail.trim() }),
+      ...(config.from && { from: config.from.trim() }),
+      ...(config.fromName?.trim() && { fromName: config.fromName.trim() }),
+      ...(config.replyTo?.trim() && { replyTo: config.replyTo.trim() }),
     }
 
     // Mettre à jour le projet
     const updatedProject = await prisma.project.update({
       where: { id },
       data: {
-        emailConfig: config as Prisma.InputJsonValue,
+        emailConfig: cleanedConfig as unknown as Prisma.InputJsonValue,
       },
       select: {
         id: true,
@@ -144,7 +130,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     })
 
     return NextResponse.json({
-      config: updatedProject.emailConfig as EmailConfig,
+      config: updatedProject.emailConfig as unknown as EmailConfig,
       message: 'Configuration mise à jour avec succès',
     })
   } catch (error) {

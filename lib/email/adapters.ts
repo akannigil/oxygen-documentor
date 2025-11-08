@@ -186,52 +186,19 @@ export class ResendEmailAdapter implements EmailAdapter {
 }
 
 /**
- * Factory pour créer l'adaptateur email approprié selon l'environnement
+ * @deprecated Cette fonction n'est plus utilisée. Utilisez createEmailAdapterFromConfig() depuis lib/email/config.ts
+ * Cette fonction est conservée pour compatibilité mais ne devrait plus être appelée.
+ * La configuration email est maintenant gérée par projet via la base de données.
  */
 export function createEmailAdapter(): EmailAdapter | null {
-  const emailProvider = process.env['EMAIL_PROVIDER'] || 'smtp'
-
-  switch (emailProvider) {
-    case 'resend': {
-      const apiKey = process.env['RESEND_API_KEY']
-      const from = process.env['RESEND_FROM_EMAIL'] || process.env['EMAIL_FROM']
-
-      if (!apiKey) {
-        console.warn('RESEND_API_KEY non configuré, emails désactivés')
-        return null
-      }
-
-      if (!from) {
-        console.warn('RESEND_FROM_EMAIL ou EMAIL_FROM non configuré')
-        return null
-      }
-
-      return new ResendEmailAdapter(apiKey, from)
-    }
-
-    case 'smtp':
-    default: {
-      const host = process.env['SMTP_HOST']
-      const port = process.env['SMTP_PORT']
-      const user = process.env['SMTP_USER']
-      const password = process.env['SMTP_PASSWORD']
-      const from = process.env['EMAIL_FROM']
-
-      if (!host || !port || !user || !password) {
-        console.warn('Configuration SMTP incomplète, emails désactivés')
-        return null
-      }
-
-      return new SMTPEmailAdapter({
-        host,
-        port: parseInt(port, 10),
-        secure: process.env['SMTP_SECURE'] === 'true' || parseInt(port, 10) === 465,
-        user,
-        password,
-        ...(from ? { from } : {}),
-      })
-    }
-  }
+  console.warn(
+    'createEmailAdapter() est déprécié. Utilisez createEmailAdapterFromConfig() avec la configuration du projet.'
+  )
+  return null
 }
 
-export const emailAdapter = createEmailAdapter()
+/**
+ * @deprecated Cette constante n'est plus utilisée. L'adaptateur email doit être créé
+ * à partir de la configuration du projet via createEmailAdapterFromConfig().
+ */
+export const emailAdapter = null

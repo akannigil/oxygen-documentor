@@ -58,9 +58,19 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
     }
 
-    if (document.status === 'failed') {
+    // Vérifier que le document a été généré avec succès
+    // Si le statut est 'failed' ET qu'il n'y a pas de fichier, on rejette
+    if (document.status === 'failed' && !document.filePath) {
       return NextResponse.json(
-        { error: 'Le document a échoué lors de la génération' },
+        { error: "Le document a échoué lors de la génération et aucun fichier n'est disponible" },
+        { status: 400 }
+      )
+    }
+
+    // Si le document n'a pas de fichier, on ne peut pas l'envoyer
+    if (!document.filePath) {
+      return NextResponse.json(
+        { error: "Le document n'a pas de fichier généré. Veuillez régénérer le document." },
         { status: 400 }
       )
     }

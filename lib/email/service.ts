@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { createStorageAdapterFromConfig } from '@/lib/storage/config'
 import type { StorageConfig } from '@/lib/storage/config'
-import { emailAdapter } from './adapters'
+import { createEmailAdapterFromConfig } from './config'
+import { getProjectEmailConfig } from './get-config'
 import {
   renderEmailTemplate,
   DEFAULT_EMAIL_TEMPLATE,
@@ -48,13 +49,6 @@ function formatFrom(name?: string, email?: string): string | undefined {
 export async function sendDocumentEmail(
   options: SendDocumentEmailOptions
 ): Promise<SendDocumentEmailResult> {
-  if (!emailAdapter) {
-    return {
-      success: false,
-      error: 'Service email non configuré',
-    }
-  }
-
   try {
     // Récupérer le document depuis la DB
     const document = await prisma.document.findUnique({
@@ -86,16 +80,28 @@ export async function sendDocumentEmail(
       }
     }
 
-    // Récupérer la configuration email du projet si elle existe
-    const projectEmailConfig =
-      (document.project.emailConfig as {
-        organizationName?: string
-        appName?: string
-        contactEmail?: string
-      } | null) || null
+    // Récupérer la configuration email du projet
+    const projectEmailConfig = await getProjectEmailConfig(document.project.id)
+
+    if (!projectEmailConfig) {
+      return {
+        success: false,
+        error: 'Configuration email non configurée pour ce projet',
+      }
+    }
+
+    // Créer l'adaptateur email à partir de la configuration du projet
+    const emailAdapter = createEmailAdapterFromConfig(projectEmailConfig)
+
+    if (!emailAdapter) {
+      return {
+        success: false,
+        error: "Impossible de créer l'adaptateur email avec la configuration fournie",
+      }
+    }
 
     // Construire les variables par défaut
-    // Priorité : configuration projet > variables d'environnement > valeurs par défaut
+    // Priorité : configuration projet > valeurs par défaut
     const defaultVariables: EmailTemplateVariables = {
       recipient_name: document.recipient || 'Cher destinataire',
       recipient_email: options.recipientEmail,
@@ -103,16 +109,9 @@ export async function sendDocumentEmail(
       document_status: document.status,
       template_name: document.template.name,
       project_name: document.project.name,
-      organization_name:
-        projectEmailConfig?.organizationName ||
-        process.env['EMAIL_ORGANIZATION_NAME'] ||
-        'Oxygen Document',
-      app_name: projectEmailConfig?.appName || process.env['EMAIL_APP_NAME'] || 'Oxygen Document',
-      contact_email:
-        projectEmailConfig?.contactEmail ||
-        process.env['EMAIL_CONTACT'] ||
-        process.env['EMAIL_FROM'] ||
-        '',
+      organization_name: projectEmailConfig.organizationName || 'Oxygen Document',
+      app_name: projectEmailConfig.appName || 'Oxygen Document',
+      contact_email: projectEmailConfig.contactEmail || projectEmailConfig.from || '',
       message: 'Vous trouverez ci-joint votre document généré.',
       additional_info: '',
       created_at: document.createdAt.toLocaleDateString('fr-FR'),
@@ -133,7 +132,7 @@ export async function sendDocumentEmail(
     // Utiliser l'adaptateur de stockage du projet ou celui par défaut
     const projectStorageConfig = document.project.storageConfig as StorageConfig | null | undefined
     const projectStorage = createStorageAdapterFromConfig(projectStorageConfig)
-    
+
     let downloadUrl = ''
     try {
       downloadUrl = await projectStorage.getSignedUrl(document.filePath, 7 * 24 * 60 * 60)
@@ -204,8 +203,8 @@ export async function sendDocumentEmail(
       : undefined
 
     // Construire l'en-tête "From"
-    const fromAddress = options.from || process.env['EMAIL_FROM']
-    const fromName = options.fromName || process.env['EMAIL_SENDER_NAME']
+    const fromAddress = options.from || projectEmailConfig.from
+    const fromName = options.fromName || projectEmailConfig.fromName
     const fromHeader = formatFrom(fromName, fromAddress)
 
     // Envoyer l'email
@@ -215,8 +214,8 @@ export async function sendDocumentEmail(
       html,
       text,
       ...(fromHeader ? { from: fromHeader } : {}),
-      ...(options.replyTo || process.env['EMAIL_REPLY_TO']
-        ? { replyTo: options.replyTo || process.env['EMAIL_REPLY_TO']! }
+      ...(options.replyTo || projectEmailConfig.replyTo
+        ? { replyTo: options.replyTo || projectEmailConfig.replyTo! }
         : {}),
       ...(options.cc ? { cc: options.cc } : {}),
       ...(options.bcc ? { bcc: options.bcc } : {}),
