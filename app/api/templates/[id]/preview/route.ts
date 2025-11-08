@@ -5,7 +5,7 @@ import { createStorageAdapterFromConfig } from '@/lib/storage/config'
 import type { StorageConfig } from '@/lib/storage/config'
 import { getAdapter, type GenerationContext } from '@/lib/generation/adapters'
 import type { CertificateAuthConfig } from '@/lib/qrcode/certificate-auth'
-import type { TemplateType } from '@/shared/types'
+import type { TemplateType, OutputFormat } from '@/shared/types'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -67,7 +67,9 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     const templateType = getTemplateType(template.mimeType)
-    const desiredFormat = outputFormat || (templateType === 'docx' ? 'docx' : 'pdf')
+    // Pour la prévisualisation, toujours utiliser PDF car c'est le seul format affichable dans un iframe
+    // Même si l'utilisateur a choisi DOCX comme format de sortie, on convertit en PDF pour l'aperçu
+    const desiredFormat: OutputFormat = 'pdf'
 
     // Préparer le contexte de génération
     const authConfig: CertificateAuthConfig | undefined = process.env['CERTIFICATE_SECRET_KEY']
@@ -88,6 +90,17 @@ export async function POST(request: Request, { params }: RouteParams) {
       return `https://example.com/preview/${filePath}?signed=${signed}&expires=${expiresIn}`
     }
 
+    // Pour les templates DOCX, toujours fournir des options PDF pour la conversion
+    // Utiliser les options fournies ou des valeurs par défaut
+    const finalPdfOptions =
+      templateType === 'docx'
+        ? pdfOptions || {
+            format: 'A4',
+            orientation: 'portrait',
+            method: 'libreoffice',
+          }
+        : pdfOptions
+
     const context: GenerationContext = {
       templateBuffer,
       templateMimeType: template.mimeType,
@@ -97,7 +110,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       ...(authConfig ? { authConfig } : {}),
       documentFilePath: previewDocumentFilePath,
       getStorageUrl,
-      ...(pdfOptions ? { pdfOptions } : {}),
+      ...(finalPdfOptions ? { pdfOptions: finalPdfOptions } : {}),
       ...(styleOptions ? { styleOptions } : {}),
     }
 
@@ -111,8 +124,9 @@ export async function POST(request: Request, { params }: RouteParams) {
     return new NextResponse(uint8Array, {
       headers: {
         'Content-Type': result.mimeType,
-        'Content-Disposition': `inline; filename="preview.${desiredFormat}"`,
+        'Content-Disposition': `inline; filename="preview.pdf"`,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'X-Content-Type-Options': 'nosniff',
       },
     })
   } catch (error) {
