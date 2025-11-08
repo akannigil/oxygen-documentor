@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import type { TemplateField } from '@/shared/types'
 import CSVExcelImport from '@/components/data-import/CSVExcelImport'
 import { VisualPreview } from './VisualPreview'
+import { DocumentPreview } from './DocumentPreview'
 import { StorageConfigForm } from '@/components/storage/StorageConfigForm'
 import type { StorageConfig } from '@/lib/storage/config'
 
@@ -73,6 +74,7 @@ export function GenerationWorkflow({
   const [monitoringJobId, setMonitoringJobId] = useState<string | null>(null)
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
   const [storageConfig, setStorageConfig] = useState<StorageConfig | null>(null)
+  const [showDocumentPreview, setShowDocumentPreview] = useState(false)
 
   const templateFieldKeys = useMemo(() => {
     if (template.templateType === 'docx' && template.variables) {
@@ -354,8 +356,64 @@ export function GenerationWorkflow({
       {currentStep === 'preview' && (
         <div className="space-y-6">
           <div className="rounded-lg bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">Étape 2 : Aperçu</h2>
-            <VisualPreview template={template} previewData={mappedRows[0] || {}} />
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Étape 2 : Aperçu</h2>
+              <button
+                onClick={() => setShowDocumentPreview(!showDocumentPreview)}
+                className={`flex items-center space-x-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                  showDocumentPreview
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span>
+                  {showDocumentPreview
+                    ? 'Masquer la prévisualisation'
+                    : 'Prévisualiser le document'}
+                </span>
+              </button>
+            </div>
+
+            {showDocumentPreview ? (
+              <DocumentPreview
+                templateId={template.id}
+                previewData={mappedRows[0] || {}}
+                outputFormat={outputFormat}
+                pdfOptions={
+                  outputFormat === 'pdf' && template.templateType === 'docx'
+                    ? {
+                        format: pdfFormat,
+                        orientation: pdfOrientation,
+                        method: pdfMethod,
+                        margins: customMargins ? pdfMargins : undefined,
+                      }
+                    : undefined
+                }
+                styleOptions={
+                  variableStyleEnabled && template.templateType === 'docx'
+                    ? {
+                        defaultFontFamily,
+                        defaultFontSize,
+                        defaultFontColor,
+                        defaultBold,
+                        defaultItalic,
+                        defaultUnderline,
+                      }
+                    : undefined
+                }
+                className="mt-4"
+              />
+            ) : (
+              <VisualPreview template={template} previewData={mappedRows[0] || {}} />
+            )}
           </div>
 
           {/* Options de configuration du document de sortie */}
