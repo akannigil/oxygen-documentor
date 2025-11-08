@@ -118,10 +118,22 @@ export function BulkSendEmailModal({
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
           <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
             <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-              <h3 className="text-lg font-semibold leading-6 text-gray-900" id="modal-title">
-                Envoi en masse
-              </h3>
-              <div className="mt-4 space-y-4">
+              <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
+                <h3 className="text-xl font-semibold leading-6 text-gray-900" id="modal-title">
+                  Envoi en masse
+                </h3>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={sending}
+                  className="rounded-md text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="mt-4 space-y-5">
                 <p className="text-sm text-gray-700">
                   {selectedDocuments.length} documents sélectionnés.
                 </p>
@@ -133,42 +145,42 @@ export function BulkSendEmailModal({
                 )}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">
                       Nom de l'expéditeur (optionnel)
                     </label>
                     <input
                       type="text"
                       value={fromName}
                       onChange={(e) => setFromName(e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                      className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">
                       From (optionnel)
                     </label>
                     <input
                       type="email"
                       value={from}
                       onChange={(e) => setFrom(e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                      className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">
                       Reply-To (optionnel)
                     </label>
                     <input
                       type="email"
                       value={replyTo}
                       onChange={(e) => setReplyTo(e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                      className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">
                       Copie (CC) - optionnel
                     </label>
                     <input
@@ -176,15 +188,15 @@ export function BulkSendEmailModal({
                       value={cc}
                       onChange={(e) => setCc(e.target.value)}
                       placeholder="ex: archive@exemple.com, autre@exemple.com"
-                      className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                      className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     />
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1.5 text-xs text-gray-500">
                       Séparez plusieurs emails par des virgules
                     </p>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
                     Copie cachée (CCI/BCC) - optionnel
                   </label>
                   <input
@@ -192,25 +204,42 @@ export function BulkSendEmailModal({
                     value={bcc}
                     onChange={(e) => setBcc(e.target.value)}
                     placeholder="ex: archive@exemple.com, autre@exemple.com"
-                    className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1.5 text-xs text-gray-500">
                     Séparez plusieurs emails par des virgules
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Sujet</label>
+                  <div className="mb-1.5 flex items-center gap-2">
+                    <label className="block text-sm font-medium text-gray-700">Sujet</label>
+                    <VariablesHelper />
+                  </div>
                   <input
                     type="text"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="Exemple: Votre document {{template_name}} est prêt"
-                    className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Vous pouvez utiliser des variables comme{' '}
-                    <code className="rounded bg-gray-200 px-1 py-0.5">{'{{template_name}}'}</code>,{' '}
-                    <code className="rounded bg-gray-200 px-1 py-0.5">{'{{recipient_name}}'}</code>, etc.
+                  <p className="mt-1.5 text-xs text-gray-500">
+                    Cliquez sur l'icône{' '}
+                    <span className="inline-flex items-center text-blue-600">
+                      <svg
+                        className="ml-1 mr-1 h-3 w-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </span>{' '}
+                    pour voir toutes les variables disponibles
                   </p>
                 </div>
                 <div>
@@ -290,35 +319,54 @@ export function BulkSendEmailModal({
                     onChange={(e) => setHtmlTemplate(e.target.value)}
                     rows={6}
                     placeholder='Exemple: <p>Bonjour {{recipient_name}},</p><p>Votre document {{template_name}} est prêt.</p>{{download_url}}'
-                    className="mt-1 block w-full rounded-md border-gray-400 font-mono text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 font-mono text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
-                <label className="inline-flex items-center gap-2 text-sm">
+                <label className="inline-flex items-center gap-2.5 text-sm text-gray-700">
                   <input
                     type="checkbox"
                     checked={attachDocument}
                     onChange={(e) => setAttachDocument(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500/20"
                   />
                   Joindre les documents en pièce jointe
                 </label>
-                {error && <p className="text-sm text-red-600">{error}</p>}
-                {resultMsg && <p className="text-sm text-green-700">{resultMsg}</p>}
+                {error && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                    {error}
+                  </div>
+                )}
+                {resultMsg && (
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+                    {resultMsg}
+                  </div>
+                )}
               </div>
             </div>
-            <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+            <div className="bg-gray-50 px-4 py-3.5 sm:flex sm:flex-row-reverse sm:px-6">
               <button
                 type="button"
                 onClick={handleBulkSend}
                 disabled={sending || docsWithEmail.length === 0}
-                className="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-50 sm:ml-3 sm:w-auto"
+                className="inline-flex w-full justify-center items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto"
               >
-                {sending ? 'Planification...' : `Envoyer (${docsWithEmail.length})`}
+                {sending ? (
+                  <>
+                    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Planification...
+                  </>
+                ) : (
+                  `Envoyer (${docsWithEmail.length})`
+                )}
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                disabled={sending}
+                className="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 sm:mt-0 sm:w-auto"
               >
                 Annuler
               </button>

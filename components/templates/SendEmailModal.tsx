@@ -199,21 +199,43 @@ export function SendEmailModal({
 
   return (
     <div
-      className="fixed inset-0 z-10 bg-gray-500 bg-opacity-75 transition-opacity"
+      className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm transition-opacity"
       aria-labelledby="modal-title"
       role="dialog"
       aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !sending) {
+          onClose()
+        }
+      }}
     >
-      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+      <div className="fixed inset-0 z-50 w-screen overflow-y-auto">
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-          <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+          <div className="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl lg:max-w-3xl">
             <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-              <h3 className="text-lg font-semibold leading-6 text-gray-900" id="modal-title">
-                Envoyer le document
-              </h3>
-              <div className="mt-4 space-y-4">
+              <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
+                <h3 className="text-xl font-semibold leading-6 text-gray-900" id="modal-title">
+                  Envoyer le document
+                </h3>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={sending}
+                  className="rounded-md text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div className="mt-4 space-y-5">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700">
                     Destinataire
                   </label>
                   <input
@@ -224,10 +246,10 @@ export function SendEmailModal({
                     placeholder={
                       document.recipientEmail || "Laisser vide pour utiliser l'email du document"
                     }
-                    className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                   {!document.recipientEmail && (
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1.5 text-xs text-gray-500">
                       Si vide, l'email sera récupéré depuis le mapping du template si configuré.
                     </p>
                   )}
@@ -245,9 +267,9 @@ export function SendEmailModal({
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="Exemple: Votre document {{template_name}} est prêt"
-                    className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1.5 text-xs text-gray-500">
                     Cliquez sur l'icône{' '}
                     <span className="inline-flex items-center text-blue-600">
                       <svg
@@ -268,7 +290,10 @@ export function SendEmailModal({
                   </p>
                 </div>
                 <div>
-                  <label htmlFor="fromName" className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="fromName"
+                    className="mb-1.5 block text-sm font-medium text-gray-700"
+                  >
                     Nom de l'expéditeur (optionnel)
                   </label>
                   <input
@@ -276,11 +301,11 @@ export function SendEmailModal({
                     id="fromName"
                     value={fromName}
                     onChange={(e) => setFromName(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
                 <div>
-                  <label htmlFor="from" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="from" className="mb-1.5 block text-sm font-medium text-gray-700">
                     From (optionnel)
                   </label>
                   <input
@@ -288,11 +313,14 @@ export function SendEmailModal({
                     id="from"
                     value={from}
                     onChange={(e) => setFrom(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
                 <div>
-                  <label htmlFor="replyTo" className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="replyTo"
+                    className="mb-1.5 block text-sm font-medium text-gray-700"
+                  >
                     Reply-To (optionnel)
                   </label>
                   <input
@@ -300,11 +328,11 @@ export function SendEmailModal({
                     id="replyTo"
                     value={replyTo}
                     onChange={(e) => setReplyTo(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
                 <div>
-                  <label htmlFor="cc" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="cc" className="mb-1.5 block text-sm font-medium text-gray-700">
                     Copie (CC) - optionnel
                   </label>
                   <input
@@ -313,14 +341,14 @@ export function SendEmailModal({
                     value={cc}
                     onChange={(e) => setCc(e.target.value)}
                     placeholder="ex: archive@exemple.com, autre@exemple.com"
-                    className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1.5 text-xs text-gray-500">
                     Séparez plusieurs emails par des virgules
                   </p>
                 </div>
                 <div>
-                  <label htmlFor="bcc" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="bcc" className="mb-1.5 block text-sm font-medium text-gray-700">
                     Copie cachée (CCI/BCC) - optionnel
                   </label>
                   <input
@@ -329,9 +357,9 @@ export function SendEmailModal({
                     value={bcc}
                     onChange={(e) => setBcc(e.target.value)}
                     placeholder="ex: archive@exemple.com, autre@exemple.com"
-                    className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1.5 text-xs text-gray-500">
                     Séparez plusieurs emails par des virgules
                   </p>
                 </div>
@@ -435,34 +463,60 @@ export function SendEmailModal({
                     onChange={(e) => setHtmlTemplate(e.target.value)}
                     rows={4}
                     placeholder="Exemple: <p>Bonjour {{recipient_name}},</p><p>Votre document {{template_name}} est prêt.</p>{{download_url}}"
-                    className="mt-1 block w-full rounded-md border-gray-400 font-mono text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 font-mono text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
-                <label className="inline-flex items-center gap-2 text-sm">
+                <label className="inline-flex items-center gap-2.5 text-sm text-gray-700">
                   <input
                     type="checkbox"
                     checked={attachDocument}
                     onChange={(e) => setAttachDocument(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500/20"
                   />
                   Joindre le document en pièce jointe
                 </label>
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                {error && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                    {error}
+                  </div>
+                )}
               </div>
             </div>
-            <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+            <div className="bg-gray-50 px-4 py-3.5 sm:flex sm:flex-row-reverse sm:px-6">
               <button
                 type="button"
                 onClick={handleSend}
                 disabled={sending}
-                className="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-50 sm:ml-3 sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:ml-3 sm:w-auto"
               >
-                {sending ? 'Envoi en cours...' : 'Envoyer'}
+                {sending ? (
+                  <>
+                    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Envoi en cours...
+                  </>
+                ) : (
+                  'Envoyer'
+                )}
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                disabled={sending}
+                className="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 sm:mt-0 sm:w-auto"
               >
                 Annuler
               </button>
