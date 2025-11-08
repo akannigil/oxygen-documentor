@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 interface DocumentPreviewProps {
   templateId: string
@@ -23,6 +23,11 @@ export function DocumentPreview({
   const [error, setError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+
+  // Extraire les dépendances complexes pour la vérification statique
+  const previewDataKey = useMemo(() => JSON.stringify(previewData), [previewData])
+  const pdfOptionsKey = useMemo(() => JSON.stringify(pdfOptions), [pdfOptions])
+  const styleOptionsKey = useMemo(() => JSON.stringify(styleOptions), [styleOptions])
 
   // Générer la prévisualisation
   const generatePreview = async () => {
@@ -51,12 +56,12 @@ export function DocumentPreview({
       // Créer un blob URL pour afficher le document
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
-      
+
       // Révoquer l'ancienne URL si elle existe
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl)
       }
-      
+
       setPreviewUrl(url)
     } catch (err) {
       console.error('Preview error:', err)
@@ -71,15 +76,17 @@ export function DocumentPreview({
     if (previewData && Object.keys(previewData).length > 0) {
       generatePreview()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [templateId, outputFormat, previewDataKey, pdfOptionsKey, styleOptionsKey])
 
-    // Cleanup: révoquer l'URL quand le composant est démonté
+  // Cleanup: révoquer l'URL quand le composant est démonté ou quand previewUrl change
+  useEffect(() => {
     return () => {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [templateId, outputFormat, JSON.stringify(previewData)])
+  }, [previewUrl])
 
   const handleDownload = () => {
     if (previewUrl) {
@@ -125,9 +132,7 @@ export function DocumentPreview({
             />
           </svg>
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-red-900">
-              Erreur de prévisualisation
-            </h3>
+            <h3 className="text-sm font-semibold text-red-900">Erreur de prévisualisation</h3>
             <p className="mt-1 text-sm text-red-700">{error}</p>
             <button
               onClick={generatePreview}
@@ -143,7 +148,9 @@ export function DocumentPreview({
 
   if (!previewUrl) {
     return (
-      <div className={`rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 ${className}`}>
+      <div
+        className={`rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 ${className}`}
+      >
         <div className="flex flex-col items-center justify-center space-y-3 text-center">
           <svg
             className="h-12 w-12 text-gray-400"
@@ -160,7 +167,9 @@ export function DocumentPreview({
           </svg>
           <div>
             <p className="text-sm font-medium text-gray-900">Aucune prévisualisation</p>
-            <p className="text-sm text-gray-500">Fournissez des données pour générer une prévisualisation</p>
+            <p className="text-sm text-gray-500">
+              Fournissez des données pour générer une prévisualisation
+            </p>
           </div>
           <button
             onClick={generatePreview}
@@ -178,12 +187,7 @@ export function DocumentPreview({
       {/* Barre d'outils en haut */}
       <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between bg-gray-800 px-4 py-2">
         <div className="flex items-center space-x-2">
-          <svg
-            className="h-5 w-5 text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -216,20 +220,12 @@ export function DocumentPreview({
       </div>
 
       {/* Viewer */}
-      <iframe
-        src={previewUrl}
-        className="h-full w-full"
-        title="Document Preview"
-      />
+      <iframe src={previewUrl} className="h-full w-full" title="Document Preview" />
     </div>
   )
 
   if (isFullscreen) {
-    return (
-      <div className="fixed inset-0 z-50">
-        {fullscreenContent}
-      </div>
-    )
+    return <div className="fixed inset-0 z-50">{fullscreenContent}</div>
   }
 
   return (
@@ -264,12 +260,7 @@ export function DocumentPreview({
             className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
             title="Actualiser"
           >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -283,12 +274,7 @@ export function DocumentPreview({
             className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
             title="Télécharger"
           >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -302,12 +288,7 @@ export function DocumentPreview({
             className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
             title="Plein écran"
           >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -321,11 +302,7 @@ export function DocumentPreview({
 
       {/* Viewer */}
       <div className="h-[600px] w-full bg-gray-100">
-        <iframe
-          src={previewUrl}
-          className="h-full w-full"
-          title="Document Preview"
-        />
+        <iframe src={previewUrl} className="h-full w-full" title="Document Preview" />
       </div>
     </div>
   )

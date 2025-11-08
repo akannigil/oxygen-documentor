@@ -58,9 +58,9 @@ export class S3StorageAdapter implements StorageAdapter {
     this.region = region
     this.endpoint = options?.endpoint
     
-    // Pour les endpoints personnalisés (MinIO, etc.), forcer path-style par défaut
-    const isCustomEndpoint = this.endpoint && !this.endpoint.includes('amazonaws.com')
-    this.forcePathStyle = options?.forcePathStyle ?? (isCustomEndpoint ? true : false)
+    // TOUJOURS utiliser path-style (compatible AWS S3 et MinIO)
+    // Le path-style fonctionne pour AWS S3 ET MinIO, donc on l'utilise par défaut
+    this.forcePathStyle = true
 
     // Log pour déboguer en développement
     if (process.env['NODE_ENV'] === 'development') {
@@ -68,17 +68,17 @@ export class S3StorageAdapter implements StorageAdapter {
       console.log(`  - Bucket: ${this.bucket}`)
       console.log(`  - Region: ${this.region}`)
       console.log(`  - Endpoint: ${this.endpoint || 'default AWS'}`)
-      console.log(`  - forcePathStyle: ${this.forcePathStyle}`)
+      console.log(`  - forcePathStyle: ${this.forcePathStyle} (toujours activé pour compatibilité)`)
     }
 
-    const clientConfig: any = { region: this.region }
+    const clientConfig: any = { 
+      region: this.region,
+      forcePathStyle: true, // Toujours activer path-style
+    }
     
     if (this.endpoint) {
       clientConfig.endpoint = this.endpoint
     }
-    
-    // IMPORTANT : Toujours définir forcePathStyle explicitement pour éviter le comportement par défaut
-    clientConfig.forcePathStyle = this.forcePathStyle
     
     if (accessKeyId && secretAccessKey) {
       this.credentials = { accessKeyId, secretAccessKey }
@@ -101,28 +101,19 @@ export class S3StorageAdapter implements StorageAdapter {
   }
 
   async getUrl(key: string): Promise<string> {
-    // Si forcePathStyle est activé, toujours utiliser path-style (endpoint/bucket/key)
-    if (this.forcePathStyle) {
-      if (this.endpoint) {
-        const endpointBase = this.endpoint.replace(/\/$/, '')
-        const url = `${endpointBase}/${this.bucket}/${key}`
-        if (process.env['NODE_ENV'] === 'development') {
-          console.log(`[S3 Storage] getUrl (path-style): ${url}`)
-        }
-        return url
-      }
-      // Même pour AWS S3 standard, utiliser path-style si forcePathStyle est activé
-      return `https://s3.${this.region}.amazonaws.com/${this.bucket}/${key}`
-    }
-
-    // Si un endpoint custom est fourni (MinIO, R2, etc.), construire l'URL à partir de celui-ci.
+    // TOUJOURS utiliser path-style (compatible AWS S3 et MinIO)
+    // Format: endpoint/bucket/key ou s3.region.amazonaws.com/bucket/key
     if (this.endpoint) {
       const endpointBase = this.endpoint.replace(/\/$/, '')
-      // Par compatibilité maximale, utiliser path-style par défaut sur endpoint custom
-      return `${endpointBase}/${this.bucket}/${key}`
+      const url = `${endpointBase}/${this.bucket}/${key}`
+      if (process.env['NODE_ENV'] === 'development') {
+        console.log(`[S3 Storage] getUrl (path-style): ${url}`)
+      }
+      return url
     }
-    // Par défaut AWS S3 (virtual-hosted style)
-    return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`
+    
+    // Pour AWS S3 standard, utiliser path-style
+    return `https://s3.${this.region}.amazonaws.com/${this.bucket}/${key}`
   }
 
   async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
@@ -131,73 +122,30 @@ export class S3StorageAdapter implements StorageAdapter {
       Key: key,
     })
 
-    // Si forcePathStyle est activé, forcer le path-style
-    if (this.forcePathStyle) {
-      // Créer un client S3 temporaire avec forcePathStyle explicitement activé
-      const clientConfig: any = {
-        region: this.region,
-        forcePathStyle: true, // Forcer explicitement le path-style
-      }
+    // Le client principal a toujours forcePathStyle=true configuré
+    // Utiliser directement ce client pour générer l'URL signée en path-style
+    const signedUrl = await getSignedUrl(this.client, command, { expiresIn })
+    
+    if (process.env['NODE_ENV'] === 'development') {
+      console.log(`[S3 Storage] getSignedUrl (path-style): ${signedUrl}`)
       
-      if (this.endpoint) {
-        clientConfig.endpoint = this.endpoint
-      }
-      
-      if (this.credentials) {
-        clientConfig.credentials = this.credentials
-      }
-      
-      const pathStyleClient = new S3Client(clientConfig)
-      const signedUrl = await getSignedUrl(pathStyleClient, command, { expiresIn })
-      
-      if (process.env['NODE_ENV'] === 'development') {
-        console.log(`[S3 Storage] getSignedUrl original: ${signedUrl}`)
-      }
-      
-      // Toujours vérifier et corriger l'URL pour s'assurer qu'elle utilise le path-style
+      // Vérifier que l'URL générée est bien en path-style
       const urlObj = new URL(signedUrl)
-      const expectedHostname = this.endpoint 
-        ? new URL(this.endpoint.replace(/\/$/, '')).hostname
-        : `s3.${this.region}.amazonaws.com`
-      
-      // Si l'URL utilise virtual-hosted style (bucket.hostname), la corriger en path-style
-      if (urlObj.hostname.startsWith(`${this.bucket}.`) || urlObj.hostname !== expectedHostname) {
-        // Construire l'URL path-style manuellement avec la même query string (signature)
-        const endpointBase = this.endpoint 
-          ? this.endpoint.replace(/\/$/, '')
-          : `https://s3.${this.region}.amazonaws.com`
-        const correctedUrl = `${endpointBase}/${this.bucket}/${key}${urlObj.search}`
-        if (process.env['NODE_ENV'] === 'development') {
-          console.log(`[S3 Storage] getSignedUrl corrigée (hostname): ${correctedUrl}`)
-        }
-        return correctedUrl
-      }
-      
-      // Vérifier aussi que le path commence bien par /bucket/key
-      // Le path-style doit être /bucket/key, pas juste /key
       const pathParts = urlObj.pathname.split('/').filter(Boolean)
       const isPathStyle = pathParts.length >= 2 && pathParts[0] === this.bucket
       
       if (!isPathStyle) {
-        // Reconstruire l'URL en path-style
-        const endpointBase = this.endpoint 
-          ? this.endpoint.replace(/\/$/, '')
-          : `https://s3.${this.region}.amazonaws.com`
-        const correctedUrl = `${endpointBase}/${this.bucket}/${key}${urlObj.search}`
-        if (process.env['NODE_ENV'] === 'development') {
-          console.log(`[S3 Storage] getSignedUrl corrigée (path): ${correctedUrl}`)
-        }
-        return correctedUrl
+        console.warn(
+          `[S3 Storage] ⚠️ L'URL générée n'est pas en path-style. ` +
+          `Hostname: ${urlObj.hostname}, Path: ${urlObj.pathname}. ` +
+          `Vérifiez que le client S3 est correctement configuré avec forcePathStyle=true et endpoint=${this.endpoint || 'non défini'}`
+        )
+      } else {
+        console.log(`[S3 Storage] ✅ URL générée en path-style: ${urlObj.hostname}${urlObj.pathname}`)
       }
-      
-      if (process.env['NODE_ENV'] === 'development') {
-        console.log(`[S3 Storage] getSignedUrl finale: ${signedUrl}`)
-      }
-      return signedUrl
     }
-
-    // Si pas de forcePathStyle, utiliser le client par défaut
-    return await getSignedUrl(this.client, command, { expiresIn })
+    
+    return signedUrl
   }
 
   async getBuffer(key: string): Promise<Buffer> {
@@ -461,20 +409,11 @@ export function createStorageAdapter(): StorageAdapter {
         }
         const region: string = regionMaybe
         
-        // Détecter si c'est un endpoint AWS S3 standard ou un endpoint personnalisé (MinIO, etc.)
-        const isAwsS3Endpoint = endpoint ? /^https?:\/\/s3[.-].*\.amazonaws\.com/i.test(endpoint) : false
-        
-        const forcePathStyleEnv = process.env['S3_FORCE_PATH_STYLE'] || process.env['MINIO_FORCE_PATH_STYLE']
-        // Pour AWS S3 standard, ne pas forcer path-style sauf si explicitement demandé
-        // Pour MinIO et autres endpoints personnalisés, forcer path-style par défaut
-        const forcePathStyle: boolean = forcePathStyleEnv 
-          ? forcePathStyleEnv === 'true' 
-          : !!(endpoint && !isAwsS3Endpoint)
-
-        // TOUJOURS passer les options pour que l'adapteur puisse décider
+        // TOUJOURS utiliser path-style (compatible AWS S3 et MinIO)
+        // Le path-style fonctionne pour AWS S3 ET MinIO, donc on l'utilise par défaut
         const options = {
           ...(endpoint ? { endpoint } : {}),
-          forcePathStyle, // Toujours défini, même si false
+          forcePathStyle: true, // Toujours activer path-style pour compatibilité
         }
 
         // Utiliser S3_BUCKET_NAME en priorité, sinon AWS_S3_BUCKET

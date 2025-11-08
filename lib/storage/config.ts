@@ -96,18 +96,11 @@ export function createStorageAdapterFromConfig(config: StorageConfig | null | un
         endpoint = `https://${endpoint}`
       }
 
-      // Détecter si c'est un endpoint AWS S3 standard ou un endpoint personnalisé (MinIO, etc.)
-      const isAwsS3Endpoint = endpoint ? /^https?:\/\/s3[.-].*\.amazonaws\.com/i.test(endpoint) : false
-      
-      // Pour AWS S3 standard, ne pas forcer path-style sauf si explicitement demandé
-      // Pour MinIO et autres endpoints personnalisés, forcer path-style par défaut
-      const forcePathStyle: boolean = s3Config.forcePathStyle !== undefined
-        ? s3Config.forcePathStyle
-        : !!(endpoint && !isAwsS3Endpoint)
-
+      // TOUJOURS utiliser path-style (compatible AWS S3 et MinIO)
+      // Le path-style fonctionne pour AWS S3 ET MinIO, donc on l'utilise par défaut
       const options = {
         ...(endpoint ? { endpoint } : {}),
-        forcePathStyle, // Toujours défini, même si false
+        forcePathStyle: true, // Toujours activer path-style pour compatibilité
       }
 
       return new S3StorageAdapter(

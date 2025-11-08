@@ -186,6 +186,8 @@ export function GenerationWorkflow({
     setMappedRows(rows)
     if (rows.length > 0) {
       setCurrentStep('preview')
+      // Activer automatiquement la prévisualisation réelle du document
+      setShowDocumentPreview(true)
     }
   }
 
