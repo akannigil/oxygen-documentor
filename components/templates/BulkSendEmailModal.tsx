@@ -2,6 +2,108 @@
 
 import { useMemo, useState } from 'react'
 
+// Composant helper pour afficher les variables disponibles
+function VariablesHelper() {
+  const [showHelper, setShowHelper] = useState(false)
+
+  const variables = [
+    {
+      category: 'Document',
+      vars: [
+        { name: 'recipient_name', desc: 'Nom du destinataire' },
+        { name: 'recipient_email', desc: 'Email du destinataire' },
+        { name: 'document_id', desc: 'ID du document' },
+        { name: 'template_name', desc: 'Nom du template' },
+        { name: 'project_name', desc: 'Nom du projet' },
+        { name: 'download_url', desc: 'URL de téléchargement (bouton HTML automatique)' },
+        { name: 'created_at', desc: 'Date de création (format français)' },
+        { name: 'created_at_full', desc: 'Date complète de création' },
+      ],
+    },
+    {
+      category: 'Système',
+      vars: [
+        { name: 'organization_name', desc: "Nom de l'organisation" },
+        { name: 'app_name', desc: "Nom de l'application" },
+        { name: 'contact_email', desc: 'Email de contact' },
+      ],
+    },
+    {
+      category: 'Personnalisées',
+      vars: [
+        {
+          name: 'nom_du_champ',
+          desc: 'Toutes les données du document (champs CSV/Excel) sont automatiquement disponibles. Utilisez le nom exact de la colonne, ex: {{prenom}}, {{email}}, {{date_naissance}}',
+        },
+      ],
+    },
+  ]
+
+  return (
+    <div className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setShowHelper(!showHelper)}
+        className="ml-1 inline-flex items-center text-blue-600 transition-colors hover:text-blue-800 focus:outline-none"
+        title="Variables disponibles"
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </button>
+      {showHelper && (
+        <>
+          <div className="fixed inset-0 z-50" onClick={() => setShowHelper(false)} />
+          <div className="absolute left-0 top-6 z-50 w-80 rounded-lg border border-gray-200 bg-white shadow-xl">
+            <div className="max-h-96 overflow-y-auto p-4">
+              <div className="mb-3 flex items-center justify-between border-b border-gray-200 pb-2">
+                <h4 className="text-sm font-semibold text-gray-900">Variables disponibles</h4>
+                <button
+                  type="button"
+                  onClick={() => setShowHelper(false)}
+                  className="text-gray-400 transition-colors hover:text-gray-600"
+                  title="Fermer"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div className="space-y-4 text-xs">
+                {variables.map((category) => (
+                  <div key={category.category}>
+                    <p className="mb-2 font-semibold text-gray-700">{category.category}</p>
+                    <ul className="space-y-1.5">
+                      {category.vars.map((variable) => (
+                        <li key={variable.name} className="flex items-start gap-2">
+                          <code className="whitespace-nowrap rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-800">
+                            {'{{' + variable.name + '}}'}
+                          </code>
+                          <span className="flex-1 leading-relaxed text-gray-600">{variable.desc}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 interface BulkSendEmailModalProps {
   templateId: string
   selectedDocuments: Array<{ id: string; recipientEmail: string | null; recipient?: string | null }>
