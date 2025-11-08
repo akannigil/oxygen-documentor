@@ -6,6 +6,7 @@ import { z } from 'zod'
 const documentsQuerySchema = z.object({
   projectId: z.string(),
   status: z.enum(['generated', 'sent', 'failed']).optional(),
+  templateId: z.string().optional(),
   search: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -30,6 +31,7 @@ export async function GET(request: Request) {
     const queryParams = {
       projectId: searchParams.get('projectId') ?? undefined,
       status: searchParams.get('status') ?? undefined,
+      templateId: searchParams.get('templateId') ?? undefined,
       search: searchParams.get('search') ?? undefined,
       startDate: searchParams.get('startDate') ?? undefined,
       endDate: searchParams.get('endDate') ?? undefined,
@@ -55,6 +57,10 @@ export async function GET(request: Request) {
 
     if (validated.status) {
       where.status = validated.status
+    }
+
+    if (validated.templateId) {
+      where.templateId = validated.templateId
     }
 
     if (validated.search) {

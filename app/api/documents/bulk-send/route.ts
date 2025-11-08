@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendDocumentEmail } from '@/lib/email/service'
+import { normalizeEmail } from '@/lib/utils'
 
 interface BulkSendRequest {
   documentIds: string[]
@@ -71,6 +72,17 @@ export async function POST(request: Request) {
         if (!recipientEmail) {
           failedCount++
           errors.push({ documentId: doc.id, error: 'Email du destinataire manquant' })
+          continue
+        }
+
+        // Normaliser l'email (supprimer espaces, convertir accents, etc.)
+        recipientEmail = normalizeEmail(recipientEmail)
+
+        // Valider le format de l'email après normalisation
+        const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i
+        if (!emailRegex.test(recipientEmail)) {
+          failedCount++
+          errors.push({ documentId: doc.id, error: "Format d'email invalide après normalisation" })
           continue
         }
 

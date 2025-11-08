@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { loadLastEmailData, saveLastEmailData } from '@/lib/email/storage'
 
 // Composant helper pour afficher les variables disponibles
 function VariablesHelper() {
@@ -117,23 +118,34 @@ export function SendEmailModal({
   defaultCc,
   defaultBcc,
 }: SendEmailModalProps) {
+  // Charger les données du dernier email envoyé
+  const lastEmailData = loadLastEmailData()
+
   const [recipient, setRecipient] = useState(document.recipientEmail || '')
-  const [subject, setSubject] = useState(defaultSubject || 'Votre document')
-  const [htmlTemplate, setHtmlTemplate] = useState(defaultHtmlTemplate || '')
-  const [from, setFrom] = useState(defaultFrom || '')
-  const [fromName, setFromName] = useState(defaultFromName || '')
-  const [replyTo, setReplyTo] = useState(defaultReplyTo || '')
+  const [subject, setSubject] = useState(
+    defaultSubject || lastEmailData.subject || 'Votre document'
+  )
+  const [htmlTemplate, setHtmlTemplate] = useState(
+    defaultHtmlTemplate || lastEmailData.htmlTemplate || ''
+  )
+  const [from, setFrom] = useState(defaultFrom || lastEmailData.from || '')
+  const [fromName, setFromName] = useState(defaultFromName || lastEmailData.fromName || '')
+  const [replyTo, setReplyTo] = useState(defaultReplyTo || lastEmailData.replyTo || '')
   const [cc, setCc] = useState(
-    typeof defaultCc === 'string' ? defaultCc : Array.isArray(defaultCc) ? defaultCc.join(', ') : ''
+    typeof defaultCc === 'string'
+      ? defaultCc
+      : Array.isArray(defaultCc)
+        ? defaultCc.join(', ')
+        : lastEmailData.cc || ''
   )
   const [bcc, setBcc] = useState(
     typeof defaultBcc === 'string'
       ? defaultBcc
       : Array.isArray(defaultBcc)
         ? defaultBcc.join(', ')
-        : ''
+        : lastEmailData.bcc || ''
   )
-  const [attachDocument, setAttachDocument] = useState(true)
+  const [attachDocument, setAttachDocument] = useState(lastEmailData.attachDocument ?? true)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -187,6 +199,18 @@ export function SendEmailModal({
         const data = await res.json()
         throw new Error(data.error || "Erreur lors de l'envoi")
       }
+
+      // Sauvegarder les données du dernier email envoyé
+      saveLastEmailData({
+        subject,
+        htmlTemplate,
+        from,
+        fromName,
+        replyTo,
+        cc,
+        bcc,
+        attachDocument,
+      })
 
       onEmailSent() // Refresh the list
       onClose() // Close the modal

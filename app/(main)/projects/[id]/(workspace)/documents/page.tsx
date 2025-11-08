@@ -50,9 +50,15 @@ export default function ProjectDocumentsPage() {
   const [showBulkSendEmailModal, setShowBulkSendEmailModal] = useState(false)
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteResult, setDeleteResult] = useState<{
+    deleted: number
+    total: number
+    errors?: Array<{ documentId: string; error: string }>
+  } | null>(null)
 
   // Filtres
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || '')
+  const [templateFilter, setTemplateFilter] = useState<string>(searchParams.get('templateId') || '')
   const [searchQuery, setSearchQuery] = useState<string>(searchParams.get('search') || '')
   const [startDate, setStartDate] = useState<string>(searchParams.get('startDate') || '')
   const [endDate, setEndDate] = useState<string>(searchParams.get('endDate') || '')
@@ -62,6 +68,7 @@ export default function ProjectDocumentsPage() {
   const [rowsPerPage, setRowsPerPage] = useState<number>(
     parseInt(searchParams.get('limit') || '20', 10)
   )
+  const [templates, setTemplates] = useState<Array<{ id: string; name: string }>>([])
 
   const fetchDocs = useCallback(async () => {
     setLoading(true)
@@ -75,6 +82,7 @@ export default function ProjectDocumentsPage() {
       })
 
       if (statusFilter) queryParams.set('status', statusFilter)
+      if (templateFilter) queryParams.set('templateId', templateFilter)
       if (searchQuery) queryParams.set('search', searchQuery)
       if (startDate) queryParams.set('startDate', startDate)
       if (endDate) queryParams.set('endDate', endDate)
@@ -118,7 +126,25 @@ export default function ProjectDocumentsPage() {
     } finally {
       setLoading(false)
     }
-  }, [projectId, statusFilter, searchQuery, startDate, endDate, currentPage, rowsPerPage])
+  }, [projectId, statusFilter, templateFilter, searchQuery, startDate, endDate, currentPage, rowsPerPage])
+
+  // Récupérer la liste des templates pour le filtre
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}`)
+        if (res.ok) {
+          const project = await res.json()
+          setTemplates(project.templates || [])
+        }
+      } catch (err) {
+        console.error('Error fetching templates:', err)
+      }
+    }
+    if (projectId) {
+      fetchTemplates()
+    }
+  }, [projectId])
 
   useEffect(() => {
     fetchDocs()
@@ -236,26 +262,33 @@ export default function ProjectDocumentsPage() {
         const deletedCount = data.deleted || 0
         const totalCount = data.total || selectedDocs.size
         
+        // Stocker les résultats
+        setDeleteResult({
+          deleted: deletedCount,
+          total: totalCount,
+          errors: data.errors,
+        })
+        
         // Réinitialiser la sélection
         setSelectedDocs(new Set())
-        setShowBulkDeleteModal(false)
         
         // Actualiser la table
         await fetchDocs()
-        
-        // Afficher un message de succès
-        if (deletedCount === totalCount) {
-          alert(`${deletedCount} document${deletedCount > 1 ? 's' : ''} supprimé${deletedCount > 1 ? 's' : ''} avec succès`)
-        } else {
-          alert(`${deletedCount} sur ${totalCount} document${totalCount > 1 ? 's' : ''} supprimé${deletedCount > 1 ? 's' : ''}. ${totalCount - deletedCount} erreur${totalCount - deletedCount > 1 ? 's' : ''}.`)
-        }
       } else {
         const errorData = await res.json().catch(() => ({}))
-        alert(`Erreur lors de la suppression: ${errorData.error || 'Erreur inconnue'}`)
+        setDeleteResult({
+          deleted: 0,
+          total: selectedDocs.size,
+          errors: [{ documentId: '', error: errorData.error || 'Erreur inconnue' }],
+        })
       }
     } catch (err) {
       console.error('Bulk delete error:', err)
-      alert('Erreur lors de la suppression en masse')
+      setDeleteResult({
+        deleted: 0,
+        total: selectedDocs.size,
+        errors: [{ documentId: '', error: err instanceof Error ? err.message : 'Erreur lors de la suppression en masse' }],
+      })
     } finally {
       setDeleting(false)
     }
@@ -269,6 +302,7 @@ export default function ProjectDocumentsPage() {
       })
 
       if (statusFilter) queryParams.set('status', statusFilter)
+      if (templateFilter) queryParams.set('templateId', templateFilter)
       if (searchQuery) queryParams.set('search', searchQuery)
       if (startDate) queryParams.set('startDate', startDate)
       if (endDate) queryParams.set('endDate', endDate)
@@ -411,7 +445,7 @@ export default function ProjectDocumentsPage() {
             </select>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Recherche</label>
             <input
@@ -422,6 +456,21 @@ export default function ProjectDocumentsPage() {
               placeholder="Nom, email, ID..."
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Template</label>
+            <select
+              value={templateFilter}
+              onChange={(e) => setTemplateFilter(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="">Tous</option>
+              {templates.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Statut</label>
@@ -753,88 +802,186 @@ export default function ProjectDocumentsPage() {
           role="dialog"
           aria-modal="true"
           onClick={(e) => {
-            if (e.target === e.currentTarget && !deleting) {
+            if (e.target === e.currentTarget && !deleting && deleteResult) {
               setShowBulkDeleteModal(false)
+              setDeleteResult(null)
             }
           }}
         >
           <div className="fixed inset-0 z-50 w-screen overflow-y-auto">
             <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
               <div className="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-                <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
-                      <svg
-                        className="h-6 w-6 text-red-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold leading-6 text-gray-900" id="modal-title">
-                        Confirmer la suppression
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Êtes-vous sûr de vouloir supprimer définitivement{' '}
-                        <span className="font-semibold text-gray-900">
-                          {selectedDocs.size} document{selectedDocs.size > 1 ? 's' : ''}
-                        </span>
-                        ? Cette action est irréversible.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-gray-50 px-4 py-3.5 sm:flex sm:flex-row-reverse sm:px-6">
-                  <button
-                    type="button"
-                    onClick={handleBulkDeleteConfirm}
-                    disabled={deleting}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:ml-3 sm:w-auto"
-                  >
-                    {deleting ? (
-                      <>
-                        <svg
-                          className="h-4 w-4 animate-spin"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
+                {!deleteResult ? (
+                  <>
+                    <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                      <div className="mb-4 flex items-center gap-3">
+                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
+                          <svg
+                            className="h-6 w-6 text-red-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
                             stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        Suppression en cours...
-                      </>
-                    ) : (
-                      'Confirmer la suppression'
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowBulkDeleteModal(false)}
-                    disabled={deleting}
-                    className="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 sm:mt-0 sm:w-auto"
-                  >
-                    Annuler
-                  </button>
-                </div>
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                            />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold leading-6 text-gray-900" id="modal-title">
+                            Confirmer la suppression
+                          </h3>
+                          <p className="mt-1 text-sm text-gray-500">
+                            Êtes-vous sûr de vouloir supprimer définitivement{' '}
+                            <span className="font-semibold text-gray-900">
+                              {selectedDocs.size} document{selectedDocs.size > 1 ? 's' : ''}
+                            </span>
+                            ? Cette action est irréversible.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 px-4 py-3.5 sm:flex sm:flex-row-reverse sm:px-6">
+                      <button
+                        type="button"
+                        onClick={handleBulkDeleteConfirm}
+                        disabled={deleting}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:ml-3 sm:w-auto"
+                      >
+                        {deleting ? (
+                          <>
+                            <svg
+                              className="h-4 w-4 animate-spin"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              />
+                            </svg>
+                            Suppression en cours...
+                          </>
+                        ) : (
+                          'Confirmer la suppression'
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowBulkDeleteModal(false)
+                          setDeleteResult(null)
+                        }}
+                        disabled={deleting}
+                        className="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 sm:mt-0 sm:w-auto"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                      <div className="mb-4 flex items-center gap-3">
+                        <div
+                          className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full ${
+                            deleteResult.deleted === deleteResult.total
+                              ? 'bg-green-100'
+                              : deleteResult.deleted > 0
+                                ? 'bg-yellow-100'
+                                : 'bg-red-100'
+                          }`}
+                        >
+                          {deleteResult.deleted === deleteResult.total ? (
+                            <svg
+                              className="h-6 w-6 text-green-600"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className={`h-6 w-6 ${
+                                deleteResult.deleted > 0 ? 'text-yellow-600' : 'text-red-600'
+                              }`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold leading-6 text-gray-900" id="modal-title">
+                            Résultat de la suppression
+                          </h3>
+                          <div className="mt-2 space-y-2">
+                            <p className="text-sm text-gray-700">
+                              <span className="font-semibold text-green-700">
+                                {deleteResult.deleted} document{deleteResult.deleted > 1 ? 's' : ''}
+                              </span>{' '}
+                              supprimé{deleteResult.deleted > 1 ? 's' : ''} sur{' '}
+                              <span className="font-semibold">{deleteResult.total}</span>
+                            </p>
+                            {deleteResult.errors && deleteResult.errors.length > 0 && (
+                              <div className="mt-3 rounded-md bg-red-50 p-3">
+                                <p className="text-xs font-semibold text-red-800 mb-2">
+                                  Erreurs ({deleteResult.errors.length}) :
+                                </p>
+                                <div className="max-h-40 overflow-y-auto space-y-1">
+                                  {deleteResult.errors.map((error, idx) => (
+                                    <p key={idx} className="text-xs text-red-700">
+                                      {error.documentId
+                                        ? `Document ${error.documentId.slice(0, 8)}... : ${error.error}`
+                                        : error.error}
+                                    </p>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 px-4 py-3.5 sm:flex sm:flex-row-reverse sm:px-6">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowBulkDeleteModal(false)
+                          setDeleteResult(null)
+                        }}
+                        className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:ml-3 sm:w-auto"
+                      >
+                        Ok
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

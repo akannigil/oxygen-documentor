@@ -6,19 +6,42 @@ import { sendDocumentEmail } from '@/lib/email/service'
 import { emailSendingQueue, areQueuesAvailable } from '@/lib/queue/queues'
 import type { EmailTemplateVariables } from '@/lib/email/templates'
 import type { EmailSendingJobData } from '@/lib/queue/workers'
+import { normalizeEmail } from '@/lib/utils'
 
 export const sendEmailSchema = z.object({
-  recipientEmail: z.string().trim().email('Email invalide').optional(), // Optionnel car on peut le récupérer du document
+  recipientEmail: z
+    .string()
+    .transform((val) => normalizeEmail(val))
+    .pipe(z.string().email('Email invalide'))
+    .optional(), // Optionnel car on peut le récupérer du document
   subject: z.string().optional(),
   htmlTemplate: z.string().optional(),
   textTemplate: z.string().optional(),
   variables: z.record(z.unknown()).optional(),
   attachDocument: z.boolean().optional().default(false),
-  from: z.string().trim().email().optional(),
+  from: z
+    .string()
+    .transform((val) => normalizeEmail(val))
+    .pipe(z.string().email())
+    .optional(),
   fromName: z.string().optional(),
-  replyTo: z.string().trim().email().optional(),
-  cc: z.union([z.string().trim().email(), z.array(z.string().trim().email())]).optional(),
-  bcc: z.union([z.string().trim().email(), z.array(z.string().trim().email())]).optional(),
+  replyTo: z
+    .string()
+    .transform((val) => normalizeEmail(val))
+    .pipe(z.string().email())
+    .optional(),
+  cc: z
+    .union([
+      z.string().transform((val) => normalizeEmail(val)).pipe(z.string().email()),
+      z.array(z.string().transform((val) => normalizeEmail(val)).pipe(z.string().email())),
+    ])
+    .optional(),
+  bcc: z
+    .union([
+      z.string().transform((val) => normalizeEmail(val)).pipe(z.string().email()),
+      z.array(z.string().transform((val) => normalizeEmail(val)).pipe(z.string().email())),
+    ])
+    .optional(),
 })
 
 interface RouteParams {
@@ -110,8 +133,11 @@ export async function POST(request: Request, { params }: RouteParams) {
       )
     }
 
-    // Valider le format de l'email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    // Normaliser l'email (supprimer espaces, convertir accents, etc.)
+    recipientEmail = normalizeEmail(recipientEmail)
+
+    // Valider le format de l'email après normalisation
+    const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i
     if (!emailRegex.test(recipientEmail)) {
       return NextResponse.json({ error: "Format d'email invalide" }, { status: 400 })
     }

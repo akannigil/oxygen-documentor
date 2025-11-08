@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { loadLastEmailData, saveLastEmailData } from '@/lib/email/storage'
 
 interface Document {
   id: string
@@ -139,22 +140,33 @@ export function BulkSendEmailModal({
   defaultCc,
   defaultBcc,
 }: BulkSendEmailModalProps) {
-  const [subject, setSubject] = useState(defaultSubject || 'Votre document')
-  const [htmlTemplate, setHtmlTemplate] = useState(defaultHtmlTemplate || '')
-  const [from, setFrom] = useState(defaultFrom || '')
-  const [fromName, setFromName] = useState(defaultFromName || '')
-  const [replyTo, setReplyTo] = useState(defaultReplyTo || '')
+  // Charger les données du dernier email envoyé
+  const lastEmailData = loadLastEmailData()
+
+  const [subject, setSubject] = useState(
+    defaultSubject || lastEmailData.subject || 'Votre document'
+  )
+  const [htmlTemplate, setHtmlTemplate] = useState(
+    defaultHtmlTemplate || lastEmailData.htmlTemplate || ''
+  )
+  const [from, setFrom] = useState(defaultFrom || lastEmailData.from || '')
+  const [fromName, setFromName] = useState(defaultFromName || lastEmailData.fromName || '')
+  const [replyTo, setReplyTo] = useState(defaultReplyTo || lastEmailData.replyTo || '')
   const [cc, setCc] = useState(
-    typeof defaultCc === 'string' ? defaultCc : Array.isArray(defaultCc) ? defaultCc.join(', ') : ''
+    typeof defaultCc === 'string'
+      ? defaultCc
+      : Array.isArray(defaultCc)
+        ? defaultCc.join(', ')
+        : lastEmailData.cc || ''
   )
   const [bcc, setBcc] = useState(
     typeof defaultBcc === 'string'
       ? defaultBcc
       : Array.isArray(defaultBcc)
         ? defaultBcc.join(', ')
-        : ''
+        : lastEmailData.bcc || ''
   )
-  const [attachDocument, setAttachDocument] = useState(true)
+  const [attachDocument, setAttachDocument] = useState(lastEmailData.attachDocument ?? true)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{
@@ -253,6 +265,20 @@ export function BulkSendEmailModal({
         resultData.errors = errors
       }
       setResult(resultData)
+
+      // Sauvegarder les données du dernier email envoyé seulement si au moins un envoi a réussi
+      if (successCount > 0) {
+        saveLastEmailData({
+          subject,
+          htmlTemplate,
+          from,
+          fromName,
+          replyTo,
+          cc,
+          bcc,
+          attachDocument,
+        })
+      }
 
       // Appeler onSent après un court délai pour permettre à l'utilisateur de voir le résultat
       setTimeout(() => {
