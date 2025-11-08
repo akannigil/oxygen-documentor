@@ -107,6 +107,16 @@ export function createDocumentGenerationWorker(): Worker<
         console.log(
           `[Worker] Configuration de stockage: ${projectStorageConfig?.type || 'défaut (env)'}`
         )
+        console.log(`[Worker] Chemin du template: ${template.filePath}`)
+
+        // Vérifier que le fichier template existe avant de le récupérer
+        const templateExists = await projectStorage.exists(template.filePath)
+        if (!templateExists) {
+          throw new Error(
+            `Le fichier template n'existe pas dans le stockage. Chemin: ${template.filePath}. ` +
+              `Veuillez vérifier que le fichier a été correctement uploadé ou re-uploader le template.`
+          )
+        }
 
         // Utiliser le stockage du projet pour récupérer le template
         const templateBuffer = await projectStorage.getBuffer(template.filePath)

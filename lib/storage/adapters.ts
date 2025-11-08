@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import * as fs from 'fs/promises'
 import * as path from 'path'
@@ -10,6 +10,7 @@ export interface StorageAdapter {
   getSignedUrl(key: string, expiresIn?: number): Promise<string>
   getBuffer(key: string): Promise<Buffer>
   delete(key: string): Promise<void>
+  exists(key: string): Promise<boolean>
 }
 
 async function streamToBuffer(stream: any): Promise<Buffer> {
@@ -61,6 +62,15 @@ export class S3StorageAdapter implements StorageAdapter {
     const isCustomEndpoint = this.endpoint && !this.endpoint.includes('amazonaws.com')
     this.forcePathStyle = options?.forcePathStyle ?? (isCustomEndpoint ? true : false)
 
+    // Log pour déboguer en développement
+    if (process.env['NODE_ENV'] === 'development') {
+      console.log('[S3 Storage] Configuration:')
+      console.log(`  - Bucket: ${this.bucket}`)
+      console.log(`  - Region: ${this.region}`)
+      console.log(`  - Endpoint: ${this.endpoint || 'default AWS'}`)
+      console.log(`  - forcePathStyle: ${this.forcePathStyle}`)
+    }
+
     const clientConfig: any = { region: this.region }
     
     if (this.endpoint) {
@@ -95,7 +105,11 @@ export class S3StorageAdapter implements StorageAdapter {
     if (this.forcePathStyle) {
       if (this.endpoint) {
         const endpointBase = this.endpoint.replace(/\/$/, '')
-        return `${endpointBase}/${this.bucket}/${key}`
+        const url = `${endpointBase}/${this.bucket}/${key}`
+        if (process.env['NODE_ENV'] === 'development') {
+          console.log(`[S3 Storage] getUrl (path-style): ${url}`)
+        }
+        return url
       }
       // Même pour AWS S3 standard, utiliser path-style si forcePathStyle est activé
       return `https://s3.${this.region}.amazonaws.com/${this.bucket}/${key}`
@@ -136,6 +150,10 @@ export class S3StorageAdapter implements StorageAdapter {
       const pathStyleClient = new S3Client(clientConfig)
       const signedUrl = await getSignedUrl(pathStyleClient, command, { expiresIn })
       
+      if (process.env['NODE_ENV'] === 'development') {
+        console.log(`[S3 Storage] getSignedUrl original: ${signedUrl}`)
+      }
+      
       // Toujours vérifier et corriger l'URL pour s'assurer qu'elle utilise le path-style
       const urlObj = new URL(signedUrl)
       const expectedHostname = this.endpoint 
@@ -148,7 +166,11 @@ export class S3StorageAdapter implements StorageAdapter {
         const endpointBase = this.endpoint 
           ? this.endpoint.replace(/\/$/, '')
           : `https://s3.${this.region}.amazonaws.com`
-        return `${endpointBase}/${this.bucket}/${key}${urlObj.search}`
+        const correctedUrl = `${endpointBase}/${this.bucket}/${key}${urlObj.search}`
+        if (process.env['NODE_ENV'] === 'development') {
+          console.log(`[S3 Storage] getSignedUrl corrigée (hostname): ${correctedUrl}`)
+        }
+        return correctedUrl
       }
       
       // Vérifier aussi que le path commence bien par /bucket/key
@@ -161,9 +183,16 @@ export class S3StorageAdapter implements StorageAdapter {
         const endpointBase = this.endpoint 
           ? this.endpoint.replace(/\/$/, '')
           : `https://s3.${this.region}.amazonaws.com`
-        return `${endpointBase}/${this.bucket}/${key}${urlObj.search}`
+        const correctedUrl = `${endpointBase}/${this.bucket}/${key}${urlObj.search}`
+        if (process.env['NODE_ENV'] === 'development') {
+          console.log(`[S3 Storage] getSignedUrl corrigée (path): ${correctedUrl}`)
+        }
+        return correctedUrl
       }
       
+      if (process.env['NODE_ENV'] === 'development') {
+        console.log(`[S3 Storage] getSignedUrl finale: ${signedUrl}`)
+      }
       return signedUrl
     }
 
@@ -191,6 +220,41 @@ export class S3StorageAdapter implements StorageAdapter {
     })
 
     await this.client.send(command)
+  }
+
+  async exists(key: string): Promise<boolean> {
+    try {
+      const command = new HeadObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      })
+      await this.client.send(command)
+      return true
+    } catch (error: unknown) {
+      // Vérifier si c'est une erreur "not found" (fichier n'existe pas)
+      if (error && typeof error === 'object') {
+        // Vérifier le nom de l'erreur
+        if ('name' in error && (error.name === 'NotFound' || error.name === 'NoSuchKey')) {
+          return false
+        }
+        // Vérifier le code HTTP
+        if ('$metadata' in error) {
+          const metadata = error.$metadata as { httpStatusCode?: number }
+          if (metadata?.httpStatusCode === 404) {
+            return false
+          }
+        }
+        // Vérifier le code d'erreur S3
+        if ('Code' in error) {
+          const code = error.Code as string
+          if (code === 'NoSuchKey' || code === 'NotFound' || code === '404') {
+            return false
+          }
+        }
+      }
+      // Si c'est une autre erreur (permissions, etc.), la propager
+      throw error
+    }
   }
 }
 
@@ -237,6 +301,16 @@ export class LocalStorageAdapter implements StorageAdapter {
     await fs.unlink(fullPath).catch(() => {
       // Ignorer si le fichier n'existe pas
     })
+  }
+
+  async exists(key: string): Promise<boolean> {
+    try {
+      const fullPath = path.join(this.baseDir, key)
+      await fs.access(fullPath)
+      return true
+    } catch {
+      return false
+    }
   }
 }
 
@@ -341,6 +415,21 @@ export class FTPStorageAdapter implements StorageAdapter {
         : key
 
       await client.remove(fullPath)
+    } finally {
+      client.close()
+    }
+  }
+
+  async exists(key: string): Promise<boolean> {
+    const client = await this.getClient()
+    try {
+      const fullPath = this.config.basePath
+        ? `${this.config.basePath}/${key}`
+        : key
+      await client.size(fullPath)
+      return true
+    } catch {
+      return false
     } finally {
       client.close()
     }
