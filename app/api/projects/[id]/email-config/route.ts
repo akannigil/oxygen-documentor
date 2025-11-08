@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -43,10 +44,21 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     // Récupérer les valeurs par défaut depuis les variables d'environnement
-    const defaultConfig: EmailConfig = {
-      organizationName: process.env['EMAIL_ORGANIZATION_NAME'] || '',
-      appName: process.env['EMAIL_APP_NAME'] || 'Oxygen Document',
-      contactEmail: process.env['EMAIL_CONTACT'] || process.env['EMAIL_FROM'] || '',
+    const defaultConfig: EmailConfig = {}
+    const envOrgName = process.env['EMAIL_ORGANIZATION_NAME']
+    const envAppName = process.env['EMAIL_APP_NAME']
+    const envContact = process.env['EMAIL_CONTACT'] || process.env['EMAIL_FROM']
+
+    if (envOrgName) {
+      defaultConfig.organizationName = envOrgName
+    }
+    if (envAppName) {
+      defaultConfig.appName = envAppName
+    } else {
+      defaultConfig.appName = 'Oxygen Document'
+    }
+    if (envContact) {
+      defaultConfig.contactEmail = envContact
     }
 
     // Fusionner avec la configuration du projet si elle existe
@@ -96,23 +108,34 @@ export async function PUT(request: Request, { params }: RouteParams) {
     }
 
     // Valider et nettoyer la configuration
-    const config: EmailConfig = {
-      ...(body.config.organizationName !== undefined && {
-        organizationName: String(body.config.organizationName).trim() || undefined,
-      }),
-      ...(body.config.appName !== undefined && {
-        appName: String(body.config.appName).trim() || undefined,
-      }),
-      ...(body.config.contactEmail !== undefined && {
-        contactEmail: String(body.config.contactEmail).trim() || undefined,
-      }),
+    const config: EmailConfig = {}
+
+    if (body.config.organizationName !== undefined) {
+      const trimmed = String(body.config.organizationName).trim()
+      if (trimmed) {
+        config.organizationName = trimmed
+      }
+    }
+
+    if (body.config.appName !== undefined) {
+      const trimmed = String(body.config.appName).trim()
+      if (trimmed) {
+        config.appName = trimmed
+      }
+    }
+
+    if (body.config.contactEmail !== undefined) {
+      const trimmed = String(body.config.contactEmail).trim()
+      if (trimmed) {
+        config.contactEmail = trimmed
+      }
     }
 
     // Mettre à jour le projet
     const updatedProject = await prisma.project.update({
       where: { id },
       data: {
-        emailConfig: config,
+        emailConfig: config as Prisma.InputJsonValue,
       },
       select: {
         id: true,

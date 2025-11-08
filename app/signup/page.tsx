@@ -10,6 +10,9 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [organizationName, setOrganizationName] = useState('')
+  const [appName, setAppName] = useState('Oxygen Document')
+  const [contactEmail, setContactEmail] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -28,7 +31,17 @@ export default function SignupPage() {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, confirmPassword }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          confirmPassword,
+          emailConfig: {
+            ...(organizationName.trim() && { organizationName: organizationName.trim() }),
+            ...(appName.trim() && { appName: appName.trim() }),
+            ...(contactEmail.trim() && { contactEmail: contactEmail.trim() }),
+          },
+        }),
       })
 
       const data = await res.json()
@@ -129,6 +142,64 @@ export default function SignupPage() {
                 className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 placeholder="••••••••"
               />
+            </div>
+          </div>
+
+          {/* Section Configuration Email (optionnel) */}
+          <div className="mt-6 rounded-md border border-gray-200 bg-gray-50 p-4">
+            <h3 className="mb-3 text-sm font-semibold text-gray-900">
+              Configuration Email (optionnel)
+            </h3>
+            <p className="mb-4 text-xs text-gray-600">
+              Ces informations seront utilisées par défaut pour les templates d'email. Vous pourrez
+              les modifier plus tard dans les paramètres de votre projet.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="organizationName"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Nom de l'organisation
+                </label>
+                <input
+                  id="organizationName"
+                  name="organizationName"
+                  type="text"
+                  value={organizationName}
+                  onChange={(e) => setOrganizationName(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  placeholder="Votre Organisation"
+                />
+              </div>
+              <div>
+                <label htmlFor="appName" className="block text-sm font-medium text-gray-700">
+                  Nom de l'application
+                </label>
+                <input
+                  id="appName"
+                  name="appName"
+                  type="text"
+                  value={appName}
+                  onChange={(e) => setAppName(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  placeholder="Oxygen Document"
+                />
+              </div>
+              <div>
+                <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700">
+                  Email de contact
+                </label>
+                <input
+                  id="contactEmail"
+                  name="contactEmail"
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  placeholder="contact@example.com"
+                />
+              </div>
             </div>
           </div>
 

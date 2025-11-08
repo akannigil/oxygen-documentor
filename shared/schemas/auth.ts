@@ -11,6 +11,15 @@ export const signupSchema = z
     email: z.string().email('Email invalide'),
     password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
     confirmPassword: z.string(),
+    emailConfig: z
+      .object({
+        organizationName: z.string().optional(),
+        appName: z.string().optional(),
+        contactEmail: z
+          .union([z.string().email('Email de contact invalide'), z.literal('')])
+          .optional(),
+      })
+      .optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Les mots de passe ne correspondent pas',
