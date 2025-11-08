@@ -204,17 +204,92 @@ export function BulkSendEmailModal({
                     type="text"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Exemple: Votre document {{template_name}} est prêt"
                     className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
                   />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Vous pouvez utiliser des variables comme{' '}
+                    <code className="rounded bg-gray-200 px-1 py-0.5">{'{{template_name}}'}</code>,{' '}
+                    <code className="rounded bg-gray-200 px-1 py-0.5">{'{{recipient_name}}'}</code>, etc.
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Template HTML (optionnel)
-                  </label>
+                  <div className="mb-2 flex items-center justify-between">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Template HTML (optionnel)
+                    </label>
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                        Variables disponibles
+                      </summary>
+                      <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs">
+                        <p className="mb-2 font-semibold text-gray-900">Variables du document :</p>
+                        <ul className="mb-3 space-y-1 text-gray-700">
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">{'{{recipient_name}}'}</code>{' '}
+                            - Nom du destinataire
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">{'{{recipient_email}}'}</code>{' '}
+                            - Email du destinataire
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">{'{{document_id}}'}</code> - ID
+                            du document
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">{'{{template_name}}'}</code> - Nom
+                            du template
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">{'{{project_name}}'}</code> - Nom
+                            du projet
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">{'{{download_url}}'}</code> - URL
+                            de téléchargement (bouton HTML automatique)
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">{'{{created_at}}'}</code> - Date de
+                            création (format français)
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{created_at_full}}'}
+                            </code>{' '}
+                            - Date complète de création
+                          </li>
+                        </ul>
+                        <p className="mb-2 font-semibold text-gray-900">Variables système :</p>
+                        <ul className="mb-3 space-y-1 text-gray-700">
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{organization_name}}'}
+                            </code>{' '}
+                            - Nom de l'organisation
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">{'{{app_name}}'}</code> - Nom de
+                            l'application
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">{'{{contact_email}}'}</code> - Email
+                            de contact
+                          </li>
+                        </ul>
+                        <p className="mb-2 font-semibold text-gray-900">Variables personnalisées :</p>
+                        <p className="text-gray-600">
+                          Toutes les données du document (champs du CSV/Excel) sont disponibles via{' '}
+                          <code className="rounded bg-gray-200 px-1 py-0.5">{'{{nom_du_champ}}'}</code>
+                        </p>
+                      </div>
+                    </details>
+                  </div>
                   <textarea
                     value={htmlTemplate}
                     onChange={(e) => setHtmlTemplate(e.target.value)}
                     rows={6}
+                    placeholder='Exemple: <p>Bonjour {{recipient_name}},</p><p>Votre document {{template_name}} est prêt.</p>{{download_url}}'
                     className="mt-1 block w-full rounded-md border-gray-400 font-mono text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
                   />
                 </div>

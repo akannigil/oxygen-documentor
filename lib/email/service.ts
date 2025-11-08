@@ -73,6 +73,7 @@ export async function sendDocumentEmail(
             name: true,
             ownerId: true,
             storageConfig: true,
+            emailConfig: true,
           },
         },
       },
@@ -85,7 +86,16 @@ export async function sendDocumentEmail(
       }
     }
 
+    // Récupérer la configuration email du projet si elle existe
+    const projectEmailConfig =
+      (document.project.emailConfig as {
+        organizationName?: string
+        appName?: string
+        contactEmail?: string
+      } | null) || null
+
     // Construire les variables par défaut
+    // Priorité : configuration projet > variables d'environnement > valeurs par défaut
     const defaultVariables: EmailTemplateVariables = {
       recipient_name: document.recipient || 'Cher destinataire',
       recipient_email: options.recipientEmail,
@@ -93,9 +103,16 @@ export async function sendDocumentEmail(
       document_status: document.status,
       template_name: document.template.name,
       project_name: document.project.name,
-      organization_name: process.env['EMAIL_ORGANIZATION_NAME'] || 'Oxygen Document',
-      app_name: process.env['EMAIL_APP_NAME'] || 'Oxygen Document',
-      contact_email: process.env['EMAIL_CONTACT'] || process.env['EMAIL_FROM'] || '',
+      organization_name:
+        projectEmailConfig?.organizationName ||
+        process.env['EMAIL_ORGANIZATION_NAME'] ||
+        'Oxygen Document',
+      app_name: projectEmailConfig?.appName || process.env['EMAIL_APP_NAME'] || 'Oxygen Document',
+      contact_email:
+        projectEmailConfig?.contactEmail ||
+        process.env['EMAIL_CONTACT'] ||
+        process.env['EMAIL_FROM'] ||
+        '',
       message: 'Vous trouverez ci-joint votre document généré.',
       additional_info: '',
       created_at: document.createdAt.toLocaleDateString('fr-FR'),

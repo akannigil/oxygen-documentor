@@ -28,6 +28,7 @@ model Project {
   ownerId       String
   owner         User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   storageConfig Json?      // Configuration de stockage personnalisée: {type: 's3'|'local'|'ftp'|'google-drive', config: {...}}
+  emailConfig   Json?      // Configuration système d'email: {organizationName, appName, contactEmail}
   templates     Template[]
   documents     Document[]
   createdAt     DateTime   @default(now())

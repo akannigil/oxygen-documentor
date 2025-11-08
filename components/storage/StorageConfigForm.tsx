@@ -260,7 +260,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
           <select
             value={storageType}
             onChange={(e) => setStorageType(e.target.value as StorageType)}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="local">Local (fichiers sur le serveur)</option>
             <option value="s3">AWS S3 / MinIO / Cloudflare R2</option>
@@ -281,7 +281,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                 value={localBaseDir}
                 onChange={(e) => setLocalBaseDir(e.target.value)}
                 placeholder="./uploads"
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <p className="mt-1 text-xs text-gray-500">
                 Chemin relatif ou absolu où seront stockés les fichiers
@@ -303,7 +303,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                 onChange={(e) => setS3Bucket(e.target.value)}
                 placeholder="mon-bucket"
                 required
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -316,7 +316,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                 onChange={(e) => setS3Region(e.target.value)}
                 placeholder="us-east-1"
                 required
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -328,7 +328,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                 value={s3AccessKeyId}
                 onChange={(e) => setS3AccessKeyId(e.target.value)}
                 placeholder="AKIAIOSFODNN7EXAMPLE"
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -340,7 +340,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                 value={s3SecretAccessKey}
                 onChange={(e) => setS3SecretAccessKey(e.target.value)}
                 placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -352,7 +352,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                 value={s3Endpoint}
                 onChange={(e) => setS3Endpoint(e.target.value)}
                 placeholder="https://s3.example.com"
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <p className="mt-1 text-xs text-gray-500">
                 Laissez vide pour AWS S3 standard. Pour MinIO, indiquez l&apos;URL complète (ex:{' '}
@@ -566,7 +566,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                 onChange={(e) => setFtpHost(e.target.value)}
                 placeholder="ftp.example.com"
                 required
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -580,7 +580,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                   onChange={(e) => setFtpUser(e.target.value)}
                   placeholder="username"
                   required
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
               <div>
@@ -593,7 +593,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                   onChange={(e) => setFtpPassword(e.target.value)}
                   placeholder="password"
                   required
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -607,7 +607,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                   value={ftpPort}
                   onChange={(e) => setFtpPort(e.target.value)}
                   placeholder="21"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
               <div className="flex items-end">
@@ -634,7 +634,7 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                 value={ftpBasePath}
                 onChange={(e) => setFtpBasePath(e.target.value)}
                 placeholder="/documents"
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>

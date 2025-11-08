@@ -168,13 +168,8 @@ export default function GeneratePage() {
   const selectedTemplate = templates.find((t) => t.id === selectedTemplateId)
 
   const handleGenerationComplete = () => {
-    // Rediriger vers la page template pour voir la bannière "Envoyer par email"
-    if (selectedTemplateId) {
-      router.push(`/projects/${projectId}/templates/${selectedTemplateId}?generated=true`)
-    } else {
-      // Fallback si pas de template sélectionné
-      router.push(`/projects/${projectId}/documents`)
-    }
+    // Rediriger vers la page des documents pour gérer les documents générés
+    router.push(`/projects/${projectId}/documents`)
   }
 
   if (loading) {

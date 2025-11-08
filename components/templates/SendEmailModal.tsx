@@ -2,6 +2,91 @@
 
 import { useState } from 'react'
 
+// Composant helper pour afficher les variables disponibles
+function VariablesHelper() {
+  const [showHelper, setShowHelper] = useState(false)
+
+  const variables = [
+    { category: 'Document', vars: [
+      { name: 'recipient_name', desc: 'Nom du destinataire' },
+      { name: 'recipient_email', desc: 'Email du destinataire' },
+      { name: 'document_id', desc: 'ID du document' },
+      { name: 'template_name', desc: 'Nom du template' },
+      { name: 'project_name', desc: 'Nom du projet' },
+      { name: 'download_url', desc: 'URL de téléchargement (bouton HTML automatique)' },
+      { name: 'created_at', desc: 'Date de création (format français)' },
+      { name: 'created_at_full', desc: 'Date complète de création' },
+    ]},
+    { category: 'Système', vars: [
+      { name: 'organization_name', desc: 'Nom de l\'organisation' },
+      { name: 'app_name', desc: 'Nom de l\'application' },
+      { name: 'contact_email', desc: 'Email de contact' },
+    ]},
+    { category: 'Personnalisées', vars: [
+      { name: 'nom_du_champ', desc: 'Toutes les données du document (champs CSV/Excel) sont automatiquement disponibles. Utilisez le nom exact de la colonne, ex: {{prenom}}, {{email}}, {{date_naissance}}' },
+    ]},
+  ]
+
+  return (
+    <div className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setShowHelper(!showHelper)}
+        className="ml-1 inline-flex items-center text-blue-600 hover:text-blue-800 focus:outline-none transition-colors"
+        title="Variables disponibles"
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </button>
+      {showHelper && (
+        <>
+          {/* Overlay pour fermer en cliquant à l'extérieur */}
+          <div
+            className="fixed inset-0 z-50"
+            onClick={() => setShowHelper(false)}
+          />
+          {/* Popover avec les variables */}
+          <div className="absolute left-0 top-6 z-50 w-80 rounded-lg border border-gray-200 bg-white shadow-xl">
+            <div className="max-h-96 overflow-y-auto p-4">
+              <div className="mb-3 flex items-center justify-between border-b border-gray-200 pb-2">
+                <h4 className="text-sm font-semibold text-gray-900">Variables disponibles</h4>
+                <button
+                  type="button"
+                  onClick={() => setShowHelper(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  title="Fermer"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="space-y-4 text-xs">
+                {variables.map((category) => (
+                  <div key={category.category}>
+                    <p className="mb-2 font-semibold text-gray-700">{category.category}</p>
+                    <ul className="space-y-1.5">
+                      {category.vars.map((variable) => (
+                        <li key={variable.name} className="flex items-start gap-2">
+                          <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-800 whitespace-nowrap">
+                            {'{{' + variable.name + '}}'}
+                          </code>
+                          <span className="flex-1 text-gray-600 leading-relaxed">{variable.desc}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 interface Document {
   id: string
   recipientEmail: string | null
@@ -148,16 +233,39 @@ export function SendEmailModal({
                   )}
                 </div>
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700">
-                    Sujet
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700">
+                      Sujet
+                    </label>
+                    <VariablesHelper />
+                  </div>
                   <input
                     type="text"
                     id="subject"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Exemple: Votre document {{template_name}} est prêt"
                     className="mt-1 block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
                   />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Cliquez sur l'icône{' '}
+                    <span className="inline-flex items-center text-blue-600">
+                      <svg
+                        className="ml-1 mr-1 h-3 w-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </span>{' '}
+                    pour voir toutes les variables disponibles
+                  </p>
                 </div>
                 <div>
                   <label htmlFor="fromName" className="block text-sm font-medium text-gray-700">
@@ -228,14 +336,105 @@ export function SendEmailModal({
                   </p>
                 </div>
                 <div>
-                  <label htmlFor="html" className="block text-sm font-medium text-gray-700">
-                    Template HTML (optionnel)
-                  </label>
+                  <div className="mb-2 flex items-center justify-between">
+                    <label htmlFor="html" className="block text-sm font-medium text-gray-700">
+                      Template HTML (optionnel)
+                    </label>
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                        Variables disponibles
+                      </summary>
+                      <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs">
+                        <p className="mb-2 font-semibold text-gray-900">Variables du document :</p>
+                        <ul className="mb-3 space-y-1 text-gray-700">
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{recipient_name}}'}
+                            </code>{' '}
+                            - Nom du destinataire
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{recipient_email}}'}
+                            </code>{' '}
+                            - Email du destinataire
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{document_id}}'}
+                            </code>{' '}
+                            - ID du document
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{template_name}}'}
+                            </code>{' '}
+                            - Nom du template
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{project_name}}'}
+                            </code>{' '}
+                            - Nom du projet
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{download_url}}'}
+                            </code>{' '}
+                            - URL de téléchargement (bouton HTML automatique)
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{created_at}}'}
+                            </code>{' '}
+                            - Date de création (format français)
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{created_at_full}}'}
+                            </code>{' '}
+                            - Date complète de création
+                          </li>
+                        </ul>
+                        <p className="mb-2 font-semibold text-gray-900">Variables système :</p>
+                        <ul className="mb-3 space-y-1 text-gray-700">
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{organization_name}}'}
+                            </code>{' '}
+                            - Nom de l'organisation
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{app_name}}'}
+                            </code>{' '}
+                            - Nom de l'application
+                          </li>
+                          <li>
+                            <code className="rounded bg-gray-200 px-1 py-0.5">
+                              {'{{contact_email}}'}
+                            </code>{' '}
+                            - Email de contact
+                          </li>
+                        </ul>
+                        <p className="mb-2 font-semibold text-gray-900">
+                          Variables personnalisées :
+                        </p>
+                        <p className="text-gray-600">
+                          Toutes les données du document (champs du CSV/Excel) sont disponibles via{' '}
+                          <code className="rounded bg-gray-200 px-1 py-0.5">
+                            {'{{nom_du_champ}}'}
+                          </code>
+                        </p>
+                      </div>
+                    </details>
+                  </div>
                   <textarea
                     id="html"
                     value={htmlTemplate}
                     onChange={(e) => setHtmlTemplate(e.target.value)}
                     rows={4}
+                    placeholder="Exemple: <p>Bonjour {{recipient_name}},</p><p>Votre document {{template_name}} est prêt.</p>{{download_url}}"
                     className="mt-1 block w-full rounded-md border-gray-400 font-mono text-gray-900 placeholder-gray-600 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
                   />
                 </div>

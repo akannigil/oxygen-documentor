@@ -25,7 +25,7 @@ interface GenerationWorkflowProps {
   onGenerationComplete: () => void
 }
 
-type Step = 'import' | 'preview' | 'confirm' | 'monitoring'
+type Step = 'import' | 'storage' | 'style' | 'confirm' | 'monitoring'
 
 interface JobStatus {
   status: 'queued' | 'active' | 'completed' | 'failed' | 'unknown'
@@ -185,9 +185,7 @@ export function GenerationWorkflow({
   const handleDataMapped = (rows: Record<string, string | number>[]) => {
     setMappedRows(rows)
     if (rows.length > 0) {
-      setCurrentStep('preview')
-      // Activer automatiquement la prévisualisation réelle du document
-      setShowDocumentPreview(true)
+      setCurrentStep('storage')
     }
   }
 
@@ -276,14 +274,14 @@ export function GenerationWorkflow({
   }
 
   const isStepComplete = (step: Step) => {
-    const stepOrder: Step[] = ['import', 'preview', 'confirm', 'monitoring']
+    const stepOrder: Step[] = ['import', 'storage', 'style', 'confirm', 'monitoring']
     return stepOrder.indexOf(currentStep) > stepOrder.indexOf(step)
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-center">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
           <StepIndicator
             number={1}
             label="Import"
@@ -291,28 +289,37 @@ export function GenerationWorkflow({
             isComplete={isStepComplete('import')}
           />
           <div
-            className={`h-0.5 w-16 ${isStepComplete('import') ? 'bg-blue-600' : 'bg-gray-300'}`}
+            className={`h-0.5 w-12 ${isStepComplete('import') ? 'bg-blue-600' : 'bg-gray-300'}`}
           />
           <StepIndicator
             number={2}
-            label="Aperçu"
-            isActive={currentStep === 'preview'}
-            isComplete={isStepComplete('preview')}
+            label="Stockage"
+            isActive={currentStep === 'storage'}
+            isComplete={isStepComplete('storage')}
           />
           <div
-            className={`h-0.5 w-16 ${isStepComplete('preview') ? 'bg-blue-600' : 'bg-gray-300'}`}
+            className={`h-0.5 w-12 ${isStepComplete('storage') ? 'bg-blue-600' : 'bg-gray-300'}`}
           />
           <StepIndicator
             number={3}
+            label="Style"
+            isActive={currentStep === 'style'}
+            isComplete={isStepComplete('style')}
+          />
+          <div
+            className={`h-0.5 w-12 ${isStepComplete('style') ? 'bg-blue-600' : 'bg-gray-300'}`}
+          />
+          <StepIndicator
+            number={4}
             label="Confirmation"
             isActive={currentStep === 'confirm'}
             isComplete={isStepComplete('confirm')}
           />
           <div
-            className={`h-0.5 w-16 ${isStepComplete('confirm') ? 'bg-blue-600' : 'bg-gray-300'}`}
+            className={`h-0.5 w-12 ${isStepComplete('confirm') ? 'bg-blue-600' : 'bg-gray-300'}`}
           />
           <StepIndicator
-            number={4}
+            number={5}
             label="Génération"
             isActive={currentStep === 'monitoring'}
             isComplete={jobStatus?.status === 'completed'}
@@ -355,409 +362,17 @@ export function GenerationWorkflow({
         <CSVExcelImport templateFieldKeys={templateFieldKeys} onDataMapped={handleDataMapped} />
       )}
 
-      {currentStep === 'preview' && (
+      {currentStep === 'storage' && (
         <div className="space-y-6">
           <div className="rounded-lg bg-white p-6 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Étape 2 : Aperçu</h2>
-              <button
-                onClick={() => setShowDocumentPreview(!showDocumentPreview)}
-                className={`flex items-center space-x-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                  showDocumentPreview
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <span>
-                  {showDocumentPreview
-                    ? 'Masquer la prévisualisation'
-                    : 'Prévisualiser le document'}
-                </span>
-              </button>
-            </div>
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">
+              Étape 2 : Configuration du stockage
+            </h2>
+            <p className="mb-6 text-sm text-gray-600">
+              Choisissez où les fichiers générés seront stockés. Par défaut, ils sont stockés
+              localement.
+            </p>
 
-            {showDocumentPreview ? (
-              <DocumentPreview
-                templateId={template.id}
-                previewData={mappedRows[0] || {}}
-                outputFormat={outputFormat}
-                pdfOptions={
-                  outputFormat === 'pdf' && template.templateType === 'docx'
-                    ? {
-                        format: pdfFormat,
-                        orientation: pdfOrientation,
-                        method: pdfMethod,
-                        margins: customMargins ? pdfMargins : undefined,
-                      }
-                    : undefined
-                }
-                styleOptions={
-                  variableStyleEnabled && template.templateType === 'docx'
-                    ? {
-                        defaultFontFamily,
-                        defaultFontSize,
-                        defaultFontColor,
-                        defaultBold,
-                        defaultItalic,
-                        defaultUnderline,
-                      }
-                    : undefined
-                }
-                className="mt-4"
-              />
-            ) : (
-              <VisualPreview template={template} previewData={mappedRows[0] || {}} />
-            )}
-          </div>
-
-          {/* Options de configuration du document de sortie */}
-          <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-6 shadow-sm">
-            <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-gray-900">
-              <svg
-                className="h-5 w-5 text-blue-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              Configuration du document de sortie
-            </h3>
-
-            {/* Styles pour les variables DOCX */}
-            {template.templateType === 'docx' && (
-              <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
-                <label className="mb-3 flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={variableStyleEnabled}
-                    onChange={(e) => setVariableStyleEnabled(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm font-medium text-gray-700">
-                    Personnaliser le style des variables
-                  </span>
-                </label>
-
-                {variableStyleEnabled && (
-                  <div className="mt-4 space-y-4">
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                          Police
-                        </label>
-                        <select
-                          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          value={defaultFontFamily}
-                          onChange={(e) => setDefaultFontFamily(e.target.value)}
-                        >
-                          <optgroup label="Polices système">
-                            <option value="Arial">Arial</option>
-                            <option value="Times New Roman">Times New Roman</option>
-                            <option value="Calibri">Calibri</option>
-                            <option value="Cambria">Cambria</option>
-                            <option value="Courier New">Courier New</option>
-                            <option value="Georgia">Georgia</option>
-                            <option value="Verdana">Verdana</option>
-                          </optgroup>
-                          <optgroup label="Google Fonts (téléchargées automatiquement)">
-                            <option value="Roboto">Roboto</option>
-                            <option value="Open Sans">Open Sans</option>
-                            <option value="Lato">Lato</option>
-                            <option value="Montserrat">Montserrat</option>
-                            <option value="Roboto Condensed">Roboto Condensed</option>
-                            <option value="Source Sans Pro">Source Sans Pro</option>
-                            <option value="Raleway">Raleway</option>
-                            <option value="Oswald">Oswald</option>
-                            <option value="PT Sans">PT Sans</option>
-                            <option value="Merriweather">Merriweather</option>
-                            <option value="Playfair Display">Playfair Display</option>
-                            <option value="Lora">Lora</option>
-                            <option value="Noto Sans">Noto Sans</option>
-                          </optgroup>
-                        </select>
-                        <p className="mt-1 text-xs text-gray-500">
-                          {[
-                            'Roboto',
-                            'Open Sans',
-                            'Lato',
-                            'Montserrat',
-                            'Roboto Condensed',
-                            'Source Sans Pro',
-                            'Raleway',
-                            'Oswald',
-                            'PT Sans',
-                            'Merriweather',
-                            'Playfair Display',
-                            'Lora',
-                            'Noto Sans',
-                          ].includes(defaultFontFamily) && (
-                            <span className="text-blue-600">
-                              ✨ Cette police sera téléchargée et intégrée automatiquement dans le
-                              document
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                          Taille (pt)
-                        </label>
-                        <input
-                          type="number"
-                          min="8"
-                          max="72"
-                          step="1"
-                          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          value={defaultFontSize}
-                          onChange={(e) => setDefaultFontSize(parseInt(e.target.value) || 12)}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-700">
-                        Couleur
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          className="h-10 w-20 cursor-pointer rounded border border-gray-300"
-                          value={defaultFontColor}
-                          onChange={(e) => setDefaultFontColor(e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="flex-1 rounded-md border border-gray-300 px-3 py-2 font-mono text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          value={defaultFontColor}
-                          onChange={(e) => setDefaultFontColor(e.target.value)}
-                          placeholder="#000000"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex gap-4">
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={defaultBold}
-                          onChange={(e) => setDefaultBold(e.target.checked)}
-                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm font-bold text-gray-700">Gras</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={defaultItalic}
-                          onChange={(e) => setDefaultItalic(e.target.checked)}
-                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm italic text-gray-700">Italique</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={defaultUnderline}
-                          onChange={(e) => setDefaultUnderline(e.target.checked)}
-                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700 underline">Souligné</span>
-                      </label>
-                    </div>
-
-                    <p className="mt-2 text-xs text-gray-500">
-                      💡 Ces styles seront appliqués à toutes les variables insérées dans le
-                      document DOCX.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Sélecteur de format de sortie pour DOCX */}
-            {template.templateType === 'docx' && (
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Format de sortie
-                </label>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="outputFormat"
-                      value="docx"
-                      checked={outputFormat === 'docx'}
-                      onChange={(e) => setOutputFormat(e.target.value as 'docx')}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">DOCX (format original)</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="outputFormat"
-                      value="pdf"
-                      checked={outputFormat === 'pdf'}
-                      onChange={(e) => setOutputFormat(e.target.value as 'pdf')}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">PDF (conversion)</span>
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {/* Options PDF (pour DOCX → PDF ou templates PDF) */}
-            {template.templateType === 'docx' && outputFormat === 'pdf' && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
-                      Format de page
-                    </label>
-                    <select
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      value={pdfFormat}
-                      onChange={(e) =>
-                        setPdfFormat(e.target.value as 'A4' | 'A3' | 'Letter' | 'Legal' | 'Tabloid')
-                      }
-                    >
-                      <option value="A4">A4 (210 × 297 mm)</option>
-                      <option value="A3">A3 (297 × 420 mm)</option>
-                      <option value="Letter">Letter (8.5 × 11 in)</option>
-                      <option value="Legal">Legal (8.5 × 14 in)</option>
-                      <option value="Tabloid">Tabloid (11 × 17 in)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
-                      Orientation
-                    </label>
-                    <select
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      value={pdfOrientation}
-                      onChange={(e) =>
-                        setPdfOrientation(e.target.value as 'portrait' | 'landscape')
-                      }
-                    >
-                      <option value="portrait">Portrait</option>
-                      <option value="landscape">Paysage</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
-                      Moteur de conversion
-                    </label>
-                    <select
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      value={pdfMethod}
-                      onChange={(e) => setPdfMethod(e.target.value as 'libreoffice' | 'puppeteer')}
-                    >
-                      <option value="libreoffice">LibreOffice (fidèle recommandé)</option>
-                      <option value="puppeteer">Puppeteer (fallback)</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Marges personnalisables */}
-                <div>
-                  <label className="mb-2 flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={customMargins}
-                      onChange={(e) => setCustomMargins(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm font-medium text-gray-700">
-                      Marges personnalisées
-                    </span>
-                  </label>
-                  {customMargins && (
-                    <div className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-4">
-                      <div>
-                        <label className="mb-1 block text-xs text-gray-600">Haut</label>
-                        <input
-                          type="text"
-                          value={pdfMargins.top}
-                          onChange={(e) => setPdfMargins({ ...pdfMargins, top: e.target.value })}
-                          placeholder="10mm"
-                          className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs text-gray-600">Droite</label>
-                        <input
-                          type="text"
-                          value={pdfMargins.right}
-                          onChange={(e) => setPdfMargins({ ...pdfMargins, right: e.target.value })}
-                          placeholder="10mm"
-                          className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs text-gray-600">Bas</label>
-                        <input
-                          type="text"
-                          value={pdfMargins.bottom}
-                          onChange={(e) => setPdfMargins({ ...pdfMargins, bottom: e.target.value })}
-                          placeholder="10mm"
-                          className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs text-gray-600">Gauche</label>
-                        <input
-                          type="text"
-                          value={pdfMargins.left}
-                          onChange={(e) => setPdfMargins({ ...pdfMargins, left: e.target.value })}
-                          placeholder="10mm"
-                          className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {customMargins && (
-                    <p className="mt-2 text-xs text-gray-500">
-                      Format accepté : valeur + unité (ex: 10mm, 0.5in, 20px). Par défaut : 10mm.
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Info pour templates PDF/image */}
-            {template.templateType !== 'docx' && (
-              <div className="rounded-md bg-blue-100 p-3 text-sm text-blue-800">
-                <p className="font-medium">Format de sortie : PDF</p>
-                <p className="mt-1 text-xs">
-                  Les documents seront générés au format PDF avec les dimensions du template.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Configuration du stockage */}
-          <div className="mt-6">
             <StorageConfigForm
               projectId={projectId}
               initialConfig={storageConfig}
@@ -768,13 +383,384 @@ export function GenerationWorkflow({
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setCurrentStep('import')}
-              className="rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200"
+              className="rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
             >
               Retour
             </button>
             <button
-              onClick={() => setCurrentStep('confirm')}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
+              onClick={() => setCurrentStep('style')}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Continuer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {currentStep === 'style' && (
+        <div className="space-y-6">
+          <div className="rounded-lg bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">
+              Étape 3 : Personnalisation du style
+            </h2>
+            <p className="mb-6 text-sm text-gray-600">
+              Configurez l'apparence et le format de sortie de vos documents.
+            </p>
+
+            {/* Options de configuration du document de sortie */}
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-gray-900">
+                <svg
+                  className="h-5 w-5 text-blue-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Format de sortie
+              </h3>
+
+              {/* Styles pour les variables DOCX */}
+              {template.templateType === 'docx' && (
+                <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
+                  <label className="mb-3 flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={variableStyleEnabled}
+                      onChange={(e) => setVariableStyleEnabled(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm font-medium text-gray-700">
+                      Personnaliser le style des variables
+                    </span>
+                  </label>
+
+                  {variableStyleEnabled && (
+                    <div className="mt-4 space-y-4">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Police
+                          </label>
+                          <select
+                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            value={defaultFontFamily}
+                            onChange={(e) => setDefaultFontFamily(e.target.value)}
+                          >
+                            <optgroup label="Polices système">
+                              <option value="Arial">Arial</option>
+                              <option value="Times New Roman">Times New Roman</option>
+                              <option value="Calibri">Calibri</option>
+                              <option value="Cambria">Cambria</option>
+                              <option value="Courier New">Courier New</option>
+                              <option value="Georgia">Georgia</option>
+                              <option value="Verdana">Verdana</option>
+                            </optgroup>
+                            <optgroup label="Google Fonts (téléchargées automatiquement)">
+                              <option value="Roboto">Roboto</option>
+                              <option value="Open Sans">Open Sans</option>
+                              <option value="Lato">Lato</option>
+                              <option value="Montserrat">Montserrat</option>
+                              <option value="Roboto Condensed">Roboto Condensed</option>
+                              <option value="Source Sans Pro">Source Sans Pro</option>
+                              <option value="Raleway">Raleway</option>
+                              <option value="Oswald">Oswald</option>
+                              <option value="PT Sans">PT Sans</option>
+                              <option value="Merriweather">Merriweather</option>
+                              <option value="Playfair Display">Playfair Display</option>
+                              <option value="Lora">Lora</option>
+                              <option value="Noto Sans">Noto Sans</option>
+                            </optgroup>
+                          </select>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {[
+                              'Roboto',
+                              'Open Sans',
+                              'Lato',
+                              'Montserrat',
+                              'Roboto Condensed',
+                              'Source Sans Pro',
+                              'Raleway',
+                              'Oswald',
+                              'PT Sans',
+                              'Merriweather',
+                              'Playfair Display',
+                              'Lora',
+                              'Noto Sans',
+                            ].includes(defaultFontFamily) && (
+                              <span className="text-blue-600">
+                                ✨ Cette police sera téléchargée et intégrée automatiquement dans le
+                                document
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Taille (pt)
+                          </label>
+                          <input
+                            type="number"
+                            min="8"
+                            max="72"
+                            step="1"
+                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            value={defaultFontSize}
+                            onChange={(e) => setDefaultFontSize(parseInt(e.target.value) || 12)}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                          Couleur
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            className="h-10 w-20 cursor-pointer rounded border border-gray-300"
+                            value={defaultFontColor}
+                            onChange={(e) => setDefaultFontColor(e.target.value)}
+                          />
+                          <input
+                            type="text"
+                            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            value={defaultFontColor}
+                            onChange={(e) => setDefaultFontColor(e.target.value)}
+                            placeholder="#000000"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={defaultBold}
+                            onChange={(e) => setDefaultBold(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-sm font-bold text-gray-700">Gras</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={defaultItalic}
+                            onChange={(e) => setDefaultItalic(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-sm italic text-gray-700">Italique</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={defaultUnderline}
+                            onChange={(e) => setDefaultUnderline(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700 underline">Souligné</span>
+                        </label>
+                      </div>
+
+                      <p className="mt-2 text-xs text-gray-500">
+                        💡 Ces styles seront appliqués à toutes les variables insérées dans le
+                        document DOCX.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Sélecteur de format de sortie pour DOCX */}
+              {template.templateType === 'docx' && (
+                <div className="mb-4">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Format de sortie
+                  </label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="outputFormat"
+                        value="docx"
+                        checked={outputFormat === 'docx'}
+                        onChange={(e) => setOutputFormat(e.target.value as 'docx')}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">DOCX (format original)</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="outputFormat"
+                        value="pdf"
+                        checked={outputFormat === 'pdf'}
+                        onChange={(e) => setOutputFormat(e.target.value as 'pdf')}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">PDF (conversion)</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Options PDF (pour DOCX → PDF ou templates PDF) */}
+              {template.templateType === 'docx' && outputFormat === 'pdf' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        Format de page
+                      </label>
+                      <select
+                        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        value={pdfFormat}
+                        onChange={(e) =>
+                          setPdfFormat(
+                            e.target.value as 'A4' | 'A3' | 'Letter' | 'Legal' | 'Tabloid'
+                          )
+                        }
+                      >
+                        <option value="A4">A4 (210 × 297 mm)</option>
+                        <option value="A3">A3 (297 × 420 mm)</option>
+                        <option value="Letter">Letter (8.5 × 11 in)</option>
+                        <option value="Legal">Legal (8.5 × 14 in)</option>
+                        <option value="Tabloid">Tabloid (11 × 17 in)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        Orientation
+                      </label>
+                      <select
+                        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        value={pdfOrientation}
+                        onChange={(e) =>
+                          setPdfOrientation(e.target.value as 'portrait' | 'landscape')
+                        }
+                      >
+                        <option value="portrait">Portrait</option>
+                        <option value="landscape">Paysage</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        Moteur de conversion
+                      </label>
+                      <select
+                        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        value={pdfMethod}
+                        onChange={(e) =>
+                          setPdfMethod(e.target.value as 'libreoffice' | 'puppeteer')
+                        }
+                      >
+                        <option value="libreoffice">LibreOffice (fidèle recommandé)</option>
+                        <option value="puppeteer">Puppeteer (fallback)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Marges personnalisables */}
+                  <div>
+                    <label className="mb-2 flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={customMargins}
+                        onChange={(e) => setCustomMargins(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm font-medium text-gray-700">
+                        Marges personnalisées
+                      </span>
+                    </label>
+                    {customMargins && (
+                      <div className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-4">
+                        <div>
+                          <label className="mb-1 block text-xs text-gray-600">Haut</label>
+                          <input
+                            type="text"
+                            value={pdfMargins.top}
+                            onChange={(e) => setPdfMargins({ ...pdfMargins, top: e.target.value })}
+                            placeholder="10mm"
+                            className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs text-gray-600">Droite</label>
+                          <input
+                            type="text"
+                            value={pdfMargins.right}
+                            onChange={(e) =>
+                              setPdfMargins({ ...pdfMargins, right: e.target.value })
+                            }
+                            placeholder="10mm"
+                            className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs text-gray-600">Bas</label>
+                          <input
+                            type="text"
+                            value={pdfMargins.bottom}
+                            onChange={(e) =>
+                              setPdfMargins({ ...pdfMargins, bottom: e.target.value })
+                            }
+                            placeholder="10mm"
+                            className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs text-gray-600">Gauche</label>
+                          <input
+                            type="text"
+                            value={pdfMargins.left}
+                            onChange={(e) => setPdfMargins({ ...pdfMargins, left: e.target.value })}
+                            placeholder="10mm"
+                            className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {customMargins && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Format accepté : valeur + unité (ex: 10mm, 0.5in, 20px). Par défaut : 10mm.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Info pour templates PDF/image */}
+              {template.templateType !== 'docx' && (
+                <div className="rounded-md bg-blue-100 p-3 text-sm text-blue-800">
+                  <p className="font-medium">Format de sortie : PDF</p>
+                  <p className="mt-1 text-xs">
+                    Les documents seront générés au format PDF avec les dimensions du template.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setCurrentStep('storage')}
+              className="rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
+              Retour
+            </button>
+            <button
+              onClick={() => {
+                setCurrentStep('confirm')
+                setShowDocumentPreview(true)
+              }}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Continuer
             </button>
@@ -783,74 +769,174 @@ export function GenerationWorkflow({
       )}
 
       {currentStep === 'confirm' && (
-        <div className="rounded-lg bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Étape 3 : Confirmation</h2>
+        <div className="space-y-6">
+          <div className="rounded-lg bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">
+              Étape 4 : Confirmation et aperçu
+            </h2>
+            <p className="mb-6 text-sm text-gray-600">
+              Vérifiez l'aperçu de votre document et confirmez les paramètres avant génération.
+            </p>
 
-          {/* Résumé de la configuration */}
-          <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <h3 className="mb-3 text-sm font-semibold text-gray-900">Résumé de la génération</h3>
-            <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
-              <div>
-                <span className="text-gray-600">Nombre de documents :</span>
-                <span className="ml-2 font-medium text-gray-900">{mappedRows.length}</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Template :</span>
-                <span className="ml-2 font-medium text-gray-900">{template.name}</span>
-              </div>
-              {template.templateType === 'docx' && (
-                <>
-                  <div>
-                    <span className="text-gray-600">Format de sortie :</span>
-                    <span className="ml-2 font-medium text-gray-900">
-                      {outputFormat.toUpperCase()}
-                    </span>
-                  </div>
-                  {outputFormat === 'pdf' && (
-                    <>
-                      <div>
-                        <span className="text-gray-600">Format de page :</span>
-                        <span className="ml-2 font-medium text-gray-900">{pdfFormat}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Orientation :</span>
-                        <span className="ml-2 font-medium text-gray-900">
-                          {pdfOrientation === 'portrait' ? 'Portrait' : 'Paysage'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Moteur :</span>
-                        <span className="ml-2 font-medium text-gray-900">
-                          {pdfMethod === 'libreoffice' ? 'LibreOffice' : 'Puppeteer'}
-                        </span>
-                      </div>
-                      {customMargins && (
-                        <div className="col-span-2">
-                          <span className="text-gray-600">Marges :</span>
+            {/* Résumé de la configuration */}
+            <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <h3 className="mb-3 text-sm font-semibold text-gray-900">Résumé de la génération</h3>
+              <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+                <div>
+                  <span className="text-gray-600">Nombre de documents :</span>
+                  <span className="ml-2 font-medium text-gray-900">{mappedRows.length}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Template :</span>
+                  <span className="ml-2 font-medium text-gray-900">{template.name}</span>
+                </div>
+                {template.templateType === 'docx' && (
+                  <>
+                    <div>
+                      <span className="text-gray-600">Format de sortie :</span>
+                      <span className="ml-2 font-medium text-gray-900">
+                        {outputFormat.toUpperCase()}
+                      </span>
+                    </div>
+                    {outputFormat === 'pdf' && (
+                      <>
+                        <div>
+                          <span className="text-gray-600">Format de page :</span>
+                          <span className="ml-2 font-medium text-gray-900">{pdfFormat}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Orientation :</span>
                           <span className="ml-2 font-medium text-gray-900">
-                            {pdfMargins.top} / {pdfMargins.right} / {pdfMargins.bottom} /{' '}
-                            {pdfMargins.left}
+                            {pdfOrientation === 'portrait' ? 'Portrait' : 'Paysage'}
                           </span>
                         </div>
-                      )}
-                    </>
-                  )}
-                </>
+                        <div>
+                          <span className="text-gray-600">Moteur :</span>
+                          <span className="ml-2 font-medium text-gray-900">
+                            {pdfMethod === 'libreoffice' ? 'LibreOffice' : 'Puppeteer'}
+                          </span>
+                        </div>
+                        {customMargins && (
+                          <div className="col-span-2">
+                            <span className="text-gray-600">Marges :</span>
+                            <span className="ml-2 font-medium text-gray-900">
+                              {pdfMargins.top} / {pdfMargins.right} / {pdfMargins.bottom} /{' '}
+                              {pdfMargins.left}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
+                {storageConfig && (
+                  <div className="col-span-2">
+                    <span className="text-gray-600">Stockage :</span>
+                    <span className="ml-2 font-medium text-gray-900">
+                      {storageConfig.type === 'local'
+                        ? 'Local'
+                        : storageConfig.type === 's3'
+                          ? 'Amazon S3'
+                          : storageConfig.type === 'ftp'
+                            ? 'FTP'
+                            : storageConfig.type === 'google-drive'
+                              ? 'Google Drive'
+                              : 'Configuré'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Aperçu du document */}
+            <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-900">Aperçu du document</h3>
+                <button
+                  onClick={() => setShowDocumentPreview(!showDocumentPreview)}
+                  className={`flex items-center space-x-2 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    showDocumentPreview
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                  <span>{showDocumentPreview ? 'Masquer' : 'Afficher'}</span>
+                </button>
+              </div>
+
+              {showDocumentPreview ? (
+                <DocumentPreview
+                  templateId={template.id}
+                  previewData={mappedRows[0] || {}}
+                  outputFormat={outputFormat}
+                  pdfOptions={
+                    outputFormat === 'pdf' && template.templateType === 'docx'
+                      ? {
+                          format: pdfFormat,
+                          orientation: pdfOrientation,
+                          method: pdfMethod,
+                          margins: customMargins ? pdfMargins : undefined,
+                        }
+                      : undefined
+                  }
+                  styleOptions={
+                    variableStyleEnabled && template.templateType === 'docx'
+                      ? {
+                          defaultFontFamily,
+                          defaultFontSize,
+                          defaultFontColor,
+                          defaultBold,
+                          defaultItalic,
+                          defaultUnderline,
+                        }
+                      : undefined
+                  }
+                  className="mt-4"
+                />
+              ) : (
+                <VisualPreview template={template} previewData={mappedRows[0] || {}} />
               )}
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="flex justify-end gap-3">
             <button
-              onClick={() => setCurrentStep('preview')}
-              className="rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200"
+              onClick={() => setCurrentStep('style')}
+              className="rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
             >
               Retour
             </button>
             <button
               onClick={handleGenerate}
-              className="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500"
+              className="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
+              <svg
+                className="-ml-0.5 mr-1.5 inline-block h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
               Lancer la Génération
             </button>
           </div>
@@ -896,7 +982,7 @@ function JobMonitor({
 
   return (
     <div className="rounded-lg bg-white p-6 text-center shadow-sm">
-      <h2 className="mb-4 text-lg font-semibold text-gray-900">Suivi de la Génération</h2>
+      <h2 className="mb-4 text-lg font-semibold text-gray-900">Étape 5 : Génération en cours</h2>
       <div className="space-y-4">
         <p className="text-sm text-gray-600">{getStatusText()}</p>
         <div className="h-2.5 w-full rounded-full bg-gray-200">

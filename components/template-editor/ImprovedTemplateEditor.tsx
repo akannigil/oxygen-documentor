@@ -442,7 +442,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
           type="text"
           value={field.key}
           onChange={(e) => onUpdate(index, { key: e.target.value })}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+          className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
 
@@ -453,7 +453,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
           onChange={(e) =>
             onUpdate(index, { type: e.target.value as 'text' | 'number' | 'date' | 'qrcode' })
           }
-          className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+          className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         >
           <option value="text">Texte</option>
           <option value="number">Nombre</option>
@@ -470,7 +470,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
               type="number"
               value={field.fontSize || 12}
               onChange={(e) => onUpdate(index, { fontSize: parseInt(e.target.value) })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               min={6}
               max={72}
             />
@@ -491,7 +491,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
                     | 'Courier-Bold',
                 })
               }
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="Helvetica">Helvetica</option>
               <option value="Helvetica-Bold">Helvetica Bold</option>
@@ -509,7 +509,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
               onChange={(e) =>
                 onUpdate(index, { align: e.target.value as 'left' | 'center' | 'right' })
               }
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="left">Gauche</option>
               <option value="center">Centre</option>
@@ -530,7 +530,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
                 type="text"
                 value={field.textColor || '#000000'}
                 onChange={(e) => onUpdate(index, { textColor: e.target.value })}
-                className="flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>

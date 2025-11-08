@@ -388,7 +388,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
             type="text"
             value={localField.key}
             onChange={(e) => handleChange('key', e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
         <div>
@@ -396,7 +396,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
           <select
             value={localField.type}
             onChange={(e) => handleChange('type', e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="text">Texte</option>
             <option value="qrcode">QR Code</option>
@@ -414,7 +414,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
                 type="number"
                 value={localField.fontSize || 12}
                 onChange={(e) => handleChange('fontSize', Number.parseInt(e.target.value))}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 min={8}
                 max={72}
               />
@@ -424,7 +424,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
               <select
                 value={localField.fontFamily || 'Helvetica'}
                 onChange={(e) => handleChange('fontFamily', e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="Helvetica">Helvetica</option>
                 <option value="Helvetica-Bold">Helvetica Bold</option>
@@ -439,7 +439,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
               <select
                 value={localField.align || 'left'}
                 onChange={(e) => handleChange('align', e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="left">Gauche</option>
                 <option value="center">Centre</option>
@@ -459,7 +459,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
                   type="text"
                   value={localField.textColor || '#000000'}
                   onChange={(e) => handleChange('textColor', e.target.value)}
-                  className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm"
+                  className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="#000000"
                 />
               </div>
@@ -477,7 +477,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
                   type="text"
                   value={localField.backgroundColor || ''}
                   onChange={(e) => handleChange('backgroundColor', e.target.value)}
-                  className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm"
+                  className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="Transparent"
                 />
               </div>
@@ -496,7 +496,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
                     type="text"
                     value={localField.borderColor || ''}
                     onChange={(e) => handleChange('borderColor', e.target.value)}
-                    className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm"
+                    className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="Couleur bordure"
                   />
                 </div>
@@ -504,7 +504,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
                   type="number"
                   value={localField.borderWidth || 0}
                   onChange={(e) => handleChange('borderWidth', Number.parseInt(e.target.value))}
-                  className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                  className="w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="Épaisseur (px)"
                   min={0}
                   max={10}
@@ -519,7 +519,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
             <select
               value={localField.format || ''}
               onChange={(e) => handleChange('format', e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">Aucun</option>
               <option value="uppercase">MAJUSCULES</option>
@@ -534,7 +534,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
             <select
               value={localField.format || ''}
               onChange={(e) => handleChange('format', e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">DD/MM/YYYY (défaut)</option>
               <option value="YYYY-MM-DD">YYYY-MM-DD</option>
@@ -548,7 +548,7 @@ function FieldPropertiesPanel({ field, index, onUpdate, onDelete }: FieldPropert
             <select
               value={localField.format || ''}
               onChange={(e) => handleChange('format', e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">Entier</option>
               <option value="0.0">1 décimale</option>

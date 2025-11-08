@@ -162,7 +162,7 @@ export default function CSVExcelImport({ templateFieldKeys, onDataMapped }: CSVE
                 Champ requis pour l'envoi d'e-mails groupé ou individuel.
               </p>
               <select
-                className="block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                className="block w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={mapping[RECIPIENT_EMAIL_KEY] ?? ''}
                 onChange={(e) => handleMappingChange(RECIPIENT_EMAIL_KEY, e.target.value)}
               >
@@ -181,7 +181,7 @@ export default function CSVExcelImport({ templateFieldKeys, onDataMapped }: CSVE
               <div key={key} className="space-y-1">
                 <div className="text-xs font-medium text-gray-700">{key}</div>
                 <select
-                  className="block w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                  className="block w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   value={mapping[key] ?? ''}
                   onChange={(e) => handleMappingChange(key, e.target.value)}
                 >

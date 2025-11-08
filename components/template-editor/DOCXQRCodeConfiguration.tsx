@@ -249,7 +249,7 @@ export function DOCXQRCodeConfiguration({
                       value={config.placeholder}
                       onChange={(e) => handleUpdateConfig(index, { placeholder: e.target.value })}
                       placeholder="{{qrcode_verification}}"
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm"
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                     <p className="mt-1 text-xs text-gray-500">
                       Ce texte sera remplacé par le QR Code dans le document Word
@@ -273,7 +273,7 @@ export function DOCXQRCodeConfiguration({
                           | 'custom'
                         handleUpdateConfig(index, { contentType: value })
                       }}
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                       <option value="url">URL</option>
                       <option value="text">Texte</option>
@@ -296,7 +296,7 @@ export function DOCXQRCodeConfiguration({
                       }
                       placeholder="https://verify.example.com/{{id}}/{{code}}"
                       rows={3}
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm"
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                     <p className="mt-1 text-xs text-gray-500">
                       Utilisez {`{{variable}}`} pour insérer des données dynamiques
@@ -341,7 +341,7 @@ export function DOCXQRCodeConfiguration({
                           }
                           min={50}
                           max={500}
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                          className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                       </div>
 
@@ -358,7 +358,7 @@ export function DOCXQRCodeConfiguration({
                           }
                           min={0}
                           max={10}
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                          className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                       </div>
 
@@ -374,7 +374,7 @@ export function DOCXQRCodeConfiguration({
                               errorCorrectionLevel: e.target.value as 'L' | 'M' | 'Q' | 'H',
                             })
                           }
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                          className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >
                           <option value="L">L (7% - Plus petit)</option>
                           <option value="M">M (15% - Recommandé)</option>
