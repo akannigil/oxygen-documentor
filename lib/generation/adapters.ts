@@ -67,14 +67,13 @@ export class PdfImageGeneratorAdapter implements TemplateGeneratorAdapter {
         (f.qrcodeAuth?.enabled === true || f.qrcodeStorageUrl?.enabled === true)
     )
 
-    const qrOptions =
-      hasQRCodeWithOptions && ctx.authConfig
-        ? {
-            authConfig: ctx.authConfig,
-            ...(ctx.documentFilePath ? { documentFilePath: ctx.documentFilePath } : {}),
-            ...(ctx.getStorageUrl ? { getStorageUrl: ctx.getStorageUrl } : {}),
-          }
-        : undefined
+    const qrOptions = hasQRCodeWithOptions
+      ? {
+          ...(ctx.authConfig ? { authConfig: ctx.authConfig } : {}),
+          ...(ctx.documentFilePath ? { documentFilePath: ctx.documentFilePath } : {}),
+          ...(ctx.getStorageUrl ? { getStorageUrl: ctx.getStorageUrl } : {}),
+        }
+      : undefined
 
     const buffer = await generateDocumentFromTemplate(
       ctx.templateBuffer,

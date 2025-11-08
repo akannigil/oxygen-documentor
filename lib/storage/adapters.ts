@@ -69,6 +69,8 @@ export class S3StorageAdapter implements StorageAdapter {
       console.log(`  - Region: ${this.region}`)
       console.log(`  - Endpoint: ${this.endpoint || 'default AWS'}`)
       console.log(`  - forcePathStyle: ${this.forcePathStyle} (toujours activé pour compatibilité)`)
+      console.log(`  - Access Key ID: ${accessKeyId ? `${accessKeyId.substring(0, 8)}...` : 'non défini'}`)
+      console.log(`  - Secret Access Key: ${secretAccessKey ? '***défini***' : 'non défini'}`)
     }
 
     const clientConfig: any = { 
@@ -117,6 +119,14 @@ export class S3StorageAdapter implements StorageAdapter {
   }
 
   async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
+    // Vérifier que les credentials sont définis
+    if (!this.credentials) {
+      throw new Error(
+        'Les credentials S3 ne sont pas définis. ' +
+        'Veuillez fournir accessKeyId et secretAccessKey lors de la création du S3StorageAdapter.'
+      )
+    }
+
     const command = new GetObjectCommand({
       Bucket: this.bucket,
       Key: key,
@@ -128,6 +138,28 @@ export class S3StorageAdapter implements StorageAdapter {
     
     if (process.env['NODE_ENV'] === 'development') {
       console.log(`[S3 Storage] getSignedUrl (path-style): ${signedUrl}`)
+      
+      // Extraire l'Access Key ID de l'URL signée pour vérification
+      try {
+        const urlObj = new URL(signedUrl)
+        const credentialParam = urlObj.searchParams.get('X-Amz-Credential')
+        if (credentialParam) {
+          const accessKeyIdFromUrl = credentialParam.split('/')[0]
+          if (accessKeyIdFromUrl) {
+            console.log(`[S3 Storage] Access Key ID utilisé dans l'URL: ${accessKeyIdFromUrl.substring(0, 8)}...`)
+            console.log(`[S3 Storage] Access Key ID configuré: ${this.credentials.accessKeyId.substring(0, 8)}...`)
+            
+            if (accessKeyIdFromUrl !== this.credentials.accessKeyId) {
+              console.warn(
+                `[S3 Storage] ⚠️ L'Access Key ID dans l'URL ne correspond pas aux credentials configurés! ` +
+                `Cela peut indiquer un problème de configuration du client S3.`
+              )
+            }
+          }
+        }
+      } catch (error) {
+        // Ignorer les erreurs de parsing
+      }
       
       // Vérifier que l'URL générée est bien en path-style
       const urlObj = new URL(signedUrl)

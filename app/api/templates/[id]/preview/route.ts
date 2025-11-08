@@ -78,6 +78,10 @@ export async function POST(request: Request, { params }: RouteParams) {
         }
       : undefined
 
+    // Pour la prévisualisation, utiliser un chemin fictif pour les QR codes avec stockage
+    // Ce chemin sera utilisé pour générer des URLs de placeholder
+    const previewDocumentFilePath = `preview/${templateId}/preview.${desiredFormat}`
+
     // Pour la prévisualisation, ne pas générer de vraies URLs de stockage
     // Utiliser des URLs de placeholder à la place
     const getStorageUrl = async (filePath: string, signed = false, expiresIn = 3600) => {
@@ -91,6 +95,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       fields: template.fields as any,
       qrcodeConfigs: template.qrcodeConfigs as any,
       ...(authConfig ? { authConfig } : {}),
+      documentFilePath: previewDocumentFilePath,
       getStorageUrl,
       ...(pdfOptions ? { pdfOptions } : {}),
       ...(styleOptions ? { styleOptions } : {}),

@@ -23,6 +23,18 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
     details?: any
   } | null>(null)
 
+  // Génération d'access keys
+  const [showGenerateAccessKey, setShowGenerateAccessKey] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [adminAccessKeyId, setAdminAccessKeyId] = useState('')
+  const [adminSecretAccessKey, setAdminSecretAccessKey] = useState('')
+  const [generatedAccessKey, setGeneratedAccessKey] = useState<{
+    accessKeyId: string
+    secretAccessKey: string
+    userName: string
+  } | null>(null)
+  const [generateError, setGenerateError] = useState<string | null>(null)
+
   // Configuration S3
   const [s3Bucket, setS3Bucket] = useState('')
   const [s3Region, setS3Region] = useState('us-east-1')
@@ -403,6 +415,141 @@ export function StorageConfigForm({ projectId, initialConfig, onSave }: StorageC
                 </p>
               </div>
             </div>
+
+            {/* Génération d'access keys pour MinIO */}
+            {isMinioOrCompatible && s3Bucket && (
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="text-sm font-medium text-blue-900">
+                      Générer des access keys spécifiques pour ce bucket
+                    </h4>
+                    <p className="text-xs text-blue-700 mt-1">
+                      Créez des credentials dédiés avec des permissions limitées à ce bucket uniquement
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowGenerateAccessKey(!showGenerateAccessKey)}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    {showGenerateAccessKey ? 'Masquer' : 'Afficher'}
+                  </button>
+                </div>
+
+                {showGenerateAccessKey && (
+                  <div className="space-y-3 mt-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Access Key ID Admin (MinIO)
+                      </label>
+                      <input
+                        type="text"
+                        value={adminAccessKeyId}
+                        onChange={(e) => setAdminAccessKeyId(e.target.value)}
+                        placeholder="Votre access key admin MinIO"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Secret Access Key Admin (MinIO)
+                      </label>
+                      <input
+                        type="password"
+                        value={adminSecretAccessKey}
+                        onChange={(e) => setAdminSecretAccessKey(e.target.value)}
+                        placeholder="Votre secret key admin MinIO"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!adminAccessKeyId || !adminSecretAccessKey || !s3Bucket) {
+                          setGenerateError('Veuillez remplir tous les champs')
+                          return
+                        }
+
+                        setIsGenerating(true)
+                        setGenerateError(null)
+                        setGeneratedAccessKey(null)
+
+                        try {
+                          const response = await fetch(
+                            `/api/projects/${projectId}/storage-config/generate-access-key`,
+                            {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                adminAccessKeyId,
+                                adminSecretAccessKey,
+                                bucketName: s3Bucket,
+                                userName: `project-${projectId}-${Date.now()}`,
+                                permissions: ['read', 'write'],
+                              }),
+                            }
+                          )
+
+                          const data = await response.json()
+
+                          if (!response.ok) {
+                            throw new Error(data.error || 'Erreur lors de la génération')
+                          }
+
+                          setGeneratedAccessKey(data.accessKey)
+                          // Remplir automatiquement les champs avec les nouveaux credentials
+                          setS3AccessKeyId(data.accessKey.accessKeyId)
+                          setS3SecretAccessKey(data.accessKey.secretAccessKey)
+                        } catch (error) {
+                          setGenerateError(
+                            error instanceof Error ? error.message : 'Erreur inconnue'
+                          )
+                        } finally {
+                          setIsGenerating(false)
+                        }
+                      }}
+                      disabled={isGenerating || !adminAccessKeyId || !adminSecretAccessKey || !s3Bucket}
+                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
+                    >
+                      {isGenerating ? 'Génération...' : 'Générer des access keys'}
+                    </button>
+
+                    {generateError && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                        <p className="text-xs text-red-800">{generateError}</p>
+                      </div>
+                    )}
+
+                    {generatedAccessKey && (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                        <p className="text-xs font-medium text-green-900 mb-2">
+                          ✓ Access keys générées avec succès !
+                        </p>
+                        <div className="space-y-2 text-xs">
+                          <div>
+                            <span className="font-medium text-gray-700">Access Key ID:</span>
+                            <code className="ml-2 px-2 py-1 bg-gray-100 rounded text-green-800">
+                              {generatedAccessKey.accessKeyId}
+                            </code>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Secret Access Key:</span>
+                            <code className="ml-2 px-2 py-1 bg-gray-100 rounded text-green-800">
+                              {generatedAccessKey.secretAccessKey}
+                            </code>
+                          </div>
+                        </div>
+                        <p className="text-xs text-green-700 mt-2">
+                          Les credentials ont été automatiquement remplis dans les champs ci-dessus.
+                          Veuillez les configurer dans MinIO si nécessaire.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
