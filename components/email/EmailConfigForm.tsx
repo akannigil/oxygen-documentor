@@ -70,31 +70,47 @@ export function EmailConfigForm({ projectId, initialConfig, onSave }: EmailConfi
   }, [initialConfig])
 
   const buildConfig = (): EmailConfig | null => {
-    const baseConfig = {
-      organizationName: organizationName.trim() || undefined,
-      appName: appName.trim() || undefined,
-      contactEmail: contactEmail.trim() || undefined,
-      from: from.trim() || undefined,
-      fromName: fromName.trim() || undefined,
-      replyTo: replyTo.trim() || undefined,
-    }
+    const baseConfig: {
+      organizationName?: string
+      appName?: string
+      contactEmail?: string
+      fromName?: string
+      replyTo?: string
+    } = {}
+
+    const trimmedOrgName = organizationName.trim()
+    if (trimmedOrgName) baseConfig.organizationName = trimmedOrgName
+
+    const trimmedAppName = appName.trim()
+    if (trimmedAppName) baseConfig.appName = trimmedAppName
+
+    const trimmedContactEmail = contactEmail.trim()
+    if (trimmedContactEmail) baseConfig.contactEmail = trimmedContactEmail
+
+    const trimmedFromName = fromName.trim()
+    if (trimmedFromName) baseConfig.fromName = trimmedFromName
+
+    const trimmedReplyTo = replyTo.trim()
+    if (trimmedReplyTo) baseConfig.replyTo = trimmedReplyTo
 
     switch (provider) {
       case 'resend': {
-        if (!resendApiKey.trim() || !resendFrom.trim()) {
-          throw new Error('La clé API Resend et l\'adresse email from sont requises')
+        const trimmedApiKey = resendApiKey.trim()
+        const trimmedFrom = resendFrom.trim()
+        if (!trimmedApiKey || !trimmedFrom) {
+          throw new Error("La clé API Resend et l'adresse email from sont requises")
         }
         return {
           provider: 'resend',
-          apiKey: resendApiKey.trim(),
-          from: resendFrom.trim(),
+          apiKey: trimmedApiKey,
+          from: trimmedFrom,
           ...baseConfig,
         }
       }
 
       case 'smtp': {
         if (!smtpHost.trim() || !smtpPort.trim() || !smtpUser.trim() || !smtpPassword.trim()) {
-          throw new Error('L\'hôte, le port, l\'utilisateur et le mot de passe SMTP sont requis')
+          throw new Error("L'hôte, le port, l'utilisateur et le mot de passe SMTP sont requis")
         }
         return {
           provider: 'smtp',
