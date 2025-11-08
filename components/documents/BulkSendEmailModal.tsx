@@ -14,6 +14,13 @@ interface BulkSendEmailModalProps {
   selectedDocuments: Document[]
   onClose: () => void
   onSent: () => void
+  defaultSubject?: string | undefined
+  defaultHtmlTemplate?: string | undefined
+  defaultFrom?: string | undefined
+  defaultFromName?: string | undefined
+  defaultReplyTo?: string | undefined
+  defaultCc?: string | string[] | undefined
+  defaultBcc?: string | string[] | undefined
 }
 
 // Composant helper pour afficher les variables disponibles
@@ -124,14 +131,29 @@ export function BulkSendEmailModal({
   selectedDocuments,
   onClose,
   onSent,
+  defaultSubject,
+  defaultHtmlTemplate,
+  defaultFrom,
+  defaultFromName,
+  defaultReplyTo,
+  defaultCc,
+  defaultBcc,
 }: BulkSendEmailModalProps) {
-  const [subject, setSubject] = useState('Votre document')
-  const [htmlTemplate, setHtmlTemplate] = useState('')
-  const [from, setFrom] = useState('')
-  const [fromName, setFromName] = useState('')
-  const [replyTo, setReplyTo] = useState('')
-  const [cc, setCc] = useState('')
-  const [bcc, setBcc] = useState('')
+  const [subject, setSubject] = useState(defaultSubject || 'Votre document')
+  const [htmlTemplate, setHtmlTemplate] = useState(defaultHtmlTemplate || '')
+  const [from, setFrom] = useState(defaultFrom || '')
+  const [fromName, setFromName] = useState(defaultFromName || '')
+  const [replyTo, setReplyTo] = useState(defaultReplyTo || '')
+  const [cc, setCc] = useState(
+    typeof defaultCc === 'string' ? defaultCc : Array.isArray(defaultCc) ? defaultCc.join(', ') : ''
+  )
+  const [bcc, setBcc] = useState(
+    typeof defaultBcc === 'string'
+      ? defaultBcc
+      : Array.isArray(defaultBcc)
+        ? defaultBcc.join(', ')
+        : ''
+  )
   const [attachDocument, setAttachDocument] = useState(true)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { DeleteDocumentButton } from '@/components/documents/DeleteDocumentButton'
 import { SendEmailModal } from '@/components/templates/SendEmailModal'
 import { BulkSendEmailModal } from '@/components/documents/BulkSendEmailModal'
+import { DEFAULT_EMAIL_TEMPLATE } from '@/lib/email/templates'
 
 interface DocumentItem {
   id: string
@@ -56,6 +57,9 @@ export default function ProjectDocumentsPage() {
   const [currentPage, setCurrentPage] = useState<number>(
     parseInt(searchParams.get('page') || '1', 10)
   )
+  const [rowsPerPage, setRowsPerPage] = useState<number>(
+    parseInt(searchParams.get('limit') || '20', 10)
+  )
 
   const fetchDocs = useCallback(async () => {
     setLoading(true)
@@ -65,6 +69,7 @@ export default function ProjectDocumentsPage() {
       const queryParams = new URLSearchParams({
         projectId,
         page: currentPage.toString(),
+        limit: rowsPerPage.toString(),
       })
 
       if (statusFilter) queryParams.set('status', statusFilter)
@@ -76,20 +81,42 @@ export default function ProjectDocumentsPage() {
       if (res.ok) {
         const data = await res.json()
         setDocs(data.documents || [])
-        setPagination(data.pagination || null)
+        // Toujours définir la pagination, même si elle est vide
+        setPagination(
+          data.pagination || {
+            page: currentPage,
+            limit: rowsPerPage,
+            total: 0,
+            totalPages: 0,
+          }
+        )
       } else {
         const errorData = await res.json().catch(() => ({}))
         setError(
           `Erreur ${res.status}: ${errorData.error || 'Erreur lors du chargement des documents'}`
         )
+        // Mettre à jour la pagination même en cas d'erreur pour éviter qu'elle disparaisse
+        setPagination({
+          page: currentPage,
+          limit: rowsPerPage,
+          total: 0,
+          totalPages: 0,
+        })
       }
     } catch (err) {
       console.error('Fetch error:', err)
       setError(`Erreur réseau: ${err instanceof Error ? err.message : 'Erreur inconnue'}`)
+      // Mettre à jour la pagination même en cas d'erreur pour éviter qu'elle disparaisse
+      setPagination({
+        page: currentPage,
+        limit: rowsPerPage,
+        total: 0,
+        totalPages: 0,
+      })
     } finally {
       setLoading(false)
     }
-  }, [projectId, statusFilter, searchQuery, startDate, endDate, currentPage])
+  }, [projectId, statusFilter, searchQuery, startDate, endDate, currentPage, rowsPerPage])
 
   useEffect(() => {
     fetchDocs()
@@ -98,6 +125,36 @@ export default function ProjectDocumentsPage() {
   const handleFilterChange = () => {
     setCurrentPage(1) // Reset à la première page lors d'un changement de filtre
     fetchDocs()
+  }
+
+  const handleRowsPerPageChange = (newLimit: number) => {
+    setRowsPerPage(newLimit)
+    setCurrentPage(1) // Reset à la première page lors d'un changement de limite
+  }
+
+  // Réinitialiser le statut d'un document
+  const handleResetStatus = async (docId: string) => {
+    if (!confirm('Réinitialiser le statut de ce document à "Généré" ?')) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/documents/${docId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'generated' }),
+      })
+
+      if (res.ok) {
+        fetchDocs()
+      } else {
+        const errorData = await res.json().catch(() => ({}))
+        alert(`Erreur lors de la réinitialisation: ${errorData.error || 'Erreur inconnue'}`)
+      }
+    } catch (err) {
+      console.error('Reset status error:', err)
+      alert('Erreur lors de la réinitialisation du statut')
+    }
   }
 
   // Gestion de la sélection
@@ -314,6 +371,25 @@ export default function ProjectDocumentsPage() {
 
       {/* Filtres et recherche */}
       <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Filtres</h2>
+          <div className="flex items-center gap-3">
+            <label htmlFor="rowsPerPage" className="text-sm font-medium text-gray-700">
+              Lignes par page :
+            </label>
+            <select
+              id="rowsPerPage"
+              value={rowsPerPage}
+              onChange={(e) => handleRowsPerPageChange(parseInt(e.target.value, 10))}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Recherche</label>
@@ -370,15 +446,14 @@ export default function ProjectDocumentsPage() {
 
       {error && <div className="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-800">{error}</div>}
 
-      {docs.length === 0 ? (
+      {docs.length === 0 && !loading ? (
         <div className="rounded-lg border border-gray-200 bg-white p-6 text-center text-sm text-gray-600">
           Aucun document trouvé
         </div>
-      ) : (
-        <>
-          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
+      ) : docs.length > 0 ? (
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
                 <tr>
                   <th className="sticky left-0 z-10 bg-gray-50 px-2 py-3 text-left sm:px-4">
                     <input
@@ -510,6 +585,28 @@ export default function ProjectDocumentsPage() {
                             </span>
                           </button>
                         )}
+                        {d.status === 'sent' && (
+                          <button
+                            onClick={() => handleResetStatus(d.id)}
+                            className="inline-flex items-center rounded-md bg-yellow-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 sm:px-3 sm:text-sm"
+                            title="Réinitialiser le statut"
+                          >
+                            <svg
+                              className="h-3 w-3 sm:h-4 sm:w-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                              />
+                            </svg>
+                            <span className="hidden sm:inline ml-1">Réinit.</span>
+                          </button>
+                        )}
                         <Link
                           href={`/documents/${d.id}`}
                           className="inline-flex items-center rounded-md bg-blue-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:px-3 sm:text-sm"
@@ -525,38 +622,81 @@ export default function ProjectDocumentsPage() {
               </tbody>
             </table>
           </div>
+      ) : null}
 
-          {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-between">
+      {/* Pagination - Toujours affichée si définie */}
+      {pagination && (
+        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-gray-700">
-                Affichage de {(currentPage - 1) * pagination.limit + 1} à{' '}
-                {Math.min(currentPage * pagination.limit, pagination.total)} sur {pagination.total}{' '}
-                documents
+                {pagination.total > 0 ? (
+                  <>
+                    Affichage de {(currentPage - 1) * pagination.limit + 1} à{' '}
+                    {Math.min(currentPage * pagination.limit, pagination.total)} sur{' '}
+                    {pagination.total} document{pagination.total > 1 ? 's' : ''}
+                  </>
+                ) : (
+                  <>Aucun document</>
+                )}
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50"
-                >
-                  Précédent
-                </button>
-                <span className="flex items-center px-3 py-2 text-sm font-medium text-gray-800">
-                  Page {currentPage} sur {pagination.totalPages}
-                </span>
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
-                  disabled={currentPage === pagination.totalPages}
-                  className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50"
-                >
-                  Suivant
-                </button>
-              </div>
+              {pagination.totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50"
+                  >
+                    Précédent
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(pagination.totalPages, 7) }, (_, i) => {
+                      let pageNum: number
+                      if (pagination.totalPages <= 7) {
+                        pageNum = i + 1
+                      } else if (currentPage <= 4) {
+                        pageNum = i + 1
+                      } else if (currentPage >= pagination.totalPages - 3) {
+                        pageNum = pagination.totalPages - 6 + i
+                      } else {
+                        pageNum = currentPage - 3 + i
+                      }
+
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`min-w-[2.5rem] rounded-md border px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                            currentPage === pageNum
+                              ? 'border-blue-500 bg-blue-600 text-white hover:bg-blue-700'
+                              : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    })}
+                    {pagination.totalPages > 7 && currentPage < pagination.totalPages - 3 && (
+                      <>
+                        <span className="px-2 text-gray-500">...</span>
+                        <button
+                          onClick={() => setCurrentPage(pagination.totalPages)}
+                          className="min-w-[2.5rem] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        >
+                          {pagination.totalPages}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
+                    disabled={currentPage === pagination.totalPages}
+                    className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50"
+                  >
+                    Suivant
+                  </button>
+                </div>
+              )}
             </div>
           )}
-        </>
-      )}
 
       {/* Modal d'envoi d'email individuel */}
       {showSendEmailModal && selectedDocumentForEmail && (
@@ -570,6 +710,7 @@ export default function ProjectDocumentsPage() {
             setSelectedDocumentForEmail(null)
           }}
           onEmailSent={handleEmailSent}
+          defaultHtmlTemplate={DEFAULT_EMAIL_TEMPLATE}
         />
       )}
 
@@ -579,6 +720,7 @@ export default function ProjectDocumentsPage() {
           selectedDocuments={docs.filter((d) => selectedDocs.has(d.id))}
           onClose={() => setShowBulkSendEmailModal(false)}
           onSent={handleBulkEmailSent}
+          defaultHtmlTemplate={DEFAULT_EMAIL_TEMPLATE}
         />
       )}
     </div>

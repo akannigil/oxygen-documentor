@@ -135,3 +135,68 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
   }
 }
+
+export async function PATCH(request: Request, { params }: RouteParams) {
+  try {
+    const session = await auth()
+    if (!session?.user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
+    const { id } = await params
+    const body = await request.json().catch(() => ({}))
+    const { status } = body
+
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json({ error: 'ID de document invalide' }, { status: 400 })
+    }
+
+    const doc = await prisma.document.findUnique({
+      where: { id },
+      include: {
+        project: {
+          select: {
+            ownerId: true,
+          },
+        },
+      },
+    })
+
+    if (!doc) {
+      return NextResponse.json({ error: 'Document non trouvé' }, { status: 404 })
+    }
+
+    if (doc.project.ownerId !== session.user.id) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
+    }
+
+    // Valider le statut
+    if (status && !['generated', 'sent', 'failed'].includes(status)) {
+      return NextResponse.json({ error: 'Statut invalide' }, { status: 400 })
+    }
+
+    // Mettre à jour le document
+    const updateData: {
+      status?: string
+      emailSentAt?: null
+      errorMessage?: null
+    } = {}
+
+    if (status) {
+      updateData.status = status
+      // Si on réinitialise à 'generated', on supprime les métadonnées d'envoi
+      if (status === 'generated') {
+        updateData.emailSentAt = null
+        updateData.errorMessage = null
+      }
+    }
+
+    const updatedDoc = await prisma.document.update({
+      where: { id },
+      data: updateData,
+    })
+
+    return NextResponse.json({ message: 'Document mis à jour', document: updatedDoc }, { status: 200 })
+  } catch (error) {
+    console.error('Error updating document:', error)
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 })
+  }
+}
