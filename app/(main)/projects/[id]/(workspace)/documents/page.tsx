@@ -376,11 +376,11 @@ export default function ProjectDocumentsPage() {
         </div>
       ) : (
         <>
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left">
+                  <th className="sticky left-0 z-10 bg-gray-50 px-2 py-3 text-left sm:px-4">
                     <input
                       type="checkbox"
                       checked={selectedDocs.size === docs.length && docs.length > 0}
@@ -389,13 +389,23 @@ export default function ProjectDocumentsPage() {
                       title="Tout sélectionner"
                     />
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-800">ID</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-800">Template</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-800">Statut</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-800">Destinataire</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-800">Email</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-800">Date</th>
-                  <th className="px-4 py-3 text-right font-semibold text-gray-800">Actions</th>
+                  <th className="hidden px-2 py-3 text-left font-semibold text-gray-800 md:table-cell sm:px-4">
+                    ID
+                  </th>
+                  <th className="hidden px-2 py-3 text-left font-semibold text-gray-800 lg:table-cell sm:px-4">
+                    Template
+                  </th>
+                  <th className="px-2 py-3 text-left font-semibold text-gray-800 sm:px-4">Statut</th>
+                  <th className="hidden px-2 py-3 text-left font-semibold text-gray-800 lg:table-cell sm:px-4">
+                    Destinataire
+                  </th>
+                  <th className="px-2 py-3 text-left font-semibold text-gray-800 sm:px-4">Email</th>
+                  <th className="hidden px-2 py-3 text-left font-semibold text-gray-800 md:table-cell sm:px-4">
+                    Date
+                  </th>
+                  <th className="sticky right-0 z-10 bg-gray-50 px-2 py-3 text-right font-semibold text-gray-800 sm:px-4">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
@@ -406,7 +416,11 @@ export default function ProjectDocumentsPage() {
                       selectedDocs.has(d.id) ? 'bg-blue-50' : ''
                     }`}
                   >
-                    <td className="px-4 py-3">
+                    <td
+                      className={`sticky left-0 z-10 px-2 py-3 sm:px-4 ${
+                        selectedDocs.has(d.id) ? 'bg-blue-50' : 'bg-white'
+                      }`}
+                    >
                       <input
                         type="checkbox"
                         checked={selectedDocs.has(d.id)}
@@ -414,13 +428,19 @@ export default function ProjectDocumentsPage() {
                         className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-900">
-                      {d.id.slice(0, 12)}...
+                    <td className="hidden px-2 py-3 font-mono text-xs text-gray-900 md:table-cell sm:px-4">
+                      <span className="truncate block max-w-[100px]" title={d.id}>
+                        {d.id.slice(0, 12)}...
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-900">{d.template?.name || d.templateId}</td>
-                    <td className="px-4 py-3">
+                    <td className="hidden px-2 py-3 text-gray-900 lg:table-cell sm:px-4">
+                      <span className="truncate block max-w-[150px]" title={d.template?.name || d.templateId}>
+                        {d.template?.name || d.templateId}
+                      </span>
+                    </td>
+                    <td className="px-2 py-3 sm:px-4">
                       <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap ${
                           d.status === 'sent'
                             ? 'bg-green-100 text-green-800'
                             : d.status === 'failed'
@@ -435,21 +455,45 @@ export default function ProjectDocumentsPage() {
                             : 'Généré'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-900">{d.recipient || '-'}</td>
-                    <td className="px-4 py-3 text-gray-900">{d.recipientEmail || '-'}</td>
-                    <td className="px-4 py-3 text-gray-900">
-                      {new Date(d.createdAt).toLocaleString('fr-FR')}
+                    <td className="hidden px-2 py-3 text-gray-900 lg:table-cell sm:px-4">
+                      <span className="truncate block max-w-[150px]" title={d.recipient || undefined}>
+                        {d.recipient || '-'}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {d.recipientEmail && d.status !== 'sent' && (
+                    <td className="px-2 py-3 text-gray-900 sm:px-4">
+                      <span className="truncate block max-w-[180px] sm:max-w-none" title={d.recipientEmail || undefined}>
+                        {d.recipientEmail || '-'}
+                      </span>
+                    </td>
+                    <td className="hidden px-2 py-3 text-gray-900 md:table-cell sm:px-4">
+                      <span className="whitespace-nowrap">
+                        {new Date(d.createdAt).toLocaleString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </td>
+                    <td
+                      className={`sticky right-0 z-10 px-2 py-3 text-right sm:px-4 ${
+                        selectedDocs.has(d.id) ? 'bg-blue-50' : 'bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center justify-end gap-1 sm:gap-2">
+                        {d.recipientEmail && (
                           <button
                             onClick={() => handleSendEmailClick(d)}
-                            className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                            title="Envoyer par email"
+                            className={`inline-flex items-center rounded-md px-2 py-1.5 text-xs font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 sm:px-3 sm:text-sm ${
+                              d.status === 'sent'
+                                ? 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-500'
+                                : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
+                            }`}
+                            title={d.status === 'sent' ? 'Renvoyer par email' : 'Envoyer par email'}
                           >
                             <svg
-                              className="h-4 w-4"
+                              className="h-3 w-3 sm:h-4 sm:w-4"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -461,13 +505,17 @@ export default function ProjectDocumentsPage() {
                                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                               />
                             </svg>
+                            <span className="hidden sm:inline ml-1">
+                              {d.status === 'sent' ? 'Renvoyer' : 'Envoyer'}
+                            </span>
                           </button>
                         )}
                         <Link
                           href={`/documents/${d.id}`}
-                          className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="inline-flex items-center rounded-md bg-blue-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:px-3 sm:text-sm"
                         >
-                          Ouvrir
+                          <span className="hidden sm:inline">Ouvrir</span>
+                          <span className="sm:hidden">Voir</span>
                         </Link>
                         <DeleteDocumentButton documentId={d.id} onDeleted={() => fetchDocs()} />
                       </div>
