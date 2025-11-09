@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { loadLastEmailData, saveLastEmailData } from '@/lib/email/storage'
+import { normalizeEmail } from '@/lib/utils'
 
 // Composant helper pour afficher les variables disponibles
 function VariablesHelper() {
@@ -174,10 +175,13 @@ export function SendEmailModal({
 
     // Si un email est fourni, le valider
     if (trimmedRecipient) {
-      // Validation basique de l'email
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(trimmedRecipient)) {
-        setError("L'email du destinataire est invalide")
+      // Normaliser l'email (extrait l'email du format "Nom <email@domain.com>" si présent)
+      const normalizedEmail = normalizeEmail(trimmedRecipient)
+      
+      // Validation basique de l'email après normalisation
+      const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i
+      if (!normalizedEmail || !emailRegex.test(normalizedEmail)) {
+        setError("L'email du destinataire est invalide pour ce format")
         setSending(false)
         return
       }
