@@ -29,6 +29,12 @@ export function saveLastEmailData(data: Partial<LastEmailData>): void {
 
   try {
     const existing = loadLastEmailData()
+    const additionalAttachmentUrl = data.additionalAttachmentUrl ?? existing.additionalAttachmentUrl
+    const additionalAttachmentFilename =
+      data.additionalAttachmentFilename ?? existing.additionalAttachmentFilename
+    const additionalAttachmentContentType =
+      data.additionalAttachmentContentType ?? existing.additionalAttachmentContentType
+
     const merged: LastEmailData = {
       subject: data.subject ?? existing.subject ?? '',
       htmlTemplate: data.htmlTemplate ?? existing.htmlTemplate ?? '',
@@ -38,9 +44,9 @@ export function saveLastEmailData(data: Partial<LastEmailData>): void {
       cc: data.cc ?? existing.cc ?? '',
       bcc: data.bcc ?? existing.bcc ?? '',
       attachDocument: data.attachDocument ?? existing.attachDocument ?? true,
-      additionalAttachmentUrl: data.additionalAttachmentUrl ?? existing.additionalAttachmentUrl,
-      additionalAttachmentFilename: data.additionalAttachmentFilename ?? existing.additionalAttachmentFilename,
-      additionalAttachmentContentType: data.additionalAttachmentContentType ?? existing.additionalAttachmentContentType,
+      ...(additionalAttachmentUrl ? { additionalAttachmentUrl } : {}),
+      ...(additionalAttachmentFilename ? { additionalAttachmentFilename } : {}),
+      ...(additionalAttachmentContentType ? { additionalAttachmentContentType } : {}),
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
   } catch (error) {
@@ -71,9 +77,15 @@ export function loadLastEmailData(): LastEmailData {
       cc: parsed.cc ?? '',
       bcc: parsed.bcc ?? '',
       attachDocument: parsed.attachDocument ?? true,
-      additionalAttachmentUrl: parsed.additionalAttachmentUrl,
-      additionalAttachmentFilename: parsed.additionalAttachmentFilename,
-      additionalAttachmentContentType: parsed.additionalAttachmentContentType,
+      ...(parsed.additionalAttachmentUrl
+        ? { additionalAttachmentUrl: parsed.additionalAttachmentUrl }
+        : {}),
+      ...(parsed.additionalAttachmentFilename
+        ? { additionalAttachmentFilename: parsed.additionalAttachmentFilename }
+        : {}),
+      ...(parsed.additionalAttachmentContentType
+        ? { additionalAttachmentContentType: parsed.additionalAttachmentContentType }
+        : {}),
     }
   } catch (error) {
     console.error('Erreur lors du chargement des données email:', error)
