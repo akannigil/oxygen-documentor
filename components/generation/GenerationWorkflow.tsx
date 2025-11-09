@@ -64,12 +64,28 @@ export function GenerationWorkflow({
 
   // Styles pour les variables DOCX
   const [variableStyleEnabled, setVariableStyleEnabled] = useState(false)
+  const [useSameStyleForAll, setUseSameStyleForAll] = useState(true)
   const [defaultFontFamily, setDefaultFontFamily] = useState('Arial')
   const [defaultFontSize, setDefaultFontSize] = useState<number>(12)
   const [defaultFontColor, setDefaultFontColor] = useState('#000000')
   const [defaultBold, setDefaultBold] = useState(false)
   const [defaultItalic, setDefaultItalic] = useState(false)
   const [defaultUnderline, setDefaultUnderline] = useState(false)
+
+  // Styles par variable (quand useSameStyleForAll est false)
+  const [variableStyles, setVariableStyles] = useState<
+    Record<
+      string,
+      {
+        fontFamily: string
+        fontSize: number
+        color: string
+        bold: boolean
+        italic: boolean
+        underline: boolean
+      }
+    >
+  >({})
 
   const [monitoringJobId, setMonitoringJobId] = useState<string | null>(null)
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
@@ -82,6 +98,41 @@ export function GenerationWorkflow({
     }
     return template.fields?.map((f) => f.key) || []
   }, [template.fields, template.variables, template.templateType])
+
+  // Initialiser les styles par variable avec les valeurs par défaut
+  useEffect(() => {
+    if (template.templateType === 'docx' && template.variables && !useSameStyleForAll) {
+      setVariableStyles((prev) => {
+        const initialStyles: typeof variableStyles = {}
+        template.variables?.forEach((v) => {
+          if (!prev[v.name]) {
+            initialStyles[v.name] = {
+              fontFamily: defaultFontFamily,
+              fontSize: defaultFontSize,
+              color: defaultFontColor,
+              bold: defaultBold,
+              italic: defaultItalic,
+              underline: defaultUnderline,
+            }
+          }
+        })
+        if (Object.keys(initialStyles).length > 0) {
+          return { ...prev, ...initialStyles }
+        }
+        return prev
+      })
+    }
+  }, [
+    template.templateType,
+    template.variables,
+    useSameStyleForAll,
+    defaultFontFamily,
+    defaultFontSize,
+    defaultFontColor,
+    defaultBold,
+    defaultItalic,
+    defaultUnderline,
+  ])
 
   // Charger la configuration de stockage du projet
   useEffect(() => {
@@ -239,16 +290,32 @@ export function GenerationWorkflow({
               : undefined,
           styleOptions:
             template.templateType === 'docx' && variableStyleEnabled
-              ? {
-                  defaultStyle: {
-                    fontFamily: defaultFontFamily,
-                    fontSize: defaultFontSize,
-                    color: defaultFontColor,
-                    bold: defaultBold,
-                    italic: defaultItalic,
-                    underline: defaultUnderline,
-                  },
-                }
+              ? useSameStyleForAll
+                ? {
+                    defaultStyle: {
+                      fontFamily: defaultFontFamily,
+                      fontSize: defaultFontSize,
+                      color: defaultFontColor,
+                      bold: defaultBold,
+                      italic: defaultItalic,
+                      underline: defaultUnderline,
+                    },
+                  }
+                : {
+                    variableStyles: Object.fromEntries(
+                      Object.entries(variableStyles).map(([varName, style]) => [
+                        varName,
+                        {
+                          fontFamily: style.fontFamily,
+                          fontSize: style.fontSize,
+                          color: style.color,
+                          bold: style.bold,
+                          italic: style.italic,
+                          underline: style.underline,
+                        },
+                      ])
+                    ),
+                  }
               : undefined,
         }),
       })
@@ -443,6 +510,28 @@ export function GenerationWorkflow({
 
                   {variableStyleEnabled && (
                     <div className="mt-4 space-y-4">
+                      {/* Option pour appliquer le même style à toutes les variables */}
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={useSameStyleForAll}
+                          onChange={(e) => {
+                            setUseSameStyleForAll(e.target.checked)
+                            if (e.target.checked) {
+                              // Réinitialiser les styles individuels quand on active "même style pour tous"
+                              setVariableStyles({})
+                            }
+                          }}
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-sm font-medium text-gray-700">
+                          Appliquer le même style à toutes les variables
+                        </span>
+                      </label>
+
+                      {useSameStyleForAll ? (
+                        // Style global pour toutes les variables
+                        <div className="space-y-4">
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
                           <label className="mb-1 block text-sm font-medium text-gray-700">
@@ -568,10 +657,242 @@ export function GenerationWorkflow({
                         </label>
                       </div>
 
-                      <p className="mt-2 text-xs text-gray-500">
-                        💡 Ces styles seront appliqués à toutes les variables insérées dans le
-                        document DOCX.
-                      </p>
+                          <p className="mt-2 text-xs text-gray-500">
+                            💡 Ces styles seront appliqués à toutes les variables insérées dans le
+                            document DOCX.
+                          </p>
+                        </div>
+                      ) : (
+                        // Styles individuels par variable
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-gray-700">
+                              Personnalisez le style de chaque variable :
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (template.variables) {
+                                  const newStyles: typeof variableStyles = {}
+                                  template.variables.forEach((v) => {
+                                    newStyles[v.name] = {
+                                      fontFamily: defaultFontFamily,
+                                      fontSize: defaultFontSize,
+                                      color: defaultFontColor,
+                                      bold: defaultBold,
+                                      italic: defaultItalic,
+                                      underline: defaultUnderline,
+                                    }
+                                  })
+                                  setVariableStyles(newStyles)
+                                }
+                              }}
+                              className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            >
+                              Appliquer le style par défaut à toutes
+                            </button>
+                          </div>
+                          {template.variables && template.variables.length > 0 ? (
+                            <div className="space-y-4">
+                              {template.variables.map((variable) => {
+                                const varStyle =
+                                  variableStyles[variable.name] || {
+                                    fontFamily: defaultFontFamily,
+                                    fontSize: defaultFontSize,
+                                    color: defaultFontColor,
+                                    bold: defaultBold,
+                                    italic: defaultItalic,
+                                    underline: defaultUnderline,
+                                  }
+
+                                return (
+                                  <div
+                                    key={variable.name}
+                                    className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+                                  >
+                                    <div className="mb-3 flex items-center justify-between">
+                                      <h4 className="text-sm font-semibold text-gray-900">
+                                        Variable: <code className="text-blue-600">{variable.name}</code>
+                                      </h4>
+                                      {variable.occurrences > 1 && (
+                                        <span className="text-xs text-gray-500">
+                                          {variable.occurrences} occurrence
+                                          {variable.occurrences > 1 ? 's' : ''}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                      <div>
+                                        <label className="mb-1 block text-xs font-medium text-gray-700">
+                                          Police
+                                        </label>
+                                        <select
+                                          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                          value={varStyle.fontFamily}
+                                          onChange={(e) =>
+                                            setVariableStyles({
+                                              ...variableStyles,
+                                              [variable.name]: {
+                                                ...varStyle,
+                                                fontFamily: e.target.value,
+                                              },
+                                            })
+                                          }
+                                        >
+                                          <optgroup label="Polices système">
+                                            <option value="Arial">Arial</option>
+                                            <option value="Times New Roman">Times New Roman</option>
+                                            <option value="Calibri">Calibri</option>
+                                            <option value="Cambria">Cambria</option>
+                                            <option value="Courier New">Courier New</option>
+                                            <option value="Georgia">Georgia</option>
+                                            <option value="Verdana">Verdana</option>
+                                          </optgroup>
+                                          <optgroup label="Google Fonts (téléchargées automatiquement)">
+                                            <option value="Roboto">Roboto</option>
+                                            <option value="Open Sans">Open Sans</option>
+                                            <option value="Lato">Lato</option>
+                                            <option value="Montserrat">Montserrat</option>
+                                            <option value="Roboto Condensed">Roboto Condensed</option>
+                                            <option value="Source Sans Pro">Source Sans Pro</option>
+                                            <option value="Raleway">Raleway</option>
+                                            <option value="Oswald">Oswald</option>
+                                            <option value="PT Sans">PT Sans</option>
+                                            <option value="Merriweather">Merriweather</option>
+                                            <option value="Playfair Display">Playfair Display</option>
+                                            <option value="Lora">Lora</option>
+                                            <option value="Noto Sans">Noto Sans</option>
+                                          </optgroup>
+                                        </select>
+                                      </div>
+                                      <div>
+                                        <label className="mb-1 block text-xs font-medium text-gray-700">
+                                          Taille (pt)
+                                        </label>
+                                        <input
+                                          type="number"
+                                          min="8"
+                                          max="72"
+                                          step="1"
+                                          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                          value={varStyle.fontSize}
+                                          onChange={(e) =>
+                                            setVariableStyles({
+                                              ...variableStyles,
+                                              [variable.name]: {
+                                                ...varStyle,
+                                                fontSize: parseInt(e.target.value) || 12,
+                                              },
+                                            })
+                                          }
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div className="mt-3">
+                                      <label className="mb-1 block text-xs font-medium text-gray-700">
+                                        Couleur
+                                      </label>
+                                      <div className="flex items-center gap-3">
+                                        <input
+                                          type="color"
+                                          className="h-10 w-20 cursor-pointer rounded border border-gray-300"
+                                          value={varStyle.color}
+                                          onChange={(e) =>
+                                            setVariableStyles({
+                                              ...variableStyles,
+                                              [variable.name]: {
+                                                ...varStyle,
+                                                color: e.target.value,
+                                              },
+                                            })
+                                          }
+                                        />
+                                        <input
+                                          type="text"
+                                          className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                          value={varStyle.color}
+                                          onChange={(e) =>
+                                            setVariableStyles({
+                                              ...variableStyles,
+                                              [variable.name]: {
+                                                ...varStyle,
+                                                color: e.target.value,
+                                              },
+                                            })
+                                          }
+                                          placeholder="#000000"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div className="mt-3 flex gap-4">
+                                      <label className="flex items-center">
+                                        <input
+                                          type="checkbox"
+                                          checked={varStyle.bold}
+                                          onChange={(e) =>
+                                            setVariableStyles({
+                                              ...variableStyles,
+                                              [variable.name]: {
+                                                ...varStyle,
+                                                bold: e.target.checked,
+                                              },
+                                            })
+                                          }
+                                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="ml-2 text-xs font-bold text-gray-700">Gras</span>
+                                      </label>
+                                      <label className="flex items-center">
+                                        <input
+                                          type="checkbox"
+                                          checked={varStyle.italic}
+                                          onChange={(e) =>
+                                            setVariableStyles({
+                                              ...variableStyles,
+                                              [variable.name]: {
+                                                ...varStyle,
+                                                italic: e.target.checked,
+                                              },
+                                            })
+                                          }
+                                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="ml-2 text-xs italic text-gray-700">Italique</span>
+                                      </label>
+                                      <label className="flex items-center">
+                                        <input
+                                          type="checkbox"
+                                          checked={varStyle.underline}
+                                          onChange={(e) =>
+                                            setVariableStyles({
+                                              ...variableStyles,
+                                              [variable.name]: {
+                                                ...varStyle,
+                                                underline: e.target.checked,
+                                              },
+                                            })
+                                          }
+                                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="ml-2 text-xs text-gray-700 underline">
+                                          Souligné
+                                        </span>
+                                      </label>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500">
+                              Aucune variable détectée dans le template.
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -895,14 +1216,32 @@ export function GenerationWorkflow({
                   }
                   styleOptions={
                     variableStyleEnabled && template.templateType === 'docx'
-                      ? {
-                          defaultFontFamily,
-                          defaultFontSize,
-                          defaultFontColor,
-                          defaultBold,
-                          defaultItalic,
-                          defaultUnderline,
-                        }
+                      ? useSameStyleForAll
+                        ? {
+                            defaultStyle: {
+                              fontFamily: defaultFontFamily,
+                              fontSize: defaultFontSize,
+                              color: defaultFontColor,
+                              bold: defaultBold,
+                              italic: defaultItalic,
+                              underline: defaultUnderline,
+                            },
+                          }
+                        : {
+                            variableStyles: Object.fromEntries(
+                              Object.entries(variableStyles).map(([varName, style]) => [
+                                varName,
+                                {
+                                  fontFamily: style.fontFamily,
+                                  fontSize: style.fontSize,
+                                  color: style.color,
+                                  bold: style.bold,
+                                  italic: style.italic,
+                                  underline: style.underline,
+                                },
+                              ])
+                            ),
+                          }
                       : undefined
                   }
                   className="mt-4"

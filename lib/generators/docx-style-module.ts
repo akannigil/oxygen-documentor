@@ -1,6 +1,215 @@
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom'
 
 /**
+ * Corrige les variables qui ont été partiellement remplacées à cause de la division en plusieurs nœuds XML
+ * Cette fonction post-traite le XML DOCX après docxtemplater pour fusionner les nœuds partiels
+ * 
+ * Problème identifié : Quand Word divise une variable en plusieurs nœuds <w:t> (souvent à cause d'espaces),
+ * docxtemplater peut ne remplacer que le premier nœud, laissant le reste intact.
+ * Cette fonction détecte et corrige ce problème en fusionnant les nœuds partiels.
+ * 
+ * Supporte aussi les zones de texte (<w:txbxContent>) où les variables peuvent être divisées.
+ */
+export function fixSplitVariables(
+  zip: any,
+  variables: Record<string, string>
+): void {
+  // Traiter le document principal
+  const documentFile = zip.files['word/document.xml']
+  if (documentFile) {
+    fixSplitVariablesInXML(documentFile.asText() || '', variables, zip, 'word/document.xml')
+  }
+
+  // Traiter les en-têtes (headers)
+  let headerIndex = 1
+  while (zip.files[`word/header${headerIndex}.xml`]) {
+    const headerFile = zip.files[`word/header${headerIndex}.xml`]
+    if (headerFile) {
+      fixSplitVariablesInXML(headerFile.asText() || '', variables, zip, `word/header${headerIndex}.xml`)
+    }
+    headerIndex++
+  }
+
+  // Traiter les pieds de page (footers)
+  let footerIndex = 1
+  while (zip.files[`word/footer${footerIndex}.xml`]) {
+    const footerFile = zip.files[`word/footer${footerIndex}.xml`]
+    if (footerFile) {
+      fixSplitVariablesInXML(footerFile.asText() || '', variables, zip, `word/footer${footerIndex}.xml`)
+    }
+    footerIndex++
+  }
+}
+
+/**
+ * Fonction interne pour corriger les variables dans un fichier XML spécifique
+ */
+function fixSplitVariablesInXML(
+  xmlContent: string,
+  variables: Record<string, string>,
+  zip: any,
+  filePath: string
+): void {
+  try {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(xmlContent, 'text/xml')
+    const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+
+    // Pour chaque variable remplacée, vérifier si elle est partiellement remplacée
+    for (const [variableName, variableValue] of Object.entries(variables)) {
+      if (!variableValue || variableValue.trim().length === 0) {
+        continue
+      }
+
+      // Traiter les paragraphes normaux
+      const paragraphs = doc.getElementsByTagNameNS(ns, 'p')
+      fixVariablesInParagraphs(paragraphs, variableValue, doc, ns)
+
+      // Traiter les zones de texte (<w:txbxContent>)
+      const textBoxContents = doc.getElementsByTagNameNS(ns, 'txbxContent')
+      for (let i = 0; i < textBoxContents.length; i++) {
+        const textBoxContent = textBoxContents[i]
+        if (!textBoxContent) continue
+
+        // Les zones de texte contiennent aussi des paragraphes
+        const textBoxParagraphs = textBoxContent.getElementsByTagNameNS(ns, 'p')
+        fixVariablesInParagraphs(textBoxParagraphs, variableValue, doc, ns)
+      }
+    }
+
+    // Sérialiser le XML modifié
+    const serializer = new XMLSerializer()
+    const updatedXml = serializer.serializeToString(doc)
+
+    // Mettre à jour le fichier XML dans le ZIP
+    zip.file(filePath, updatedXml)
+  } catch (error) {
+    // En cas d'erreur, on continue sans corriger
+    console.warn(`Erreur lors de la correction des variables divisées dans ${filePath}:`, error)
+  }
+}
+
+/**
+ * Corrige les variables dans une collection de paragraphes
+ */
+function fixVariablesInParagraphs(
+  paragraphs: HTMLCollectionOf<Element>,
+  variableValue: string,
+  doc: Document,
+  ns: string
+): void {
+  for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
+    const paragraph = paragraphs[pIdx]
+    if (!paragraph) continue
+
+    // Extraire tout le texte du paragraphe
+    const paragraphText = paragraph.textContent || ''
+    
+    // Vérifier si ce paragraphe contient une partie de la valeur de la variable
+    // Si la valeur contient plusieurs mots, chercher le premier mot
+    const firstWord = variableValue.split(/\s+/)[0] || ''
+    const remainingWords = variableValue.substring(firstWord.length).trim()
+    
+    if (!firstWord || !paragraphText.includes(firstWord)) {
+      continue
+    }
+
+    // Trouver tous les éléments <w:t> dans ce paragraphe
+    const textElements = paragraph.getElementsByTagNameNS(ns, 't')
+    const nodesToCheck: Array<{
+      element: Element
+      content: string
+      index: number
+    }> = []
+
+    for (let i = 0; i < textElements.length; i++) {
+      const textElement = textElements[i]
+      if (!textElement) continue
+
+      const textContent = textElement.textContent || ''
+      
+      // Vérifier si cet élément contient le premier mot ou une partie de la valeur
+      if (textContent.includes(firstWord) || 
+          (remainingWords && textContent.includes(remainingWords.split(/\s+/)[0] || ''))) {
+        nodesToCheck.push({
+          element: textElement as Element,
+          content: textContent,
+          index: i,
+        })
+      }
+    }
+
+    // Si on trouve plusieurs nœuds qui contiennent des parties de la valeur,
+    // cela indique que la variable a été divisée
+    if (nodesToCheck.length > 1) {
+      // Chercher le nœud qui contient seulement le premier mot
+      const firstWordNode = nodesToCheck.find(
+        node => node.content.trim() === firstWord || 
+               (node.content.trim().startsWith(firstWord) && 
+                !node.content.trim().includes(variableValue))
+      )
+
+      if (firstWordNode) {
+        // Remplacer le contenu de ce nœud par la valeur complète
+        // Vider d'abord le nœud
+        while (firstWordNode.element.firstChild) {
+          firstWordNode.element.removeChild(firstWordNode.element.firstChild)
+        }
+        
+        // Ajouter le texte complet
+        const textNode = doc.createTextNode(variableValue)
+        firstWordNode.element.appendChild(textNode)
+        
+        // Supprimer les nœuds suivants qui contiennent le reste de la valeur
+        // On parcourt les nœuds suivants dans l'ordre
+        const nodesToRemove: Element[] = []
+        
+        for (let j = firstWordNode.index + 1; j < textElements.length; j++) {
+          const nextTextElement = textElements[j]
+          if (!nextTextElement) continue
+          
+          const nextContent = nextTextElement.textContent || ''
+          
+          // Vérifier si ce nœud contient une partie de la valeur restante
+          if (remainingWords && nextContent.trim()) {
+            // Si le contenu correspond au reste de la valeur ou commence par le prochain mot
+            const nextWord = remainingWords.split(/\s+/)[0] || ''
+            if (nextContent.trim() === remainingWords ||
+                nextContent.trim() === nextWord ||
+                nextContent.trim().startsWith(nextWord)) {
+              nodesToRemove.push(nextTextElement as Element)
+            }
+          }
+        }
+        
+        // Supprimer les nœuds identifiés
+        for (const nodeToRemove of nodesToRemove) {
+          const parent = nodeToRemove.parentNode
+          if (parent && parent.nodeName === 'w:r') {
+            // Si le run ne contient que ce nœud texte, on peut le supprimer
+            const runChildren = Array.from(parent.childNodes || [])
+            const textNodes = runChildren.filter(c => c.nodeName === 'w:t')
+            
+            if (textNodes.length === 1 && textNodes[0] === nodeToRemove) {
+              // Supprimer tout le run si c'est le seul nœud texte
+              const runParent = parent.parentNode
+              if (runParent) {
+                runParent.removeChild(parent)
+              }
+            } else {
+              // Sinon, supprimer seulement le nœud texte
+              parent.removeChild(nodeToRemove)
+            }
+          } else if (parent) {
+            parent.removeChild(nodeToRemove)
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
  * Configuration des styles pour les variables DOCX
  */
 export interface VariableStyleConfig {

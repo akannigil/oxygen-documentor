@@ -274,6 +274,11 @@ export async function generateDOCX(
     // Rendre le template avec les données
     doc.render(formattedData)
 
+    // Corriger les variables qui ont été partiellement remplacées à cause de la division en plusieurs nœuds XML
+    // Cette étape doit être faite immédiatement après doc.render() pour corriger les problèmes de variables coupées
+    const { fixSplitVariables } = await import('./docx-style-module')
+    fixSplitVariables(doc.getZip(), formattedData)
+
     // Préserver les styles de paragraphe pour éviter les décalages verticaux
     // Cette étape doit être faite après doc.render() mais avant l'application des styles
     const { preserveParagraphStyles } = await import('./docx-style-module')
