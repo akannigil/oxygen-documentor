@@ -167,6 +167,19 @@ export function BulkSendEmailModal({
         : lastEmailData.bcc || ''
   )
   const [attachDocument, setAttachDocument] = useState(lastEmailData.attachDocument ?? true)
+  const [additionalAttachmentType, setAdditionalAttachmentType] = useState<'url' | 'upload'>(
+    lastEmailData.additionalAttachmentUrl ? 'url' : 'url'
+  )
+  const [additionalAttachmentUrl, setAdditionalAttachmentUrl] = useState(
+    lastEmailData.additionalAttachmentUrl || ''
+  )
+  const [additionalAttachmentFile, setAdditionalAttachmentFile] = useState<File | null>(null)
+  const [additionalAttachmentFilename, setAdditionalAttachmentFilename] = useState(
+    lastEmailData.additionalAttachmentFilename || ''
+  )
+  const [additionalAttachmentContentType, setAdditionalAttachmentContentType] = useState(
+    lastEmailData.additionalAttachmentContentType || ''
+  )
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{
@@ -175,6 +188,9 @@ export function BulkSendEmailModal({
     total: number
     errors?: Array<{ documentId: string; error: string }>
   } | null>(null)
+
+  // Limite de taille pour les fichiers additionnels : 25MB
+  const MAX_ADDITIONAL_ATTACHMENT_SIZE = 25 * 1024 * 1024 // 25MB
 
   const docsWithEmail = useMemo(
     () => selectedDocuments.filter((d) => !!d.recipientEmail && d.status !== 'sent'),
@@ -198,6 +214,48 @@ export function BulkSendEmailModal({
     setSending(true)
     setError(null)
     setResult(null)
+
+    // Préparer la pièce jointe supplémentaire si fournie
+    let additionalAttachment:
+      | {
+          filename: string
+          url?: string
+          content?: string
+          contentType?: string
+        }
+      | undefined
+
+    if (additionalAttachmentFilename.trim()) {
+      if (additionalAttachmentType === 'url' && additionalAttachmentUrl.trim()) {
+        const trimmedContentType = additionalAttachmentContentType.trim()
+        additionalAttachment = {
+          filename: additionalAttachmentFilename.trim(),
+          url: additionalAttachmentUrl.trim(),
+          ...(trimmedContentType ? { contentType: trimmedContentType } : {}),
+        }
+      } else if (additionalAttachmentType === 'upload' && additionalAttachmentFile) {
+        // Convertir le fichier en base64
+        const reader = new FileReader()
+        const base64Content = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const result = reader.result as string
+            // Retirer le préfixe data:...;base64,
+            const base64 = result.split(',')[1] || result
+            resolve(base64)
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(additionalAttachmentFile)
+        })
+
+        const contentType =
+          additionalAttachmentFile.type || additionalAttachmentContentType.trim() || undefined
+        additionalAttachment = {
+          filename: additionalAttachmentFilename.trim(),
+          content: base64Content,
+          ...(contentType ? { contentType } : {}),
+        }
+      }
+    }
 
     try {
       // Envoyer chaque document individuellement avec les paramètres personnalisés
@@ -229,6 +287,7 @@ export function BulkSendEmailModal({
                     .map((e) => e.trim())
                     .filter((e) => e)
                 : undefined,
+              ...(additionalAttachment && { additionalAttachment }),
             }),
           })
 
@@ -277,6 +336,14 @@ export function BulkSendEmailModal({
           cc,
           bcc,
           attachDocument,
+          // Sauvegarder seulement l'URL (pas le fichier uploadé)
+          ...(additionalAttachmentType === 'url' && additionalAttachmentUrl
+            ? {
+                additionalAttachmentUrl,
+                additionalAttachmentFilename,
+                additionalAttachmentContentType,
+              }
+            : {}),
         })
       }
 
@@ -588,6 +655,135 @@ export function BulkSendEmailModal({
                       />
                       Joindre les documents en pièce jointe
                     </label>
+
+                    {/* Pièce jointe supplémentaire */}
+                    <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Pièce jointe supplémentaire (optionnel)
+                        </label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setAdditionalAttachmentType('url')}
+                            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                              additionalAttachmentType === 'url'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            URL
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAdditionalAttachmentType('upload')}
+                            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                              additionalAttachmentType === 'upload'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            Upload
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="additionalAttachmentFilename"
+                          className="mb-1.5 block text-sm font-medium text-gray-700"
+                        >
+                          Nom du fichier <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          id="additionalAttachmentFilename"
+                          value={additionalAttachmentFilename}
+                          onChange={(e) => setAdditionalAttachmentFilename(e.target.value)}
+                          placeholder="ex: document.pdf"
+                          className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                      </div>
+
+                      {additionalAttachmentType === 'url' ? (
+                        <div>
+                          <label
+                            htmlFor="additionalAttachmentUrl"
+                            className="mb-1.5 block text-sm font-medium text-gray-700"
+                          >
+                            URL du fichier <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="url"
+                            id="additionalAttachmentUrl"
+                            value={additionalAttachmentUrl}
+                            onChange={(e) => setAdditionalAttachmentUrl(e.target.value)}
+                            placeholder="https://exemple.com/fichier.pdf"
+                            className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <label
+                            htmlFor="additionalAttachmentFile"
+                            className="mb-1.5 block text-sm font-medium text-gray-700"
+                          >
+                            Fichier <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="file"
+                            id="additionalAttachmentFile"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null
+                              if (file) {
+                                // Vérifier la taille du fichier (25MB max)
+                                if (file.size > MAX_ADDITIONAL_ATTACHMENT_SIZE) {
+                                  setError(
+                                    `Le fichier est trop volumineux. Taille maximale : ${(MAX_ADDITIONAL_ATTACHMENT_SIZE / 1024 / 1024).toFixed(0)}MB (fichier actuel : ${(file.size / 1024 / 1024).toFixed(2)}MB)`
+                                  )
+                                  setAdditionalAttachmentFile(null)
+                                  // Réinitialiser l'input
+                                  e.target.value = ''
+                                  return
+                                }
+                                setError(null)
+                                setAdditionalAttachmentFile(file)
+                                if (!additionalAttachmentFilename) {
+                                  setAdditionalAttachmentFilename(file.name)
+                                  setAdditionalAttachmentContentType(file.type)
+                                }
+                              } else {
+                                setAdditionalAttachmentFile(null)
+                              }
+                            }}
+                            className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          />
+                          <p className="mt-1.5 text-xs text-gray-500">
+                            Taille maximale : {MAX_ADDITIONAL_ATTACHMENT_SIZE / 1024 / 1024}MB
+                          </p>
+                        </div>
+                      )}
+
+                      <div>
+                        <label
+                          htmlFor="additionalAttachmentContentType"
+                          className="mb-1.5 block text-sm font-medium text-gray-700"
+                        >
+                          Type MIME (optionnel)
+                        </label>
+                        <input
+                          type="text"
+                          id="additionalAttachmentContentType"
+                          value={additionalAttachmentContentType}
+                          onChange={(e) => setAdditionalAttachmentContentType(e.target.value)}
+                          placeholder="ex: application/pdf"
+                          className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                        <p className="mt-1.5 text-xs text-gray-500">
+                          Laissé vide, le type sera détecté automatiquement
+                        </p>
+                      </div>
+                    </div>
 
                     {error && (
                       <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">

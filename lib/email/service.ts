@@ -23,6 +23,12 @@ export interface SendDocumentEmailOptions {
   replyTo?: string
   cc?: string | string[]
   bcc?: string | string[]
+  additionalAttachment?: {
+    filename: string
+    url?: string // URL du fichier à télécharger
+    content?: string // Contenu en base64 (si upload direct)
+    contentType?: string
+  }
 }
 
 export interface SendDocumentEmailResult {
@@ -174,33 +180,96 @@ export async function sendDocumentEmail(
       options.subject || renderEmailTemplate('Document généré : {{template_name}}', variables)
 
     // Préparer les pièces jointes si demandé
-    const attachments = options.attachDocument
-      ? [
-          {
-            filename: (() => {
-              const mailDefaults = document.template.mailDefaults as
-                | { attachmentNamePattern?: string }
-                | undefined
-              const pattern = mailDefaults?.attachmentNamePattern
-              const defaultName = `${document.template.name}-${document.id}.pdf`
-              if (pattern) {
-                try {
-                  // Basic sanitization to remove invalid filename characters
-                  return (
-                    renderEmailTemplate(pattern, variables).replace(/[/\\?%*:|"<>]/g, '-') + '.pdf'
-                  )
-                } catch (e) {
-                  console.error('Error rendering attachment filename:', e)
-                  return defaultName
-                }
-              }
+    const attachments: Array<{
+      filename: string
+      content: Buffer
+      contentType?: string
+    }> = []
+
+    // Ajouter le document si demandé
+    if (options.attachDocument) {
+      attachments.push({
+        filename: (() => {
+          const mailDefaults = document.template.mailDefaults as
+            | { attachmentNamePattern?: string }
+            | undefined
+          const pattern = mailDefaults?.attachmentNamePattern
+          const defaultName = `${document.template.name}-${document.id}.pdf`
+          if (pattern) {
+            try {
+              // Basic sanitization to remove invalid filename characters
+              return renderEmailTemplate(pattern, variables).replace(/[/\\?%*:|"<>]/g, '-') + '.pdf'
+            } catch (e) {
+              console.error('Error rendering attachment filename:', e)
               return defaultName
-            })(),
-            content: await projectStorage.getBuffer(document.filePath),
-            contentType: document.mimeType,
-          },
-        ]
-      : undefined
+            }
+          }
+          return defaultName
+        })(),
+        content: await projectStorage.getBuffer(document.filePath),
+        ...(document.mimeType ? { contentType: document.mimeType } : {}),
+      })
+    }
+
+    // Ajouter la pièce jointe supplémentaire si fournie
+    if (options.additionalAttachment) {
+      try {
+        let content: Buffer
+        const MAX_ADDITIONAL_ATTACHMENT_SIZE = 25 * 1024 * 1024 // 25MB
+
+        if (options.additionalAttachment.url) {
+          // Télécharger le fichier depuis l'URL
+          const response = await fetch(options.additionalAttachment.url)
+          if (!response.ok) {
+            throw new Error(`Erreur lors du téléchargement du fichier: ${response.statusText}`)
+          }
+
+          // Vérifier la taille du fichier via Content-Length si disponible
+          const contentLength = response.headers.get('content-length')
+          if (contentLength) {
+            const size = parseInt(contentLength, 10)
+            if (size > MAX_ADDITIONAL_ATTACHMENT_SIZE) {
+              throw new Error(
+                `Le fichier téléchargé est trop volumineux. Taille maximale : ${(MAX_ADDITIONAL_ATTACHMENT_SIZE / 1024 / 1024).toFixed(0)}MB (fichier actuel : ${(size / 1024 / 1024).toFixed(2)}MB)`
+              )
+            }
+          }
+
+          const arrayBuffer = await response.arrayBuffer()
+          content = Buffer.from(arrayBuffer)
+
+          // Vérifier la taille réelle après téléchargement
+          if (content.length > MAX_ADDITIONAL_ATTACHMENT_SIZE) {
+            throw new Error(
+              `Le fichier téléchargé est trop volumineux. Taille maximale : ${(MAX_ADDITIONAL_ATTACHMENT_SIZE / 1024 / 1024).toFixed(0)}MB (fichier actuel : ${(content.length / 1024 / 1024).toFixed(2)}MB)`
+            )
+          }
+        } else if (options.additionalAttachment.content) {
+          // Convertir le contenu base64 en Buffer
+          content = Buffer.from(options.additionalAttachment.content, 'base64')
+
+          // Vérifier la taille du fichier décodé (25MB max)
+          if (content.length > MAX_ADDITIONAL_ATTACHMENT_SIZE) {
+            throw new Error(
+              `Le fichier additionnel est trop volumineux. Taille maximale : ${(MAX_ADDITIONAL_ATTACHMENT_SIZE / 1024 / 1024).toFixed(0)}MB (fichier actuel : ${(content.length / 1024 / 1024).toFixed(2)}MB)`
+            )
+          }
+        } else {
+          throw new Error('Aucun contenu fourni pour la pièce jointe supplémentaire')
+        }
+
+        attachments.push({
+          filename: options.additionalAttachment.filename,
+          content,
+          ...(options.additionalAttachment.contentType
+            ? { contentType: options.additionalAttachment.contentType }
+            : {}),
+        })
+      } catch (error) {
+        console.error("Erreur lors de l'ajout de la pièce jointe supplémentaire:", error)
+        // On continue sans la pièce jointe supplémentaire en cas d'erreur
+      }
+    }
 
     // Construire l'en-tête "From"
     const fromAddress = options.from || projectEmailConfig.from
@@ -219,7 +288,7 @@ export async function sendDocumentEmail(
         : {}),
       ...(options.cc ? { cc: options.cc } : {}),
       ...(options.bcc ? { bcc: options.bcc } : {}),
-      ...(attachments ? { attachments } : {}),
+      ...(attachments.length > 0 ? { attachments } : {}),
     })
 
     if (result.success) {

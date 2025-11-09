@@ -314,6 +314,12 @@ export interface EmailSendingJobData {
   replyTo?: string
   cc?: string | string[]
   bcc?: string | string[]
+  additionalAttachment?: {
+    filename: string
+    url?: string
+    content?: string // base64
+    contentType?: string
+  }
 }
 
 /**
@@ -346,6 +352,7 @@ export function createEmailSendingWorker(): Worker<
         replyTo,
         cc,
         bcc,
+        additionalAttachment,
       } = job.data
 
       const result = await sendDocumentEmail({
@@ -361,6 +368,7 @@ export function createEmailSendingWorker(): Worker<
         ...(replyTo && { replyTo }),
         ...(cc && { cc }),
         ...(bcc && { bcc }),
+        ...(additionalAttachment && { additionalAttachment }),
       })
 
       if (!result.success) {

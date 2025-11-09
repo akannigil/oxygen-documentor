@@ -8,6 +8,11 @@ import type { EmailTemplateVariables } from '@/lib/email/templates'
 import type { EmailSendingJobData } from '@/lib/queue/workers'
 import { normalizeEmail } from '@/lib/utils'
 
+// Limite de taille pour les fichiers additionnels : 25MB
+// En base64, cela représente environ 33MB (25MB * 1.33)
+const MAX_ADDITIONAL_ATTACHMENT_SIZE = 25 * 1024 * 1024 // 25MB
+const MAX_ADDITIONAL_ATTACHMENT_SIZE_BASE64 = Math.ceil(MAX_ADDITIONAL_ATTACHMENT_SIZE * 1.33) // ~33MB en base64
+
 export const sendEmailSchema = z.object({
   recipientEmail: z
     .string()
@@ -32,21 +37,71 @@ export const sendEmailSchema = z.object({
     .optional(),
   cc: z
     .union([
-      z.string().transform((val) => normalizeEmail(val)).pipe(z.string().email()),
-      z.array(z.string().transform((val) => normalizeEmail(val)).pipe(z.string().email())),
+      z
+        .string()
+        .transform((val) => normalizeEmail(val))
+        .pipe(z.string().email()),
+      z.array(
+        z
+          .string()
+          .transform((val) => normalizeEmail(val))
+          .pipe(z.string().email())
+      ),
     ])
     .optional(),
   bcc: z
     .union([
-      z.string().transform((val) => normalizeEmail(val)).pipe(z.string().email()),
-      z.array(z.string().transform((val) => normalizeEmail(val)).pipe(z.string().email())),
+      z
+        .string()
+        .transform((val) => normalizeEmail(val))
+        .pipe(z.string().email()),
+      z.array(
+        z
+          .string()
+          .transform((val) => normalizeEmail(val))
+          .pipe(z.string().email())
+      ),
     ])
+    .optional(),
+  additionalAttachment: z
+    .object({
+      filename: z.string(),
+      url: z.string().url().optional(),
+      content: z.string().optional(), // base64
+      contentType: z.string().optional(),
+    })
+    .refine((data) => data.url || data.content, {
+      message: 'Soit url soit content doit être fourni',
+    })
+    .refine(
+      (data) => {
+        // Si c'est un contenu base64, vérifier la taille
+        if (data.content) {
+          // La taille en base64 est environ 33% plus grande que l'original
+          // On vérifie que le contenu base64 ne dépasse pas ~33MB
+          const base64Size = Buffer.byteLength(data.content, 'utf8')
+          return base64Size <= MAX_ADDITIONAL_ATTACHMENT_SIZE_BASE64
+        }
+        // Pour les URLs, on ne peut pas vérifier la taille ici
+        // La vérification se fera lors du téléchargement dans le service email
+        return true
+      },
+      {
+        message: `Le fichier additionnel est trop volumineux. Taille maximale : ${(MAX_ADDITIONAL_ATTACHMENT_SIZE / 1024 / 1024).toFixed(0)}MB`,
+      }
+    )
     .optional(),
 })
 
 interface RouteParams {
   params: Promise<{ id: string }>
 }
+
+// Configuration Next.js pour accepter les body jusqu'à 35MB (pour les fichiers base64)
+// Note: Dans App Router, on doit utiliser runtime = 'nodejs' et gérer la limite via middleware
+// ou vérifier la taille avant de parser le JSON
+export const runtime = 'nodejs'
+export const maxDuration = 60 // 60 secondes max pour l'envoi
 
 /**
  * POST /api/documents/[id]/send
@@ -98,13 +153,47 @@ export async function POST(request: Request, { params }: RouteParams) {
       )
     }
 
+    // Vérifier la taille du body via Content-Length si disponible
+    const contentLength = request.headers.get('content-length')
+    const MAX_BODY_SIZE = 35 * 1024 * 1024 // 35MB (pour accommoder 25MB en base64)
+
+    if (contentLength) {
+      const bodySize = parseInt(contentLength, 10)
+      if (bodySize > MAX_BODY_SIZE) {
+        return NextResponse.json(
+          {
+            error: `Le corps de la requête est trop volumineux. Taille maximale : ${(MAX_BODY_SIZE / 1024 / 1024).toFixed(0)}MB (requête actuelle : ${(bodySize / 1024 / 1024).toFixed(2)}MB)`,
+          },
+          { status: 413 }
+        )
+      }
+    }
+
     // Parser et valider le body
-    const rawBody = await request.json()
+    // Note: Next.js limite par défaut à 1MB pour request.json()
+    // Pour augmenter la limite, on doit utiliser runtime = 'nodejs' (déjà fait)
+    // et gérer les erreurs de taille si nécessaire
+    let rawBody: unknown
+    try {
+      rawBody = await request.json()
+    } catch (error) {
+      // Si l'erreur est liée à la taille, retourner un message clair
+      if (error instanceof Error && error.message.includes('size')) {
+        return NextResponse.json(
+          {
+            error: `Le corps de la requête est trop volumineux. Taille maximale : ${(MAX_BODY_SIZE / 1024 / 1024).toFixed(0)}MB`,
+          },
+          { status: 413 }
+        )
+      }
+      return NextResponse.json({ error: 'JSON invalide' }, { status: 400 })
+    }
 
     // Récupérer l'email du destinataire : depuis le body OU depuis le document
+    // Vérifier que rawBody est un objet avant d'accéder à ses propriétés
+    const body = rawBody && typeof rawBody === 'object' ? (rawBody as Record<string, unknown>) : {}
     let recipientEmail: string | undefined =
-      (typeof rawBody['recipientEmail'] === 'string' && rawBody['recipientEmail'].trim()) ||
-      undefined
+      (typeof body['recipientEmail'] === 'string' && body['recipientEmail'].trim()) || undefined
 
     // Si pas fourni dans le body, essayer de le récupérer depuis le document
     if (!recipientEmail) {
@@ -144,29 +233,29 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     // Préprocesser les données : convertir les chaînes vides en undefined
     const preprocessedBody: Record<string, unknown> = {
-      ...rawBody,
+      ...body,
       recipientEmail, // Utiliser l'email récupéré
     }
 
     // Ajouter les champs optionnels seulement s'ils ont une valeur
-    if (rawBody['from'] && typeof rawBody['from'] === 'string' && rawBody['from'].trim()) {
-      preprocessedBody['from'] = rawBody['from'].trim()
+    if (body['from'] && typeof body['from'] === 'string' && body['from'].trim()) {
+      preprocessedBody['from'] = body['from'].trim()
     }
-    if (rawBody['replyTo'] && typeof rawBody['replyTo'] === 'string' && rawBody['replyTo'].trim()) {
-      preprocessedBody['replyTo'] = rawBody['replyTo'].trim()
+    if (body['replyTo'] && typeof body['replyTo'] === 'string' && body['replyTo'].trim()) {
+      preprocessedBody['replyTo'] = body['replyTo'].trim()
     }
-    if (rawBody['cc']) {
-      if (typeof rawBody['cc'] === 'string' && rawBody['cc'].trim()) {
-        preprocessedBody['cc'] = rawBody['cc'].trim()
-      } else if (Array.isArray(rawBody['cc']) && rawBody['cc'].length > 0) {
-        preprocessedBody['cc'] = rawBody['cc']
+    if (body['cc']) {
+      if (typeof body['cc'] === 'string' && body['cc'].trim()) {
+        preprocessedBody['cc'] = body['cc'].trim()
+      } else if (Array.isArray(body['cc']) && body['cc'].length > 0) {
+        preprocessedBody['cc'] = body['cc']
       }
     }
-    if (rawBody['bcc']) {
-      if (typeof rawBody['bcc'] === 'string' && rawBody['bcc'].trim()) {
-        preprocessedBody['bcc'] = rawBody['bcc'].trim()
-      } else if (Array.isArray(rawBody['bcc']) && rawBody['bcc'].length > 0) {
-        preprocessedBody['bcc'] = rawBody['bcc']
+    if (body['bcc']) {
+      if (typeof body['bcc'] === 'string' && body['bcc'].trim()) {
+        preprocessedBody['bcc'] = body['bcc'].trim()
+      } else if (Array.isArray(body['bcc']) && body['bcc'].length > 0) {
+        preprocessedBody['bcc'] = body['bcc']
       }
     }
 
@@ -176,8 +265,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     validatedData.recipientEmail = recipientEmail
 
     // Utiliser BullMQ si disponible (pour envois en batch futurs)
-    const useQueue =
-      areQueuesAvailable() && emailSendingQueue !== null && rawBody['useQueue'] === true
+    const useQueue = areQueuesAvailable() && emailSendingQueue !== null && body['useQueue'] === true
 
     if (useQueue && emailSendingQueue) {
       // Créer un job BullMQ pour l'envoi asynchrone
@@ -194,6 +282,19 @@ export async function POST(request: Request, { params }: RouteParams) {
         ...(validatedData.replyTo && { replyTo: validatedData.replyTo }),
         ...(validatedData.cc && { cc: validatedData.cc }),
         ...(validatedData.bcc && { bcc: validatedData.bcc }),
+        ...(validatedData.additionalAttachment
+          ? {
+              additionalAttachment: (() => {
+                const att = validatedData.additionalAttachment!
+                return {
+                  filename: att.filename,
+                  ...(att.url ? { url: att.url } : {}),
+                  ...(att.content ? { content: att.content } : {}),
+                  ...(att.contentType ? { contentType: att.contentType } : {}),
+                }
+              })(),
+            }
+          : {}),
       } satisfies EmailSendingJobData)
 
       return NextResponse.json({
@@ -221,6 +322,19 @@ export async function POST(request: Request, { params }: RouteParams) {
       ...(validatedData.replyTo && { replyTo: validatedData.replyTo }),
       ...(validatedData.cc && { cc: validatedData.cc }),
       ...(validatedData.bcc && { bcc: validatedData.bcc }),
+      ...(validatedData.additionalAttachment
+        ? {
+            additionalAttachment: (() => {
+              const att = validatedData.additionalAttachment!
+              return {
+                filename: att.filename,
+                ...(att.url ? { url: att.url } : {}),
+                ...(att.content ? { content: att.content } : {}),
+                ...(att.contentType ? { contentType: att.contentType } : {}),
+              }
+            })(),
+          }
+        : {}),
     })
 
     if (!result.success) {
